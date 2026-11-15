@@ -352,7 +352,7 @@ export function RaceCountdown({
                         const effectiveSport = getEffectiveSportLabel(goal, weeklyWorkouts || goal.workouts);
                         const badgeStyle =
                             effectiveSport.badgeClass === 'badge-bike'
-                                ? 'badge-bike bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30'
+                                ? 'badge-bike bg-positive/10 text-positive border border-positive/30'
                                 : effectiveSport.badgeClass === 'badge-tri'
                                 ? 'badge-tri bg-accent-blue/10 text-accent-blue border border-accent-blue/30'
                                 : 'badge-run';
@@ -442,7 +442,7 @@ export function RaceCountdown({
                                     : primaryLoadMetric === 'DUAL'
                                     ? `${weeklyActualTss}/${weeklyPlannedTss} TSS · ${weeklyActualTrimp}/${weeklyPlannedTrimp} TR`
                                     : `${weeklyActualTss} / ${weeklyPlannedTss} TSS`}
-                                <span className="ml-1 text-[11px] text-accent-cyan">({weeklyPct}%)</span>
+                                <span className="ml-1 text-[11px] text-positive">({weeklyPct}%)</span>
                             </span>
                         </div>
                         <p className="text-xs text-foreground-muted mb-1">All sports; actual includes recorded activities and estimates for completed workouts without a counted linked activity.</p>
@@ -477,7 +477,7 @@ export function RaceCountdown({
                                 <span className="text-foreground-muted font-medium">4-Week Block</span>
                                 <span className="font-mono tabular-nums text-foreground font-semibold text-xs">
                                     {monthlyActualTss} / {monthlyPlannedTss} TSS
-                                    <span className="ml-1 text-[11px] text-accent-cyan">({monthlyPct}%)</span>
+                                    <span className="ml-1 text-[11px] text-positive">({monthlyPct}%)</span>
                                 </span>
                             </div>
                             <div className="h-1.5 bg-background rounded-full overflow-hidden mb-2">
@@ -519,8 +519,8 @@ export function RaceCountdown({
             <div className="grid grid-cols-2 gap-4 mb-4">
                 {goal.targetTime && (
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-md bg-workout-long-run/15 flex items-center justify-center shrink-0">
-                            <Target className="w-5 h-5 text-workout-long-run" />
+                        <div className="w-10 h-10 rounded-md bg-accent-orange/15 flex items-center justify-center shrink-0">
+                            <Target className="w-5 h-5 text-accent-orange" />
                         </div>
                         <div>
                             <p className="text-xs text-foreground-muted">Goal</p>
@@ -531,8 +531,8 @@ export function RaceCountdown({
 
                 {!isCustomOrOther && nowPredictedTime > 0 && (
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-md bg-accent-cyan/15 flex items-center justify-center shrink-0">
-                            <Activity className="w-5 h-5 text-accent-cyan" />
+                        <div className="w-10 h-10 rounded-md bg-positive/15 flex items-center justify-center shrink-0">
+                            <Activity className="w-5 h-5 text-positive" />
                         </div>
                         <div>
                             <p className="text-xs text-foreground-muted flex items-center gap-1">

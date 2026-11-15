@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { MobileBottomNav } from './MobileBottomNav';
-import { Home, CalendarDays, BarChart3, HeartPulse } from 'lucide-react';
+import { Home, CalendarDays, BarChart3, HeartPulse, MessageSquare } from 'lucide-react';
 import StravaPoweredFooter from '@/components/StravaPoweredFooter';
 
 interface MobileSwipeLayoutProps {
@@ -15,11 +15,14 @@ interface MobileSwipeLayoutProps {
 
 export function MobileSwipeLayout({ children, onPageChange, onPathChange }: MobileSwipeLayoutProps) {
 
+    const router = useRouter();
+
     const tabs = useMemo(() => [
         { icon: Home, label: 'Home', path: '/' },
         { icon: CalendarDays, label: 'Calendar', path: '/calendar' },
         { icon: BarChart3, label: 'Analytics', path: '/analytics' },
         { icon: HeartPulse, label: 'Health', path: '/health' },
+        { icon: MessageSquare, label: 'Coach', path: '/chat' },
     ], []);
 
     const paths = useMemo(() => tabs.map(t => t.path), [tabs]);
@@ -63,7 +66,9 @@ export function MobileSwipeLayout({ children, onPageChange, onPathChange }: Mobi
     const handleTabChange = useCallback((index: number) => {
         if (index >= 0 && index < paths.length && index !== activeIndex) {
             setActiveIndex(index);
-            window.history.replaceState(null, '', paths[index]);
+            if (pathname !== paths[index]) {
+                router.replace(paths[index], { scroll: false });
+            }
             onPageChange?.(index);
 
             // If navigating to Calendar page, scroll to today
@@ -77,7 +82,9 @@ export function MobileSwipeLayout({ children, onPageChange, onPathChange }: Mobi
                 }, 100);
             }
         }
-    }, [activeIndex, onPageChange, paths]);
+    }, [activeIndex, onPageChange, pathname, paths, router]);
+
+    const isChatTab = paths[activeIndex] === '/chat';
 
     return (
         <div
@@ -93,16 +100,22 @@ export function MobileSwipeLayout({ children, onPageChange, onPathChange }: Mobi
                     transition={{ duration: 0.2 }}
                     className="h-full w-full"
                 >
-                    <div className="h-full w-full overflow-y-auto overscroll-y-contain">
-                        <div className="min-h-full">
-                            {/* Only render children that match current config */}
+                    {isChatTab ? (
+                        <div className="h-full w-full flex flex-col overflow-hidden">
                             {children[activeIndex]}
-                            {/* Strava footer at bottom */}
-                            <div className="py-6 px-4">
-                                <StravaPoweredFooter />
+                        </div>
+                    ) : (
+                        <div className="h-full w-full overflow-y-auto overscroll-y-contain">
+                            <div className="min-h-full">
+                                {/* Only render children that match current config */}
+                                {children[activeIndex]}
+                                {/* Strava footer at bottom */}
+                                <div className="py-6 px-4">
+                                    <StravaPoweredFooter />
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </motion.div>
             </div>
 

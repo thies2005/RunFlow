@@ -25,10 +25,7 @@
     --color-foreground-secondary: var(--foreground-secondary);
 
     --color-accent-orange: var(--accent-orange);
-    --color-accent-pink: var(--accent-red);
-    --color-accent-purple: var(--accent-ink);
     --color-accent-blue: var(--accent-blue);
-    --color-accent-cyan: var(--accent-green);
 
     --color-workout-long-run: var(--workout-long-run);
     --color-workout-tempo: var(--workout-tempo);
@@ -63,8 +60,6 @@
 
     --animate-slide-up: slideUp 0.3s ease-out;
     --animate-fade-in: fadeIn 0.4s ease-out;
-
-    --backdrop-blur-xs: 2px;
 }
 
 @keyframes slideUp {
@@ -115,6 +110,7 @@
     }
 }
 
+html,
 :root {
   color-scheme: light;
   --background: #f6f7f5;
@@ -174,6 +170,7 @@
   --scrollbar-thumb-hover: #a8ada6;
 }
 
+html.dark,
 .dark {
   color-scheme: dark;
   --background: #121417;
@@ -619,4 +616,6 @@ dialog:modal {
 
 dialog::backdrop {
   background: rgba(0, 0, 0, var(--modal-backdrop-opacity, 0.55));
+  overflow: hidden;
+  overscroll-behavior: contain;
 }

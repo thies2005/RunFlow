@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Send, Bot, Loader2, AlertCircle, Settings2, Book, Plus, Camera, Menu, SquarePen } from 'lucide-react';
+import { Send, MessageSquare, Square, Loader2, AlertCircle, Settings2, Book, Plus, Camera, Menu, SquarePen, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
@@ -14,12 +14,16 @@ import ProactiveCalorieSnapWidget from './chat/ProactiveCalorieSnapWidget';
 import MacroLoggedWidget from './chat/MacroLoggedWidget';
 import WaterLoggedWidget from './chat/WaterLoggedWidget';
 import TimelineNode from './chat/TimelineNode';
-import { FoodScannerModal } from './views/FoodScannerModal';
+import { FoodScannerModal, type ScanResult } from './views/FoodScannerModal';
+import { FoodScanResultView } from './views/FoodScanResultView';
 
 interface AiChatProps {
     activityId?: string;
     sessionId?: string;
-    compact?: boolean;
+    mode?: 'page' | 'drawer';
+    initialPrompt?: string;
+    autoSend?: boolean;
+    contextType?: string;
     onOpenSettings?: () => void;
     isPromptLibraryOpen?: boolean;
     onClosePromptLibrary?: () => void;
@@ -111,25 +115,59 @@ const stripWidgetComments = (content: string): string => {
         .trim();
 };
 
+const stripErrorPrefix = (message: string): string =>
+    message.replace(/^(?:[A-Za-z]*Error:\s*)+/i, '').trim();
+
+const parseRetryAfterSeconds = (rawRetryAfter: unknown, headerValue?: string | null): number | undefined => {
+    const candidate = typeof rawRetryAfter === 'number'
+        ? rawRetryAfter
+        : typeof rawRetryAfter === 'string' && rawRetryAfter.trim()
+            ? Number(rawRetryAfter)
+            : headerValue && headerValue.trim()
+                ? Number(headerValue)
+                : NaN;
+    if (Number.isFinite(candidate) && candidate > 0) {
+        return Math.ceil(candidate);
+    }
+    return undefined;
+};
+
+const formatAiErrorMessage = (
+    rawMessage: unknown,
+    fallback: string,
+    retryAfterSeconds?: number
+): string => {
+    const cleaned = typeof rawMessage === 'string' ? stripErrorPrefix(rawMessage) : '';
+    const base = cleaned || fallback;
+    if (retryAfterSeconds && retryAfterSeconds > 0 && !/\b\d+\s*s(?:ec(?:ond)?s?)?\b/i.test(base)) {
+        const suffix = /[.!?]$/.test(base) ? ` Try again in ${retryAfterSeconds}s.` : ` (Try again in ${retryAfterSeconds}s)`;
+        return `${base}${suffix}`;
+    }
+    return base;
+};
+
 import ErrorBoundary from '@/components/ErrorBoundary';
 
-function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary, hideInputActions = false, onOpenHistory, onNewChat }: AiChatProps) {
+function AiChatInner({ activityId, sessionId, mode = 'page', initialPrompt, autoSend = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary, hideInputActions = false, onOpenHistory, onNewChat }: AiChatProps) {
     const router = useRouter();
     const queryClient = useQueryClient();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [input, setInput] = useState('');
+    const [input, setInput] = useState(!autoSend && initialPrompt ? initialPrompt : '');
     const [isStreaming, setIsStreaming] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isPromptLibraryOpenLocal, setIsPromptLibraryOpenLocal] = useState(false);
     const [showFoodScanner, setShowFoodScanner] = useState(false);
+    const [scanResult, setScanResult] = useState<ScanResult | null>(null);
     const [showPlusMenu, setShowPlusMenu] = useState(false);
 
     const isLibraryOpen = isPromptLibraryOpen !== undefined ? isPromptLibraryOpen : isPromptLibraryOpenLocal;
     const closeLibrary = onClosePromptLibrary || (() => setIsPromptLibraryOpenLocal(false));
     const openLibrary = onOpenPromptLibrary || (() => setIsPromptLibraryOpenLocal(true));
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const isNearBottomRef = useRef(true);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const autoSentRef = useRef(false);
 
     const activeSessionIdRef = useRef<string | undefined>(sessionId);
 
@@ -242,7 +280,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
             if (historyRes.ok) {
                 const historyData = await historyRes.json();
                 const todayStr = new Date().toISOString().split('T')[0];
-                const todayLogs = historyData.filter((log: { date: string }) => log.date === todayStr);
+                const todayLogs = Array.isArray(historyData?.[todayStr]) ? historyData[todayStr] : [];
                 consumed = todayLogs.reduce((acc: number, log: { calories?: number }) => acc + (log.calories || 0), 0);
             }
             if (target) {
@@ -259,10 +297,23 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
     });
     // --------------------------------------
 
-    // Scroll to bottom
+    const handleScroll = () => {
+        const el = scrollContainerRef.current;
+        if (!el) return;
+        isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    };
+
+    // Keep pinned to bottom via instant scrollTop only while near the bottom
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        const el = scrollContainerRef.current;
+        if (el && isNearBottomRef.current) {
+            el.scrollTop = el.scrollHeight;
+        }
     }, [messages, isStreaming]);
+
+    const handleStop = () => {
+        abortControllerRef.current?.abort();
+    };
 
     const handleSend = async (e?: React.FormEvent | React.MouseEvent | null, overrideText?: string) => {
         if (e) e.preventDefault();
@@ -270,17 +321,13 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
         const userMessage = (overrideText || input).trim();
         if (!userMessage || isStreaming) return;
 
+        isNearBottomRef.current = true;
         setInput('');
         setError(null);
         setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
         setIsStreaming(true);
 
         abortControllerRef.current = new AbortController();
-
-        // Log if abort is triggered
-        abortControllerRef.current.signal.addEventListener('abort', () => {
-            console.error('[AI CHAT] Fetch aborted!', new Error().stack);
-        });
 
         try {
             const response = await fetch('/api/ai/chat', {
@@ -289,14 +336,35 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                 body: JSON.stringify({
                     message: userMessage,
                     activityId,
-                    sessionId,
+                    sessionId: sessionId ?? activeSessionIdRef.current,
                 }),
                 signal: abortControllerRef.current.signal,
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to send message');
+                let errorData: { error?: unknown; message?: unknown; retryAfterSeconds?: unknown; retryAfter?: unknown } | null = null;
+                if (typeof response.text === 'function') {
+                    const rawBody = await response.text().catch(() => '');
+                    if (rawBody) {
+                        try {
+                            errorData = JSON.parse(rawBody);
+                        } catch {
+                            errorData = null;
+                        }
+                    }
+                } else if (typeof response.json === 'function') {
+                    errorData = await response.json().catch(() => null);
+                }
+                const retryAfter = parseRetryAfterSeconds(
+                    errorData?.retryAfterSeconds ?? errorData?.retryAfter,
+                    response.headers?.get?.('retry-after')
+                );
+                const message = formatAiErrorMessage(
+                    errorData?.error ?? errorData?.message,
+                    `Failed to send message (${response.status})`,
+                    retryAfter
+                );
+                throw new Error(message);
             }
 
             setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
@@ -330,9 +398,9 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                         // Handle new session creation
                         if (json.sessionId && activeSessionIdRef.current !== json.sessionId) {
                             activeSessionIdRef.current = json.sessionId;
-                            // Update URL without full reload (using standard parameter name)
-                            router.replace(`/chat?sessionId=${json.sessionId}`, { scroll: false });
-                            // Invalidate sessions list
+                            if (mode === 'page') {
+                                router.replace(`/chat?sessionId=${json.sessionId}`, { scroll: false });
+                            }
                             queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
                         }
 
@@ -347,11 +415,10 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                             });
                         }
                         if (json.error) {
-                            const cleaned = String(json.error).replace(/^Error:\s*/i, '');
-                            const retryHint = typeof json.retryAfterSeconds === 'number' && json.retryAfterSeconds > 0
-                                ? ` (Try again in ${json.retryAfterSeconds}s)`
-                                : '';
-                            throw new Error(`${cleaned}${retryHint}`);
+                            const retryAfter = parseRetryAfterSeconds(json.retryAfterSeconds ?? json.retryAfter);
+                            throw new Error(
+                                formatAiErrorMessage(json.error, 'AI response failed. Please try again.', retryAfter)
+                            );
                         }
                     } catch (e) {
                         // Re-throw intentional errors (from json.error above)
@@ -370,9 +437,17 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                 // We don't necessarily throw here as some proxies might strip the last line
             }
         } catch (err) {
-            if ((err as Error).name === 'AbortError') return;
-            const rawMsg = err instanceof Error ? err.message : String(err);
-            setError(rawMsg.replace(/^Error:\s*/i, ''));
+            if ((err as Error).name === 'AbortError') {
+                setMessages((prev) => {
+                    const last = prev[prev.length - 1];
+                    if (last?.role === 'assistant' && !last.content) {
+                        return prev.slice(0, -1);
+                    }
+                    return prev;
+                });
+                return;
+            }
+            setError(formatAiErrorMessage((err as Error)?.message, 'Failed to send message'));
             setMessages((prev) => {
                 const last = prev[prev.length - 1];
                 if (last?.role === 'assistant' && !last.content) {
@@ -386,83 +461,38 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
         }
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.nativeEvent.isComposing || e.keyCode === 229) return;
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSend();
         }
     };
 
-    if (adminAllowed === false && compact) return null;
+    const handleSendRef = useRef(handleSend);
+    handleSendRef.current = handleSend;
+
+    useEffect(() => {
+        const waitingForHistory = Boolean((sessionId || activityId) && historyLoading);
+        if (
+            autoSend &&
+            initialPrompt &&
+            !autoSentRef.current &&
+            !settingsLoading &&
+            !waitingForHistory &&
+            aiEnabled &&
+            adminAllowed !== false
+        ) {
+            autoSentRef.current = true;
+            void handleSendRef.current(null, initialPrompt);
+        }
+    }, [autoSend, initialPrompt, settingsLoading, sessionId, activityId, historyLoading, aiEnabled, adminAllowed]);
 
     if (settingsError) {
         return <p role="alert" className="p-4 text-sm text-negative">Unable to load AI access settings. Please try again later.</p>;
     }
 
-    if (compact) {
-        return (
-            <div className="bg-background-secondary border border-line rounded-md p-4">
-                <div className="flex items-center gap-2 mb-3">
-                    <Bot className="w-5 h-5 text-foreground-muted" />
-                    <h3 className="text-sm font-medium text-foreground">Chat about this activity</h3>
-                </div>
-
-                {!aiEnabled ? (
-                    <div className="text-sm text-foreground-muted">
-                        <button onClick={onOpenSettings} className="text-accent-blue hover:underline">
-                            Enable AI features
-                        </button>{' '}to chat about this activity.
-                    </div>
-                ) : (
-                    <>
-                        {messages.length > 0 && (
-                            <div className="space-y-3 mb-3 max-h-60 overflow-y-auto">
-                                {messages.map((msg, i) => (
-                                    <div key={i} className={`text-sm ${msg.role === 'user' ? 'text-foreground-muted' : 'text-foreground'}`}>
-                                        <span className="font-medium">{msg.role === 'user' ? 'You: ' : 'Coach: '}</span>
-                                        <div className="inline-block align-top markdown-content">
-                                            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>{DOMPurify.sanitize(cleanContent(msg.content))}</ReactMarkdown>
-                                        </div>
-                                    </div>
-                                ))}
-                                <div ref={messagesEndRef} />
-                            </div>
-                        )}
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                placeholder="Ask about this activity..."
-                                disabled={isStreaming}
-                                className="flex-1 bg-background-secondary border border-line rounded-md px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:border-accent-orange focus:outline-hidden disabled:opacity-50"
-                            />
-                            <button aria-label="Send message" onClick={handleSend} disabled={!input.trim() || isStreaming} className="p-2 bg-accent-orange hover:bg-accent-orange/90 rounded-md disabled:opacity-50">
-                                {isStreaming ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Send className="w-4 h-4 text-white" />}
-                            </button>
-                        </div>
-                        {error && (
-                            <div role="alert" className="mt-2 p-2.5 bg-negative/10 border border-negative/25 rounded-md flex items-start gap-2 text-negative text-xs">
-                                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                                <span className="flex-1">{error}</span>
-                                <button
-                                    type="button"
-                                    aria-label="Dismiss error"
-                                    onClick={() => setError(null)}
-                                    className="text-negative/80 hover:text-negative underline shrink-0"
-                                >
-                                    Dismiss
-                                </button>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
-        );
-    }
-
-    // Full chat view
+    // Full chat view (shared across page and drawer modes)
     if (settingsLoading || (historyLoading && aiEnabled && messages.length === 0)) {
         return (
             <div className="flex-1 flex items-center justify-center">
@@ -474,13 +504,13 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
     if (!aiEnabled || adminAllowed === false) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-                <div className="w-16 h-16 bg-background-tertiary rounded-full flex items-center justify-center mb-4">
-                    <Bot className="w-8 h-8 text-foreground-muted" />
+                <div className="w-12 h-12 bg-background-tertiary border border-line rounded-md flex items-center justify-center mb-4">
+                    <MessageSquare className="w-6 h-6 text-foreground-muted" aria-hidden="true" />
                 </div>
-                <h2 className="text-xl font-semibold text-foreground mb-2">AI Coach</h2>
-                <p className="text-foreground-muted mb-6 max-w-sm">{adminAllowed ? 'Set up AI coaching to get training advice and ask questions about your fitness data.' : 'AI access requires approval from your administrator. View access details to learn more.'}</p>
-                <button onClick={onOpenSettings} className="px-6 py-3 bg-accent-orange hover:bg-accent-orange/90 text-white rounded-md flex items-center gap-2 transition-colors">
-                    <Settings2 className="w-5 h-5" />
+                <h2 className="text-xl font-semibold text-foreground mb-2">Coach</h2>
+                <p className="text-foreground-muted mb-6 max-w-sm">{adminAllowed ? 'Set up AI coaching to review workouts, adjust training load, and log nutrition.' : 'AI access requires approval from your administrator. View access details to learn more.'}</p>
+                <button onClick={onOpenSettings} className="px-6 py-3 bg-[var(--primary-button-bg)] hover:opacity-90 text-[var(--primary-button-fg)] rounded-md flex items-center gap-2 transition-opacity">
+                    <Settings2 className="w-5 h-5" aria-hidden="true" />
                     {adminAllowed ? 'Set up AI features' : 'View AI access'}
                 </button>
             </div>
@@ -496,22 +526,45 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
             />
 
             {/* Chat Messages */}
-            <div className={`flex-1 overflow-y-auto overscroll-y-contain p-4 space-y-4 min-h-0 ${messages.length === 0 ? 'flex flex-col justify-center' : ''}`} style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
+            <div
+                ref={scrollContainerRef}
+                onScroll={handleScroll}
+                className={`flex-1 overflow-y-auto overscroll-y-contain p-4 space-y-4 min-h-0 ${messages.length === 0 ? 'flex flex-col justify-center' : ''}`}
+                style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
+            >
                 <div className="max-w-5xl mx-auto w-full">
                     {messages.length === 0 ? (
                         <div className="flex flex-col p-4 sm:p-8">
-                            <div className="mb-8 text-left">
-                                <p className="text-foreground-muted text-lg mb-1">{(() => {
-                                    const h = new Date().getHours();
-                                    if (h < 12) return 'Good Morning';
-                                    if (h < 18) return 'Good Afternoon';
-                                    return 'Good Evening';
-                                })()},</p>
-                                <h2 className="text-3xl font-semibold text-foreground leading-tight">How can I assist?</h2>
+                            <div className="mb-6 text-left border-b border-line pb-5">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                    <span className="inline-flex items-center rounded-[3px] border border-line bg-background-tertiary px-2 py-0.5 text-xs font-mono font-medium text-foreground">
+                                        Coach
+                                    </span>
+                                    <span className="text-xs text-foreground-muted">Training &amp; nutrition context</span>
+                                </div>
+                                <p className="text-sm text-foreground-secondary max-w-xl">
+                                    Ask about recent workouts, pacing, weekly volume, or log a meal.
+                                </p>
+                                <div className="flex flex-wrap gap-2 mt-4">
+                                    {[
+                                        'Analyze my most recent workout',
+                                        'How is my training load this week?',
+                                        'Log a post-run meal',
+                                    ].map((prompt) => (
+                                        <button
+                                            key={prompt}
+                                            type="button"
+                                            onClick={() => handleSend(null, prompt)}
+                                            className="px-3 py-1.5 rounded-[3px] border border-line bg-background-secondary hover:bg-surface-hover hover:border-line-strong text-xs text-foreground transition-colors text-left"
+                                        >
+                                            {prompt}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
 
                             {/* Contextual Suggestions Timeline */}
-                            {(accessActivityLogs || accessNutritionLogs) && (recentActivity || nutritionTargetData) && (
+                            {mode === 'page' && (accessActivityLogs || accessNutritionLogs) && (recentActivity || nutritionTargetData) && (
                                 <div className="mb-8 max-w-2xl">
                                     {accessActivityLogs && recentActivity && (
                                         <TimelineNode dotColor="timeline-dot-blue" lineColor="var(--glass-border)">
@@ -579,14 +632,14 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                                                         thead: ({ node: _node, ...props }) => <thead className="bg-background-tertiary" {...props} />,
                                                                         th: ({ node: _node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-foreground-muted" {...props} />,
                                                                         td: ({ node: _node, ...props }) => <td className="px-3 py-2 text-sm text-foreground-muted border-t border-line" {...props} />,
-                                                                        blockquote: ({ node: _node, ...props }) => <blockquote className="border-l-4 border-workout-long-run pl-4 py-1 my-3 bg-background-tertiary italic" {...props} />,
+                                                                        blockquote: ({ node: _node, ...props }) => <blockquote className="border-l-4 border-line-strong pl-4 py-1 my-3 bg-background-tertiary italic" {...props} />,
                                                                         a: ({ node: _node, ...props }) => <a className="text-accent-blue hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
                                                                     }}
                                                                 >
                                                                     {DOMPurify.sanitize(displayContent)}
                                                                 </ReactMarkdown>
                                                             )}
-                                                            {mealData && <MacroLoggedWidget {...mealData} />}
+                                                            {mealData && <MacroLoggedWidget {...mealData} onEditMacros={() => router.push('/health')} />}
                                                             {waterData && <WaterLoggedWidget {...waterData} />}
                                                         </>
                                                     );
@@ -602,29 +655,44 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                     </div>
                                 );
                             })}
-                            <div ref={messagesEndRef} />
                         </>
                     )}
                 </div>
             </div>
 
             {error && (
-                <div className="mx-auto mb-2 p-3 bg-negative/10 border border-negative/30 rounded-md flex items-center gap-2 text-negative text-sm max-w-5xl w-full">
-                    <AlertCircle className="w-4 h-4" />
-                    {error}
+                <div className={mode === 'drawer' ? 'px-3 mb-2' : 'px-4 sm:px-0 mb-2'}>
+                    <div
+                        role="alert"
+                        className="mx-auto p-3 bg-negative/10 border border-negative/30 rounded-md flex items-start justify-between gap-2 text-negative text-sm max-w-5xl w-full"
+                    >
+                        <div className="flex items-start gap-2 min-w-0">
+                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+                            <span className="break-words">{error}</span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setError(null)}
+                            aria-label="Dismiss error"
+                            className="p-0.5 rounded-sm hover:bg-negative/20 transition-colors shrink-0"
+                        >
+                            <X className="w-4 h-4" aria-hidden="true" />
+                        </button>
+                    </div>
                 </div>
             )}
 
-            <div className="z-20 pb-2 sm:pb-6 px-4 sm:px-0 mt-auto">
-                <div className="glass-card rounded-full p-1.5 flex items-center max-w-5xl mx-auto border border-line">
+            <div className={`z-20 mt-auto ${mode === 'drawer' ? 'pb-3 px-3' : 'pb-2 sm:pb-6 px-4 sm:px-0'}`}>
+                <div className="bg-background-secondary rounded-md p-1.5 flex items-end gap-1.5 max-w-5xl mx-auto border border-line">
                     {!hideInputActions && (
                         <div className="relative">
                             <button
+                                type="button"
                                 onClick={() => setShowPlusMenu(!showPlusMenu)}
                                 aria-label="Chat actions" aria-expanded={showPlusMenu}
-                                className="w-10 h-10 rounded-full bg-background-tertiary flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex-shrink-0"
+                                className="w-10 h-10 rounded-md bg-background-tertiary flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex-shrink-0"
                             >
-                                <Plus className="w-5 h-5" />
+                                <Plus className="w-5 h-5" aria-hidden="true" />
                             </button>
                             {showPlusMenu && (
                                 <>
@@ -668,23 +736,34 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                         </div>
                     )}
 
-                    <input
-                        type="text"
+                    <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Message AI..." aria-label="Message AI"
-                        className="flex-1 min-w-0 bg-transparent px-4 py-2 text-foreground placeholder-foreground-muted focus:outline-hidden"
+                        placeholder="Message Coach..."
+                        aria-label="Message Coach"
+                        rows={1}
+                        className="flex-1 min-w-0 bg-transparent border-0 px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-foreground-muted focus:outline-hidden resize-none [field-sizing:content] [min-block-size:2.5lh] [max-block-size:9lh]"
                     />
 
-                    {(input.trim() || isStreaming) && (
+                    {isStreaming ? (
                         <button
+                            type="button"
+                            aria-label="Stop response"
+                            onClick={handleStop}
+                            className="w-10 h-10 rounded-md bg-negative flex items-center justify-center text-white transition-opacity flex-shrink-0 hover:opacity-90"
+                        >
+                            <Square className="w-4 h-4 fill-current" aria-hidden="true" />
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
                             aria-label="Send message"
                             onClick={(e) => handleSend(e)}
-                            disabled={!input.trim() || isStreaming}
-                            className="w-10 h-10 rounded-full bg-accent-orange flex items-center justify-center disabled:opacity-50 transition-colors flex-shrink-0 disabled:cursor-not-allowed hover:bg-accent-orange/90"
+                            disabled={!input.trim()}
+                            className="w-10 h-10 rounded-md bg-[var(--primary-button-bg)] text-[var(--primary-button-fg)] flex items-center justify-center disabled:opacity-40 transition-opacity flex-shrink-0 disabled:cursor-not-allowed hover:opacity-90"
                         >
-                            {isStreaming ? <Loader2 className="w-5 h-5 animate-spin text-white" /> : <Send className="w-5 h-5 text-white" />}
+                            <Send className="w-5 h-5" aria-hidden="true" />
                         </button>
                     )}
                 </div>
@@ -696,8 +775,34 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                     onClose={() => setShowFoodScanner(false)}
                     onScanComplete={(result) => {
                         setShowFoodScanner(false);
-                        const msg = `I just ate ${result.mealName}. It has ${result.totalCalories} kcal (${result.totalProtein}g protein, ${result.totalCarbs}g carbs, ${result.totalFats}g fat).`;
-                        handleSend(null, msg);
+                        setScanResult(result);
+                    }}
+                />
+            )}
+
+            {scanResult && (
+                <FoodScanResultView
+                    isOpen={!!scanResult}
+                    result={scanResult}
+                    onClose={() => setScanResult(null)}
+                    onLogSuccess={() => {
+                        queryClient.invalidateQueries({ queryKey: ['daily-health'] });
+                        queryClient.invalidateQueries({ queryKey: ['proactiveNutrition'] });
+                        const loggedSummary = `<!-- MEAL_LOGGED_WIDGET: ${JSON.stringify({
+                            name: scanResult.mealName,
+                            calories: scanResult.totalCalories,
+                            protein: scanResult.totalProtein,
+                            carbs: scanResult.totalCarbs,
+                            fats: scanResult.totalFats,
+                            items: scanResult.items,
+                        })} -->`;
+                        setMessages((prev) => [
+                            ...prev,
+                            {
+                                role: 'assistant',
+                                content: `Logged **${scanResult.mealName}** (${scanResult.totalCalories} kcal) to your nutrition log.\n\n${loggedSummary}`,
+                            },
+                        ]);
                     }}
                 />
             )}

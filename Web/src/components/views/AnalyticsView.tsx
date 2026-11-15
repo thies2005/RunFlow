@@ -2,7 +2,8 @@
 
 import { memo, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, RefreshCw, Settings, Activity as ActivityIcon, Zap, Layers, TrendingUp, ChevronRight } from 'lucide-react';
+import { RefreshCw, Settings, Activity as ActivityIcon, Zap, Layers, TrendingUp, ChevronRight } from 'lucide-react';
+import { AppTopBar } from '@/components/layout/AppTopBar';
 import {
     LineChart, Line, AreaChart, Area,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
@@ -203,26 +204,20 @@ export function AnalyticsView({
     return (
         <div className="min-h-screen bg-background">
             {showHeader && (
-                <header className="topbar sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between h-16">
-                            <div className="flex items-center gap-4">
-                                <button onClick={() => router.push('/')} className="p-2 transition-colors">
-                                    <ArrowLeft className="w-5 h-5" />
-                                </button>
-                                <h1 className="text-xl font-bold">Performance Analytics</h1>
-                            </div>
-                            <button
-                                onClick={onRecalculate}
-                                disabled={isRecalculating}
-                                className="btn-secondary flex items-center gap-2 py-2 px-4"
-                            >
-                                <RefreshCw className={`w-4 h-4 ${isRecalculating ? 'animate-spin' : ''}`} />
-                                Refresh
-                            </button>
-                        </div>
-                    </div>
-                </header>
+                <AppTopBar
+                    rightSlot={
+                        <button
+                            type="button"
+                            onClick={onRecalculate}
+                            disabled={isRecalculating}
+                            className="topbar-btn flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium border border-line rounded-md hover:border-foreground-muted transition-colors disabled:opacity-50"
+                            aria-label="Refresh analytics"
+                        >
+                            <RefreshCw className={`w-3.5 h-3.5 ${isRecalculating ? 'animate-spin' : ''}`} />
+                            <span className="hidden sm:inline">Refresh</span>
+                        </button>
+                    }
+                />
             )}
 
             {!showHeader && (
@@ -241,7 +236,7 @@ export function AnalyticsView({
                             aria-pressed={selectedSport === 'COMBINED'}
                             className={`flex items-center gap-2 px-3 py-2 font-medium rounded-md transition-all ${
                                 selectedSport === 'COMBINED'
-                                    ? 'bg-accent-cyan text-background font-semibold shadow-xs'
+                                    ? 'bg-positive text-background font-semibold shadow-xs'
                                     : 'text-foreground-muted hover:text-foreground'
                             }`}
                         >
@@ -311,14 +306,14 @@ export function AnalyticsView({
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="glass-card p-4">
                                 <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1.5 font-medium">
-                                    <ActivityIcon className="w-3.5 h-3.5 text-accent-cyan" /> Combined Fitness
+                                    <ActivityIcon className="w-3.5 h-3.5 text-positive" /> Combined Fitness
                                 </div>
                                 <div className="text-2xl font-mono font-bold text-foreground">
                                     {combinedSportStats.ctlCombined.toFixed(0)} <span className="text-xs text-foreground-muted font-normal">CTL</span>
                                 </div>
                                 <div className="text-xs text-foreground-muted mt-1 flex items-center gap-2">
                                     <span>ATL: {combinedSportStats.atlCombined.toFixed(0)}</span>
-                                    <span>TSB: <span className={combinedSportStats.tsbCombined >= 0 ? 'text-positive' : 'text-accent-pink'}>
+                                    <span>TSB: <span className={combinedSportStats.tsbCombined >= 0 ? 'text-positive' : 'text-negative'}>
                                         {combinedSportStats.tsbCombined >= 0 ? `+${combinedSportStats.tsbCombined.toFixed(0)}` : combinedSportStats.tsbCombined.toFixed(0)}
                                     </span></span>
                                 </div>
@@ -350,7 +345,7 @@ export function AnalyticsView({
 
                             <div className="glass-card p-4">
                                 <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1.5 font-medium">
-                                    <TrendingUp className="w-3.5 h-3.5 text-accent-purple" /> Total Training Time
+                                    <TrendingUp className="w-3.5 h-3.5 text-foreground" /> Total Training Time
                                 </div>
                                 <div className="text-2xl font-mono font-bold text-foreground">
                                     {combinedSportStats.totalHours} <span className="text-xs text-foreground-muted font-normal">hours</span>

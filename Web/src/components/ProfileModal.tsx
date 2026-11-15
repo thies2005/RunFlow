@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink, Bot, LinkIcon, Bell, ShieldCheck, ShieldOff } from 'lucide-react';
+import { Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink, Sliders, LinkIcon, Bell, ShieldCheck, ShieldOff } from 'lucide-react';
 import Link from 'next/link';
 import { signIn, signOut } from 'next-auth/react';
 import { evictAuthBoundCaches } from '@/lib/pwa/authCacheEviction';
@@ -510,12 +510,12 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                     {/* AI Features Section */}
                     <div className="pt-2 border-t border-foreground/10">
-                        <label className="block text-xs text-purple-400 mb-3 uppercase font-semibold">AI Features</label>
+                        <label className="block text-xs text-accent-orange mb-3 uppercase font-semibold">AI Features</label>
                         <button
                             onClick={() => setIsAiSettingsOpen(true)}
-                            className="w-full py-3 border border-purple-500/30 text-purple-400 rounded-lg hover:bg-purple-500/10 transition-colors text-sm flex items-center justify-center gap-2"
+                            className="w-full py-3 border border-accent-orange/30 text-accent-orange rounded-md hover:bg-accent-orange/10 transition-colors text-sm flex items-center justify-center gap-2"
                         >
-                            <Bot className="w-4 h-4" />
+                            <Sliders className="w-4 h-4" aria-hidden="true" />
                             Configure AI Coach
                         </button>
                         <p className="text-[10px] text-foreground-muted mt-2">Get personalized training advice, activity feedback, and more</p>
@@ -710,7 +710,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                     {/* Privacy & Consent Section */}
                     <div className="mb-4">
-                        <h3 className="text-purple-400 font-medium mb-3 text-xs uppercase tracking-wider flex items-center gap-2">
+                        <h3 className="text-foreground-secondary font-medium mb-3 text-xs uppercase tracking-wider flex items-center gap-2">
                             <ShieldCheck className="w-4 h-4" />
                             Privacy & Consent
                         </h3>
@@ -823,7 +823,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                     <button
                                         onClick={handleDelete}
                                         disabled={isDeleting}
-                                        className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white text-xs rounded-md flex items-center justify-center gap-2 transition-colors font-medium shadow-lg shadow-red-500/20"
+                                        className="flex-1 py-2 bg-negative hover:bg-negative/90 text-white text-xs rounded-md flex items-center justify-center gap-2 transition-colors font-medium"
                                     >
                                         {isDeleting ? <AlertCircle className="animate-spin w-3 h-3" /> : <Trash2 className="w-3 h-3" />}
                                         {isDeleting ? 'Deleting...' : 'Confirm Delete'}

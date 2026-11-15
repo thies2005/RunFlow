@@ -1,4 +1,4 @@
-import { BarChart3, HeartPulse, Plus } from 'lucide-react';
+import { BarChart3, Check, Plus } from 'lucide-react';
 import { SupplementItem } from '@/components/health/SupplementItem';
 import type { Supplement, SupplementStack, SupplementLog } from '@/lib/types/health';
 
@@ -85,9 +85,9 @@ export function SupplementsSection({
                                 type="button"
                                 aria-label={`View ${stack.name} stats`}
                                 onClick={() => onShowStats({ targetId: stack.id, targetType: 'stack', targetName: stack.name })}
-                                className="w-6 h-6 rounded flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-glass-bg hover:bg-background-tertiary"
+                                className="w-6 h-6 rounded flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-glass-bg hover:bg-background-tertiary"
                             >
-                                <BarChart3 className="w-3 h-3 text-foreground-muted" />
+                                <BarChart3 className="w-3 h-3 text-foreground-muted" aria-hidden="true" />
                             </button>
                             <button
                                 type="button"
@@ -96,7 +96,7 @@ export function SupplementsSection({
                                 disabled={pendingStackId === stack.id}
                                 className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors border ${allTaken ? 'bg-positive border-positive text-white' : 'bg-transparent border-line-strong text-foreground-muted hover:border-foreground-muted'} disabled:opacity-50`}
                             >
-                                {allTaken ? <HeartPulse className="w-4 h-4" /> : <div className="w-2.5 h-2.5 rounded-full bg-background-secondary" />}
+                                {allTaken ? <Check className="w-4 h-4" aria-hidden="true" /> : <div className="w-2.5 h-2.5 rounded-full bg-background-secondary" />}
                             </button>
                         </div>
                     )}

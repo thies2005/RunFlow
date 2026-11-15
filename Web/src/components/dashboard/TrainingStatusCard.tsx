@@ -66,18 +66,18 @@ export const DASHBOARD_LAYOUT_MODE_OPTIONS: {
 ];
 
 export const CYCLING_METRIC_OPTIONS: DashboardMetricOption<CyclingDashboardMetricId>[] = [
-    { id: 'cyclingVo2max', label: 'Cycling VO2max (ACSM MAP)', shortLabel: 'Bike VO2max', unit: 'mL/kg', colorClass: 'text-accent-purple' },
+    { id: 'cyclingVo2max', label: 'Cycling VO2max (ACSM MAP)', shortLabel: 'Bike VO2max', unit: 'mL/kg', colorClass: 'text-accent-blue' },
     { id: 'activeFtp', label: 'Active / Estimated FTP', shortLabel: 'Active FTP', unit: 'W', colorClass: 'text-accent-orange' },
-    { id: 'wPerKg', label: 'Power-to-Weight Ratio', shortLabel: 'Power / Weight', unit: 'W/kg', colorClass: 'text-accent-cyan' },
+    { id: 'wPerKg', label: 'Power-to-Weight Ratio', shortLabel: 'Power / Weight', unit: 'W/kg', colorClass: 'text-positive' },
     { id: 'weeklyBikeTss', label: 'Weekly Cycling Load (TSS)', shortLabel: 'Weekly Bike TSS', unit: 'TSS', colorClass: 'text-workout-tempo' },
     { id: 'weeklyBikeKm', label: 'Weekly Cycling Distance', shortLabel: 'Weekly Bike Km', unit: 'km', colorClass: 'text-positive' },
     { id: 'ctlBike', label: 'Cycling Chronic Load (Bike CTL)', shortLabel: 'Bike Fitness (CTL)', unit: 'CTL', colorClass: 'text-accent-blue' },
     { id: 'tsbBike', label: 'Cycling Stress Balance (Bike TSB)', shortLabel: 'Bike Form (TSB)', unit: 'TSB', colorClass: 'text-positive' },
-    { id: 'avgEf', label: 'Aerobic Efficiency Factor (NP/HR)', shortLabel: 'Aerobic EF', unit: 'W/bpm', colorClass: 'text-accent-cyan' },
+    { id: 'avgEf', label: 'Aerobic Efficiency Factor (NP/HR)', shortLabel: 'Aerobic EF', unit: 'W/bpm', colorClass: 'text-positive' },
 ];
 
 export const RUNNING_METRIC_OPTIONS: DashboardMetricOption<RunningDashboardMetricId>[] = [
-    { id: 'vdot', label: 'Jack Daniels Performance VDOT', shortLabel: 'Run VDOT', unit: 'VDOT', colorClass: 'text-accent-cyan' },
+    { id: 'vdot', label: 'Jack Daniels Performance VDOT', shortLabel: 'Run VDOT', unit: 'VDOT', colorClass: 'text-positive' },
     { id: 'weeklyRunKm', label: 'Current Week Running Distance', shortLabel: 'Weekly Run Km', unit: 'km', colorClass: 'text-positive' },
     { id: 'avg3MoRunKm', label: '3-Month Avg Weekly Run Distance', shortLabel: '3-Mo Avg Km', unit: 'km/wk', colorClass: 'text-workout-long-run' },
     { id: 'easyTrimp', label: 'Weekly Easy Aerobic TRIMP', shortLabel: 'Easy TRIMP', unit: 'TRIMP', colorClass: 'text-accent-blue' },
@@ -396,7 +396,7 @@ export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = 
 
     const workloadStatus = (ratio: number) => {
         if (ratio <= 0) return { label: 'No Data', color: 'text-foreground-muted', bg: 'bg-foreground-muted' };
-        if (ratio < 0.8) return { label: 'Recovery', color: 'text-accent-cyan', bg: 'bg-accent-cyan' };
+        if (ratio < 0.8) return { label: 'Recovery', color: 'text-positive', bg: 'bg-positive' };
         if (ratio <= 1.3) return { label: 'Optimal', color: 'text-positive', bg: 'bg-positive' };
         if (ratio <= 1.5) return { label: 'Caution', color: 'text-workout-tempo', bg: 'bg-workout-tempo' };
         return { label: 'Overload', color: 'text-negative', bg: 'bg-negative' };
@@ -571,9 +571,9 @@ export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = 
                 <div className="flex items-center gap-3">
                     <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Weekly Bike TSS</div>
                     <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
-                        <div className="h-full bg-accent-purple transition-all duration-500" style={{ width: `${Math.min(100, (weeklyBikeTss / plannedBikeTss) * 100)}%` }} />
+                        <div className="h-full bg-accent-blue transition-all duration-500" style={{ width: `${Math.min(100, (weeklyBikeTss / plannedBikeTss) * 100)}%` }} />
                     </div>
-                    <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-accent-purple underline decoration-accent-purple/30 underline-offset-2">
+                    <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-accent-blue underline decoration-accent-blue/30 underline-offset-2">
                         {weeklyBikeTss > 0 ? weeklyBikeTss : '0'}
                     </div>
                 </div>
@@ -601,8 +601,8 @@ export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = 
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-md bg-accent-cyan/15 flex items-center justify-center shrink-0">
-                                <Activity className="w-5 h-5 text-accent-cyan" />
+                            <div className="w-10 h-10 rounded-md bg-positive/15 flex items-center justify-center shrink-0">
+                                <Activity className="w-5 h-5 text-positive" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs text-foreground-muted font-semibold leading-tight">Running VO2max</p>
@@ -611,7 +611,7 @@ export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = 
                                         {aerobicVo2max > 0 ? aerobicVo2max.toFixed(1) : '-'}
                                     </p>
                                     {correctionFactor !== 1.0 && (
-                                        <span className="text-xs font-mono tabular-nums text-accent-cyan font-semibold bg-accent-cyan/10 px-1 py-0.5 rounded leading-none shrink-0 border border-accent-cyan/20">
+                                        <span className="text-xs font-mono tabular-nums text-positive font-semibold bg-positive/10 px-1 py-0.5 rounded leading-none shrink-0 border border-positive/20">
                                             {correctionFactor.toFixed(1)}x
                                         </span>
                                     )}
@@ -660,14 +660,14 @@ export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = 
                                     {activeFtpWatts > 0 ? `${activeFtpWatts}W` : '-'}
                                 </p>
                                 {wPerKg > 0 && (
-                                    <p className="text-[10px] font-mono text-accent-cyan mt-0.5">{wPerKg.toFixed(2)} W/kg</p>
+                                    <p className="text-[10px] font-mono text-positive mt-0.5">{wPerKg.toFixed(2)} W/kg</p>
                                 )}
                             </div>
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-md bg-accent-purple/15 flex items-center justify-center shrink-0">
-                                <Bike className="w-5 h-5 text-accent-purple" />
+                            <div className="w-10 h-10 rounded-md bg-accent-blue/15 flex items-center justify-center shrink-0">
+                                <Bike className="w-5 h-5 text-accent-blue" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs text-foreground-muted font-semibold leading-tight">Cycling VO2max</p>
@@ -731,21 +731,21 @@ export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = 
                                 {activeFtpWatts > 0 ? `${activeFtpWatts}W` : '-'}
                             </p>
                             {wPerKg > 0 && (
-                                <p className="text-[10px] font-mono text-accent-cyan mt-0.5">{wPerKg.toFixed(2)} W/kg</p>
+                                <p className="text-[10px] font-mono text-positive mt-0.5">{wPerKg.toFixed(2)} W/kg</p>
                             )}
                         </div>
                     </div>
                 ) : isCyclist ? (
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-md bg-accent-purple/15 flex items-center justify-center shrink-0">
-                            <Bike className="w-5 h-5 text-accent-purple" />
+                        <div className="w-10 h-10 rounded-md bg-accent-blue/15 flex items-center justify-center shrink-0">
+                            <Bike className="w-5 h-5 text-accent-blue" />
                         </div>
                         <div>
                             <p className="text-xs text-foreground-muted font-semibold leading-tight">Weekly Cycling</p>
                             <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">
                                 {weeklyBikeKm > 0 ? `${weeklyBikeKm} km` : weeklyBikeTss > 0 ? `${weeklyBikeTss} TSS` : activeFtpWatts > 0 ? `${activeFtpWatts}W` : '0 km'}
                             </p>
-                            <p className="text-[10px] font-mono text-accent-cyan mt-0.5">
+                            <p className="text-[10px] font-mono text-positive mt-0.5">
                                 {weeklyBikeKm > 0 && weeklyBikeTss > 0
                                     ? `${weeklyBikeTss} TSS`
                                     : activeFtpWatts > 0
@@ -768,8 +768,8 @@ export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = 
 
                 {/* Aerobic Fitness (VO2max) */}
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-md bg-accent-cyan/15 flex items-center justify-center shrink-0">
-                        <Activity className="w-5 h-5 text-accent-cyan" />
+                    <div className="w-10 h-10 rounded-md bg-positive/15 flex items-center justify-center shrink-0">
+                        <Activity className="w-5 h-5 text-positive" />
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-xs text-foreground-muted font-semibold leading-tight">
@@ -782,7 +782,7 @@ export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = 
                                     : (aerobicVo2max > 0 ? aerobicVo2max.toFixed(1) : cyclingVo2max > 0 ? cyclingVo2max.toFixed(1) : '-')}
                             </p>
                             {layoutMode !== 'CYCLING_HERO' && correctionFactor !== 1.0 && (
-                                <span className="text-xs font-mono tabular-nums text-accent-cyan font-semibold bg-accent-cyan/10 px-1 py-0.5 rounded leading-none shrink-0 border border-accent-cyan/20">
+                                <span className="text-xs font-mono tabular-nums text-positive font-semibold bg-positive/10 px-1 py-0.5 rounded leading-none shrink-0 border border-positive/20">
                                     {correctionFactor.toFixed(1)}x
                                 </span>
                             )}
@@ -803,7 +803,7 @@ export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = 
             {(layoutMode === 'COMBINED_STRIP' || layoutMode === 'CYCLING_HERO') && middleCyclingOptions.length > 0 && (
                 <div className="mb-5 p-3 rounded-md bg-background-tertiary/70 border border-line space-y-2 shrink-0">
                     <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-accent-cyan flex items-center gap-1">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-positive flex items-center gap-1">
                             <Bike className="w-3 h-3" />
                             Cycling Metrics
                         </span>

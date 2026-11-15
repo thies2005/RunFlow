@@ -64,7 +64,7 @@ export default function ManualActivityModal({ isOpen, onClose }: ManualActivityM
         <Modal isOpen={isOpen} onClose={onClose} title="Manual Entry" maxWidth="md">
             <form onSubmit={handleSubmit} className="space-y-4">
                 {mutation.isError && (
-                    <div className="text-negative text-sm bg-accent-pink/10 border border-accent-pink/20 rounded-md p-3">
+                    <div className="text-negative text-sm bg-negative/10 border border-negative/20 rounded-md p-3">
                         Failed to create activity. Please try again.
                     </div>
                 )}

@@ -69,6 +69,9 @@ export interface UserContext {
     performance?: {
         currentVdot?: number;
         vdotCorrectionFactor: number;
+        ftpWatts?: number;
+        thresholdPace?: number;
+        swimCssSecPer100m?: number;
         recentRacePaces?: {
             distance: string;
             pace: number;
@@ -81,6 +84,35 @@ export interface UserContext {
         height?: number;
         age?: number;
         sex?: string;
+    };
+
+    // Health & recovery (gated by accessBiometrics / accessNutritionLogs)
+    healthRecovery?: {
+        readiness?: {
+            date: string;
+            compositeScore: number;
+            state: string;
+            confidence: string;
+            componentScores?: Record<string, number>;
+            hrv?: number;
+            sleepHours?: number;
+            restingHr?: number;
+        };
+        dailyHealth?: {
+            date: string;
+            steps?: number;
+            waterIntake?: number;
+            weight?: number;
+        };
+        fasting?: {
+            isActive: boolean;
+            startedAt: string;
+            elapsedHours: number;
+        };
+        supplements?: {
+            totalScheduled: number;
+            takenCount: number;
+        };
     };
 
     // Nutrition data (if accessNutritionLogs)
@@ -279,7 +311,7 @@ export async function buildUserContext(userId: string): Promise<UserContext> {
                 })),
             recentCompletedWorkouts: workouts
                 .filter((w) => w.scheduledDate < now)
-                .slice(0, 5)
+                .slice(-5)
                 .map((w) => ({
                     date: w.scheduledDate.toISOString().split('T')[0],
                     type: w.workoutType,
@@ -360,23 +392,181 @@ export async function buildUserContext(userId: string): Promise<UserContext> {
         context.performance = {
             currentVdot: user.goals[0]?.currentVdot || undefined,
             vdotCorrectionFactor: user.vdotCorrectionFactor,
+            ftpWatts: user.ftpWatts || undefined,
+            thresholdPace: user.thresholdPace || undefined,
+            swimCssSecPer100m: user.swimCssSecPer100m || undefined,
         };
     }
 
-    // Biometrics
+    const now = new Date();
+    const todayUtcStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const tomorrowUtcStart = new Date(todayUtcStart.getTime() + DAY_MS);
+    const todayUtcKey = todayUtcStart.toISOString().split('T')[0];
+
+    let todayDailyHealth: { date: Date; steps: number | null; waterIntake: number | null; weight: number | null } | null = null;
+    if (settings.accessBiometrics || settings.accessNutritionLogs) {
+        todayDailyHealth = await prisma.dailyHealthLog.findFirst({
+            where: {
+                userId,
+                date: { gte: todayUtcStart, lt: tomorrowUtcStart },
+            },
+            orderBy: { date: 'desc' },
+            select: { date: true, steps: true, waterIntake: true, weight: true },
+        });
+    }
+
+    const healthRecovery: NonNullable<UserContext['healthRecovery']> = {};
+
+    // Biometrics + Physiological Recovery (Readiness, steps, latest weight)
     if (settings.accessBiometrics) {
         let age: number | undefined;
         if (user.birthDate) {
-            const today = new Date();
-            age = today.getFullYear() - user.birthDate.getFullYear();
+            age = now.getFullYear() - user.birthDate.getFullYear();
+        }
+
+        let latestWeight = todayDailyHealth?.weight ?? undefined;
+        if (latestWeight === undefined) {
+            const latestWeightLog = await prisma.dailyHealthLog.findFirst({
+                where: { userId, weight: { not: null } },
+                orderBy: { date: 'desc' },
+                select: { weight: true },
+            });
+            if (latestWeightLog?.weight != null) {
+                latestWeight = latestWeightLog.weight;
+            }
         }
 
         context.biometrics = {
-            weight: user.weight || undefined,
+            weight: latestWeight ?? user.weight ?? undefined,
             height: user.height || undefined,
             age,
             sex: user.sex,
         };
+
+        const readinessRecord = await prisma.dailyReadinessRecord.findFirst({
+            where: {
+                userId,
+                date: { gte: todayUtcStart, lt: tomorrowUtcStart },
+            },
+            orderBy: { date: 'desc' },
+        });
+
+        if (readinessRecord) {
+            const extractedComponents: Record<string, number> = {};
+            if (readinessRecord.componentScores && typeof readinessRecord.componentScores === 'object' && !Array.isArray(readinessRecord.componentScores)) {
+                for (const [key, val] of Object.entries(readinessRecord.componentScores as Record<string, unknown>)) {
+                    if (typeof val === 'number' && Number.isFinite(val)) {
+                        extractedComponents[key] = val;
+                    } else if (val && typeof val === 'object' && 'score' in val) {
+                        const entry = val as { score?: unknown; isAvailable?: unknown };
+                        if (entry.isAvailable !== false && typeof entry.score === 'number' && Number.isFinite(entry.score)) {
+                            extractedComponents[key] = entry.score;
+                        }
+                    }
+                }
+            }
+
+            const hrvObj = readinessRecord.hrvJson as Record<string, unknown> | null;
+            const sleepObj = readinessRecord.sleepJson as Record<string, unknown> | null;
+            const rhrObj = readinessRecord.rhrJson as Record<string, unknown> | null;
+
+            const hrv = typeof hrvObj?.todayHrv === 'number' ? hrvObj.todayHrv : undefined;
+            const sleepHours =
+                typeof sleepObj?.hours === 'number' ? sleepObj.hours
+                    : typeof sleepObj?.sleepHours === 'number' ? sleepObj.sleepHours
+                        : typeof sleepObj?.durationHours === 'number' ? sleepObj.durationHours
+                            : typeof sleepObj?.totalMinutes === 'number' ? sleepObj.totalMinutes / 60
+                                : undefined;
+            const restingHr =
+                readinessRecord.restingHr
+                ?? (typeof rhrObj?.todayRhr === 'number' ? rhrObj.todayRhr : undefined)
+                ?? (typeof rhrObj?.restingHr === 'number' ? rhrObj.restingHr : undefined);
+
+            healthRecovery.readiness = {
+                date: readinessRecord.date.toISOString().split('T')[0],
+                compositeScore: readinessRecord.compositeScore,
+                state: readinessRecord.state,
+                confidence: readinessRecord.confidence,
+                componentScores: Object.keys(extractedComponents).length > 0 ? extractedComponents : undefined,
+                hrv,
+                sleepHours,
+                restingHr,
+            };
+        }
+
+        if (todayDailyHealth && (todayDailyHealth.steps != null || latestWeight != null)) {
+            healthRecovery.dailyHealth = {
+                date: todayUtcKey,
+                steps: todayDailyHealth.steps ?? undefined,
+                weight: latestWeight,
+            };
+        } else if (latestWeight != null) {
+            healthRecovery.dailyHealth = {
+                date: todayUtcKey,
+                weight: latestWeight,
+            };
+        }
+    }
+
+    // Nutrition-gated health recovery (water intake, active fasting, supplement adherence)
+    if (settings.accessNutritionLogs) {
+        if (todayDailyHealth?.waterIntake != null) {
+            healthRecovery.dailyHealth = {
+                ...(healthRecovery.dailyHealth ?? { date: todayUtcKey }),
+                waterIntake: todayDailyHealth.waterIntake,
+            };
+        }
+
+        const activeFast = await prisma.fastingSession.findFirst({
+            where: { userId, endTime: null },
+            orderBy: { startTime: 'desc' },
+        });
+        if (activeFast) {
+            const elapsedHours = Math.max(0, (now.getTime() - activeFast.startTime.getTime()) / (1000 * 60 * 60));
+            healthRecovery.fasting = {
+                isActive: true,
+                startedAt: activeFast.startTime.toISOString(),
+                elapsedHours,
+            };
+        }
+
+        const [supplements, supplementLogs] = await Promise.all([
+            prisma.supplement.findMany({
+                where: { userId, isActive: true },
+                select: { id: true, daysOfWeek: true },
+            }),
+            prisma.supplementLog.findMany({
+                where: {
+                    date: todayUtcStart,
+                    taken: true,
+                    supplement: { userId },
+                },
+                select: { supplementId: true },
+            }),
+        ]);
+
+        if (supplements.length > 0) {
+            const todayDow = now.getUTCDay();
+            const scheduled = supplements.filter((s) => {
+                if (!Array.isArray(s.daysOfWeek) || s.daysOfWeek.length === 0) return true;
+                return s.daysOfWeek.includes(todayDow);
+            });
+            const scheduledIds = new Set(scheduled.map((s) => s.id));
+            const takenCount = supplementLogs.filter((l) => scheduledIds.has(l.supplementId)).length;
+            healthRecovery.supplements = {
+                totalScheduled: scheduled.length,
+                takenCount,
+            };
+        }
+    }
+
+    if (
+        healthRecovery.readiness ||
+        healthRecovery.dailyHealth ||
+        healthRecovery.fasting ||
+        healthRecovery.supplements
+    ) {
+        context.healthRecovery = healthRecovery;
     }
 
     return context;
@@ -490,8 +680,22 @@ export function formatContextForAi(context: UserContext): string {
         parts.push(`Goals: ${goalStrs.join('; ')}`);
     }
 
-    if (context.performance?.currentVdot) {
-        parts.push(`Current VDOT: ${context.performance.currentVdot.toFixed(1)}`);
+    if (context.performance) {
+        if (context.performance.currentVdot) {
+            parts.push(`Current VDOT: ${context.performance.currentVdot.toFixed(1)}`);
+        }
+        const perfExtras = [
+            context.performance.ftpWatts ? `Cycling FTP: ${context.performance.ftpWatts}W` : null,
+            context.performance.thresholdPace
+                ? `Threshold Pace: ${Math.floor(context.performance.thresholdPace / 60)}:${Math.floor(context.performance.thresholdPace % 60).toString().padStart(2, '0')}/km`
+                : null,
+            context.performance.swimCssSecPer100m
+                ? `Swim CSS: ${formatTime(context.performance.swimCssSecPer100m)}/100m`
+                : null,
+        ].filter(Boolean);
+        if (perfExtras.length > 0) {
+            parts.push(perfExtras.join(', '));
+        }
     }
 
     if (context.recentActivities && context.recentActivities.length > 0) {
@@ -523,6 +727,43 @@ export function formatContextForAi(context: UserContext): string {
                 .map((w) => `${w.date}: ${w.type}`)
                 .join(', ');
             parts.push(`Upcoming workouts: ${upcoming}`);
+        }
+        if (context.trainingPlan.recentCompletedWorkouts.length > 0) {
+            const recent = context.trainingPlan.recentCompletedWorkouts
+                .slice(0, 5)
+                .map((w) => `${w.date}: ${w.type} (${w.completed ? 'completed' : 'missed'})`)
+                .join(', ');
+            parts.push(`Recent workouts: ${recent}`);
+        }
+    }
+
+    if (context.healthRecovery) {
+        const hr = context.healthRecovery;
+        if (hr.readiness) {
+            const r = hr.readiness;
+            const metrics = [
+                r.hrv != null ? `HRV: ${Math.round(r.hrv)}ms` : null,
+                r.sleepHours != null ? `Sleep: ${r.sleepHours.toFixed(1)}h` : null,
+                r.restingHr != null ? `RHR: ${Math.round(r.restingHr)}bpm` : null,
+            ].filter(Boolean).join(', ');
+            parts.push(`Readiness (${r.date}): ${Math.round(r.compositeScore)}/100 (${r.state}, ${r.confidence} confidence)${metrics ? ` | ${metrics}` : ''}`);
+        }
+        if (hr.dailyHealth) {
+            const d = hr.dailyHealth;
+            const dhParts = [
+                d.steps != null ? `Steps: ${d.steps}` : null,
+                d.waterIntake != null ? `Water: ${d.waterIntake}ml` : null,
+                d.weight != null ? `Weight: ${d.weight}kg` : null,
+            ].filter(Boolean).join(', ');
+            if (dhParts) {
+                parts.push(`Daily Health (${d.date}): ${dhParts}`);
+            }
+        }
+        if (hr.fasting?.isActive) {
+            parts.push(`Fasting: Active (${hr.fasting.elapsedHours.toFixed(1)}h elapsed)`);
+        }
+        if (hr.supplements && hr.supplements.totalScheduled > 0) {
+            parts.push(`Supplements Today: ${hr.supplements.takenCount}/${hr.supplements.totalScheduled} taken`);
         }
     }
 

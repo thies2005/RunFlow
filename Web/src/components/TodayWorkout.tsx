@@ -12,7 +12,7 @@ import {
     Route,
     Zap,
     Flame,
-    Sparkles,
+    HeartPulse,
     Moon,
     Bike,
     Waves,
@@ -21,8 +21,10 @@ import {
     AlertTriangle,
     ArrowRight,
     X,
+    MessageSquare,
 } from 'lucide-react';
 import { findSmartRescheduleDay } from '@/lib/plans/schedule-utils';
+import { useCoachDrawer } from '@/components/providers/CoachDrawerProvider';
 
 interface Workout {
     id: string;
@@ -80,9 +82,9 @@ const workoutConfig = {
     },
     RECOVERY: {
         label: 'Recovery',
-        color: 'bg-accent-cyan/15',
+        color: 'bg-positive/15',
         badge: 'badge-recovery',
-        icon: <Sparkles className="w-8 h-8 text-accent-cyan" />,
+        icon: <HeartPulse className="w-8 h-8 text-positive" />,
     },
     REST: {
         label: 'Rest Day',
@@ -140,6 +142,7 @@ export function TodayWorkout({
     onAdapt,
 }: TodayWorkoutProps) {
     const queryClient = useQueryClient();
+    const { openCoach } = useCoachDrawer();
     const [dismissedAdapt, setDismissedAdapt] = useState(false);
     const [isAdapting, setIsAdapting] = useState(false);
 
@@ -157,7 +160,7 @@ export function TodayWorkout({
         staleTime: 60000,
     });
 
-    const effectiveReadinessScore = propReadinessScore ?? readinessData?.readinessScore ?? null;
+    const effectiveReadinessScore = propReadinessScore ?? readinessData?.compositeScore ?? null;
 
     const showAdaptationBanner =
         Boolean(workout) &&
@@ -245,9 +248,26 @@ export function TodayWorkout({
 
     return (
         <div className="glass-card intensity-border p-6 animate-slide-in">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 gap-2">
                 <h2 className="text-lg font-semibold text-foreground-muted">Today&apos;s Workout</h2>
-                <span className={`badge ${config.badge}`}>{config.label}</span>
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() =>
+                            openCoach({
+                                title: 'Today’s session',
+                                contextType: 'workout',
+                                prompt: `Today's scheduled workout is ${config.label}: "${workout.description}"${effectiveReadinessScore !== null ? ` and my readiness is ${Math.round(effectiveReadinessScore)}/100` : ''}. How should I pace or adjust this session?`,
+                                autoSend: true,
+                            })
+                        }
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-[3px] border border-line bg-background-secondary hover:bg-surface-hover text-[11px] font-medium text-foreground transition-colors"
+                    >
+                        <MessageSquare className="w-3 h-3 text-accent-orange" aria-hidden="true" />
+                        Ask Coach
+                    </button>
+                    <span className={`badge ${config.badge}`}>{config.label}</span>
+                </div>
             </div>
 
             {/* Readiness < 65 Adaptation Prompt */}

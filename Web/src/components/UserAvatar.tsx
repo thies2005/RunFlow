@@ -47,8 +47,8 @@ export function UserAvatar({ name, image, className = "" }: UserAvatarProps) {
     // Generate a consistent background color based on name hash
     const colors = [
         'bg-accent-blue/20 text-accent-blue', 'bg-positive/20 text-positive', 'bg-workout-tempo/20 text-workout-tempo',
-        'bg-negative/20 text-negative', 'bg-workout-long-run/20 text-workout-long-run', 'bg-accent-pink/20 text-accent-pink', 'bg-accent-blue/20 text-accent-blue',
-        'bg-accent-orange/20 text-accent-orange', 'bg-accent-cyan/20 text-accent-cyan', 'bg-workout-strength/20 text-workout-strength'
+        'bg-negative/20 text-negative', 'bg-workout-long-run/20 text-workout-long-run', 'bg-negative/20 text-negative', 'bg-accent-blue/20 text-accent-blue',
+        'bg-accent-orange/20 text-accent-orange', 'bg-positive/20 text-positive', 'bg-workout-strength/20 text-workout-strength'
     ];
 
     let colorIndex = 0;

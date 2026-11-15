@@ -254,7 +254,7 @@ export default function CalibrationSection({
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-foreground-muted">Your {distanceName} VDOT:</span>
-                                    <span className="text-lg font-bold text-accent-cyan font-mono tabular-nums">{raceVdot.toFixed(1)}</span>
+                                    <span className="text-lg font-bold text-positive font-mono tabular-nums">{raceVdot.toFixed(1)}</span>
                                 </div>
 
                                 <div className="flex justify-between items-center">

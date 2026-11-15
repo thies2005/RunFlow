@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
     X, Send, Loader2, MessageSquare, Plus, ChevronDown,
-    Dumbbell, Trash2, Check, AlertTriangle, Sparkles, ImagePlus, CheckCheck,
+    Dumbbell, Trash2, Check, AlertTriangle, ImagePlus, CheckCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -186,7 +186,7 @@ function WorkoutCard({ workout, goalId, onApplied }: { workout: WorkoutAction; g
                             ? 'bg-positive/15 text-positive cursor-default'
                             : workout.action === 'delete'
                                 ? 'bg-negative/20 text-negative hover:bg-negative/20'
-                                : 'bg-workout-long-run/20 text-workout-long-run hover:bg-workout-long-run/30'
+                                : 'bg-accent-orange/15 text-accent-orange hover:bg-accent-orange/25'
                     } disabled:opacity-50`}
                 >
                     {applying ? (
@@ -248,15 +248,15 @@ function MessageContent({ content, goalId, onWorkoutApplied }: { content: string
     return (
         <div className="text-[12px] text-foreground-secondary leading-relaxed whitespace-pre-wrap">
             {addableWorkouts.length > 1 && (
-                <div className="mb-2.5 p-2 rounded-md bg-accent-cyan/10 border border-accent-cyan/30 flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-semibold text-accent-cyan">
+                <div className="mb-2.5 p-2 rounded-md bg-positive/10 border border-positive/30 flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-semibold text-positive">
                         {addableWorkouts.length} Workouts Extracted
                     </span>
                     <button
                         type="button"
                         onClick={handleBatchApplyAll}
                         disabled={batchApplying || batchApplied}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-accent-cyan text-background font-semibold text-[10px] hover:opacity-90 disabled:opacity-50"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-positive text-background font-semibold text-[10px] hover:opacity-90 disabled:opacity-50"
                     >
                         {batchApplying ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCheck className="w-3 h-3" />}
                         {batchApplied ? 'All Imported' : `Apply All (${addableWorkouts.length})`}
@@ -533,7 +533,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
             {/* Header */}
             <div className="h-10 border-b border-glass-border flex items-center justify-between px-3 shrink-0">
                 <span className="text-xs font-semibold text-foreground-secondary flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-workout-long-run" />
+                    <MessageSquare className="w-3.5 h-3.5 text-accent-orange" />
                     AI Plan Chat
                 </span>
                 <div className="flex items-center gap-1">
@@ -561,8 +561,8 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
             <div className="flex-1 overflow-y-auto p-3 space-y-3" ref={scrollRef}>
                 {messages.length === 0 && !streaming && (
                     <div className="flex flex-col items-center justify-center py-8 gap-3">
-                        <div className="w-10 h-10 rounded-md bg-workout-long-run/10 flex items-center justify-center">
-                            <MessageSquare className="w-5 h-5 text-workout-long-run" />
+                        <div className="w-10 h-10 rounded-md bg-background-tertiary border border-line flex items-center justify-center">
+                            <MessageSquare className="w-5 h-5 text-accent-orange" />
                         </div>
                         <div className="text-center space-y-1">
                             <p className="text-xs font-medium text-foreground-secondary">AI Plan Assistant</p>
@@ -603,7 +603,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                         className={`${msg.role === 'user' ? 'flex justify-end' : ''}`}
                     >
                         {msg.role === 'user' ? (
-                            <div className="max-w-[85%] px-3 py-1.5 rounded-md bg-workout-long-run/20 text-workout-long-run text-[12px] leading-relaxed">
+                            <div className="max-w-[85%] px-3 py-1.5 rounded-md bg-background-tertiary border border-line text-foreground text-[12px] leading-relaxed">
                                 {msg.content}
                             </div>
                         ) : (
@@ -625,13 +625,13 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                             goalId={goalId}
                             onWorkoutApplied={handleWorkoutApplied}
                         />
-                        <span className="inline-block w-1.5 h-3.5 bg-workout-long-run rounded-sm ml-0.5" />
+                        <span className="inline-block w-1.5 h-3.5 bg-accent-orange rounded-sm ml-0.5" />
                     </div>
                 )}
 
                 {streaming && !streamingContent && (
                     <div className="flex items-center gap-2 px-1 py-2">
-                        <Loader2 className="w-3.5 h-3.5 text-workout-long-run animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 text-accent-orange animate-spin" />
                         <span className="text-[10px] text-foreground-muted">Thinking...</span>
                     </div>
                 )}
@@ -644,7 +644,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                         {filteredMentions.map((opt, i) => (
                             <button
                                 key={opt}
-                                className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${i === mentionIndex ? 'bg-workout-long-run/20 text-workout-long-run' : 'text-foreground-secondary hover:bg-foreground/15'}`}
+                                className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${i === mentionIndex ? 'bg-accent-orange/15 text-accent-orange' : 'text-foreground-secondary hover:bg-foreground/15'}`}
                                 onClick={() => insertMention(opt)}
                             >
                                 {opt}
@@ -653,7 +653,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                     </div>
                 )}
                 {attachedImage && (
-                    <div className="mb-1.5 px-2 py-1 rounded bg-accent-cyan/10 border border-accent-cyan/30 flex items-center justify-between text-[10px] text-accent-cyan">
+                    <div className="mb-1.5 px-2 py-1 rounded bg-positive/10 border border-positive/30 flex items-center justify-between text-[10px] text-positive">
                         <span className="truncate">📷 Calendar Picture: {attachedImage.name}</span>
                         <button
                             type="button"
@@ -676,7 +676,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                         type="button"
                         onClick={() => imageInputRef.current?.click()}
                         disabled={streaming}
-                        className="p-1.5 rounded-md bg-background-secondary border border-foreground/20 text-accent-cyan hover:bg-accent-cyan/10 transition-colors shrink-0"
+                        className="p-1.5 rounded-md bg-background-secondary border border-foreground/20 text-positive hover:bg-positive/10 transition-colors shrink-0"
                         title="Upload Calendar Screenshot / Plan Image"
                     >
                         <ImagePlus className="w-3.5 h-3.5" />
@@ -688,7 +688,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                         onKeyDown={handleKeyDown}
                         placeholder="Ask or upload a calendar screenshot (📷)..."
                         rows={1}
-                        className="flex-1 bg-background-secondary border border-foreground/20 rounded-md px-2.5 py-1.5 text-[12px] text-foreground placeholder-foreground-muted focus:outline-none focus:ring-1 focus:ring-workout-long-run/50 resize-none min-h-[32px] max-h-[120px]"
+                        className="flex-1 bg-background-secondary border border-line rounded-md px-2.5 py-1.5 text-[12px] text-foreground placeholder-foreground-muted focus:outline-none focus:ring-1 focus:ring-accent-orange/50 resize-none min-h-[32px] max-h-[120px]"
                         style={{ height: 'auto' }}
                         onInput={(e) => {
                             const target = e.target as HTMLTextAreaElement;
@@ -710,7 +710,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                             type="button"
                             onClick={sendMessage}
                             disabled={!input.trim() && !attachedImage}
-                            className="p-1.5 rounded-md bg-workout-long-run/20 text-workout-long-run hover:bg-workout-long-run/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+                            className="p-1.5 rounded-md bg-accent-orange/15 text-accent-orange hover:bg-accent-orange/25 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
                         >
                             <Send className="w-3.5 h-3.5" />
                         </button>

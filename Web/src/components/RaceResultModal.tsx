@@ -580,7 +580,7 @@ export default function RaceResultModal({
 
                         {/* Actions */}
                         {completeMutation.isError && (
-                            <div className="p-3 rounded-md bg-accent-pink/10 text-accent-pink text-sm">
+                            <div className="p-3 rounded-md bg-negative/10 text-negative text-sm">
                                 {completeMutation.error?.message || 'Failed to complete goal'}
                             </div>
                         )}

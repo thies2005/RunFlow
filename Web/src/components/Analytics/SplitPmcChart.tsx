@@ -85,10 +85,10 @@ function CustomPmcTooltip({ active, payload, label, viewMode }: CustomTooltipPro
             tsbClass = 'text-positive';
         } else if (tsbVal >= 10) {
             tsbStatus = 'Fresh';
-            tsbClass = 'text-accent-cyan';
+            tsbClass = 'text-positive';
         } else if (tsbVal <= -25) {
             tsbStatus = 'High Fatigue';
-            tsbClass = 'text-accent-pink';
+            tsbClass = 'text-negative';
         } else if (tsbVal <= -10) {
             tsbStatus = 'Tired';
             tsbClass = 'text-accent-orange';
@@ -96,7 +96,7 @@ function CustomPmcTooltip({ active, payload, label, viewMode }: CustomTooltipPro
     }
 
     return (
-        <div className="bg-background-secondary border border-line rounded-lg p-3 shadow-xl backdrop-blur-md text-xs space-y-1.5 min-w-[200px]">
+        <div className="bg-background-secondary border border-line rounded-md p-3 text-xs space-y-1.5 min-w-[200px]">
             <div className="font-semibold text-foreground border-b border-line pb-1 flex justify-between items-center">
                 <span>{dateFormatted}</span>
                 {tsbVal !== null && viewMode !== 'split' && (
@@ -250,7 +250,7 @@ function SplitPmcChartComponent({
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                 <div>
                     <div className="flex items-center gap-2">
-                        <Layers className="w-5 h-5 text-accent-cyan" />
+                        <Layers className="w-5 h-5 text-positive" />
                         <h3 className="text-lg font-semibold text-foreground">
                             {title}
                         </h3>
@@ -269,7 +269,7 @@ function SplitPmcChartComponent({
                             aria-pressed={viewMode === 'combined'}
                             className={`px-2.5 py-1 font-medium rounded-md transition-all ${
                                 viewMode === 'combined'
-                                    ? 'bg-accent-cyan text-background shadow-xs font-semibold'
+                                    ? 'bg-positive text-background shadow-xs font-semibold'
                                     : 'text-foreground-muted hover:text-foreground'
                             }`}
                         >
@@ -305,7 +305,7 @@ function SplitPmcChartComponent({
                             aria-pressed={viewMode === 'split'}
                             className={`px-2.5 py-1 font-medium rounded-md transition-all ${
                                 viewMode === 'split'
-                                    ? 'bg-accent-purple text-white shadow-xs font-semibold'
+                                    ? 'bg-accent-orange text-white shadow-xs font-semibold'
                                     : 'text-foreground-muted hover:text-foreground'
                             }`}
                         >

@@ -31,9 +31,10 @@ interface Props {
     isOpen: boolean;
     onClose: () => void;
     onSelectMeal: (_meal: SavedMeal) => void;
+    embedded?: boolean;
 }
 
-export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
+export function MealLibraryModal({ isOpen, onClose, onSelectMeal, embedded = false }: Props) {
     const { data: session } = useSession();
     const userId = session?.user?.id;
     const queryClient = useQueryClient();
@@ -41,7 +42,7 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen || embedded) return;
         window.history.pushState({ modal: 'MealLibrary' }, '');
         const handlePopState = () => onClose();
         window.addEventListener('popstate', handlePopState);
@@ -51,7 +52,7 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
                 window.history.back();
             }
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, embedded]);
 
     const { data: meals, isLoading } = useQuery({
         queryKey: ['saved-meals', userId],
@@ -84,10 +85,10 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center">
-            <div className="bg-background-secondary border border-line w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-md flex flex-col overflow-hidden animate-in slide-in-from-bottom">
-                {/* Header */}
+    const innerContent = (
+        <div className={embedded ? 'flex flex-col flex-1 min-h-0' : 'bg-background-secondary border border-line w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-md flex flex-col overflow-hidden animate-in slide-in-from-bottom'}>
+            {/* Header */}
+            {!embedded && (
                 <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-line shrink-0">
                     <div className="flex items-center gap-2">
                         <BookOpen className="w-5 h-5 text-workout-tempo" />
@@ -97,6 +98,7 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
                         <X className="w-5 h-5" />
                     </button>
                 </div>
+            )}
 
                 {/* Search Bar */}
                 <div className="p-4 border-b border-line shrink-0 bg-background-secondary sticky top-0 z-10">
@@ -191,7 +193,14 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
                         </div>
                     )}
                 </div>
-            </div>
+        </div>
+    );
+
+    if (embedded) return innerContent;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center">
+            {innerContent}
         </div>
     );
 }

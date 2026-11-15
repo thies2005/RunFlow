@@ -27,9 +27,10 @@ interface Props {
     initialFood?: FoodData | null;
     defaultTab?: 'search' | 'custom';
     defaultMealType?: string;
+    embedded?: boolean;
 }
 
-export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFood, defaultTab, defaultMealType }: Props) {
+export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFood, defaultTab, defaultMealType, embedded = false }: Props) {
     const { data: session } = useSession();
     const userId = session?.user?.id;
     const queryClient = useQueryClient();
@@ -91,13 +92,18 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
         }
     }, [isOpen, initialFood, defaultTab, defaultMealType]);
 
+    const onCloseRef = useRef(onClose);
     useEffect(() => {
-        if (!isOpen) return;
+        onCloseRef.current = onClose;
+    }, [onClose]);
+
+    useEffect(() => {
+        if (!isOpen || embedded) return;
 
         window.history.pushState({ modal: 'ManualFoodEntry' }, '');
 
         const handlePopState = () => {
-            onClose();
+            onCloseRef.current();
         };
 
         window.addEventListener('popstate', handlePopState);
@@ -108,7 +114,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                 window.history.back();
             }
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, embedded]);
 
     const resetState = () => {
         setActiveTab('search');
@@ -314,26 +320,35 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center">
-            <div className="bg-background-secondary border border-line w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-md flex flex-col overflow-hidden animate-in slide-in-from-bottom">
+    const innerContent = (
+        <div className={embedded ? 'flex flex-col flex-1 min-h-0' : 'bg-background-secondary border border-line w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-md flex flex-col overflow-hidden animate-in slide-in-from-bottom'}>
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-line shrink-0">
-                    <div className="flex items-center gap-2">
-                        {selectedFood && (
-                            <button onClick={() => setSelectedFood(null)} className="p-1 -ml-2 text-foreground-muted hover:text-foreground">
-                                <ArrowLeft className="w-5 h-5" />
-                            </button>
-                        )}
-                        <h2 className="text-lg font-semibold text-foreground">
-                            {selectedFood ? 'Log Food' : 'Add Food'}
-                        </h2>
+                {!embedded && (
+                    <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-line shrink-0">
+                        <div className="flex items-center gap-2">
+                            {selectedFood && (
+                                <button onClick={() => setSelectedFood(null)} className="p-1 -ml-2 text-foreground-muted hover:text-foreground">
+                                    <ArrowLeft className="w-5 h-5" />
+                                </button>
+                            )}
+                            <h2 className="text-lg font-semibold text-foreground">
+                                {selectedFood ? 'Log Food' : 'Add Food'}
+                            </h2>
+                        </div>
+                        <button onClick={handleClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground">
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
-                    <button onClick={handleClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+                )}
+                {embedded && selectedFood && (
+                    <div className="flex items-center gap-2 px-4 py-2 border-b border-line shrink-0">
+                        <button type="button" onClick={() => setSelectedFood(null)} className="p-1 -ml-1 text-foreground-muted hover:text-foreground">
+                            <ArrowLeft className="w-4 h-4" />
+                        </button>
+                        <span className="text-sm font-medium text-foreground">Back to search</span>
+                    </div>
+                )}
 
                 {!selectedFood ? (
                     <>
@@ -583,7 +598,14 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                         </div>
                     </div>
                 )}
-            </div>
+        </div>
+    );
+
+    if (embedded) return innerContent;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center">
+            {innerContent}
         </div>
     );
 }

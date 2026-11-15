@@ -201,7 +201,7 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                                 <p className="text-sm text-foreground-secondary font-medium">
                                     Drop your CSV file here
                                 </p>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="block mx-auto mt-1 text-sm text-accent-cyan underline">Choose CSV file</button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="block mx-auto mt-1 text-sm text-positive underline">Choose CSV file</button>
                                 <p className="text-[10px] text-foreground-muted mt-2">
                                     Supports .csv files from MyWhoosh/Custom schedules, TrainingPeaks, FinalSurge, or RunFlow
                                 </p>
@@ -225,7 +225,7 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                                         URL.revokeObjectURL(url);
                                         document.body.removeChild(a);
                                     }}
-                                    className="mt-3 inline-flex items-center gap-1 px-2.5 py-1 rounded border border-accent-cyan/40 bg-accent-cyan/10 text-accent-cyan text-[11px] font-medium hover:bg-accent-cyan/20"
+                                    className="mt-3 inline-flex items-center gap-1 px-2.5 py-1 rounded border border-positive/40 bg-positive/10 text-positive text-[11px] font-medium hover:bg-positive/20"
                                 >
                                     Download Sample CSV Template
                                 </button>

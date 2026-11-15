@@ -196,7 +196,7 @@ export default function ApiDocsPage() {
                     method="GET"
                     path="/api/external/v1/fitness"
                     title="Fitness History"
-                    icon={<Heart className="w-5 h-5 text-accent-pink" />}
+                    icon={<Heart className="w-5 h-5 text-negative" />}
                 >
                     <p className="text-foreground-muted mb-6">
                         Get historical fitness data points (CTL, ATL, TSB) for trend analysis.

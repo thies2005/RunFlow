@@ -21,7 +21,21 @@ interface HealthTrendModalProps {
 
 const RANGES: TimeRange[] = ['1W', '1M', '6M', '1Y', 'ALL'];
 
-export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalProps) {
+export interface HealthTrendContentProps {
+    metric: 'steps' | 'weight';
+    enabled?: boolean;
+    showCompositionTab?: boolean;
+    onClose?: () => void;
+    isModal?: boolean;
+}
+
+export function HealthTrendContent({
+    metric,
+    enabled = true,
+    showCompositionTab = true,
+    onClose,
+    isModal = false,
+}: HealthTrendContentProps) {
     const queryClient = useQueryClient();
     const [timeRange, setTimeRange] = useState<TimeRange>('1M');
     const [activeTab, setActiveTab] = useState<'weight' | 'composition'>('weight');
@@ -67,10 +81,8 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
             if (!res.ok) throw new Error('Failed to fetch health history');
             return res.json();
         },
-        enabled: isOpen && !!metric
+        enabled
     });
-
-    if (!isOpen || !metric) return null;
 
     // Process data for charts
     const rawData = historyData?.history || [];
@@ -105,45 +117,52 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
     const title = isSteps ? 'Steps History' : 'Weight History';
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 sm:items-center sm:justify-center">
-            <div
-                className="bg-background-secondary border border-line w-full max-w-2xl rounded-t-md sm:rounded-md flex flex-col max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom"
-            >
+        <div
+            className={isModal
+                ? 'bg-background-secondary border border-line w-full max-w-2xl rounded-t-md sm:rounded-md flex flex-col max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom'
+                : 'glass-card flex flex-col overflow-hidden'}
+        >
                 {/* Header */}
                 <div className="flex flex-col border-b border-line shrink-0">
                     <div className="flex items-center justify-between p-4 pb-2">
                         <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                             <MetricIcon className="w-5 h-5" style={{ color: metricColor }} />
-                            {metric === 'weight' ? 'Body Metrics' : title}
+                            {metric === 'weight' ? (showCompositionTab ? 'Body Metrics' : 'Weight History') : title}
                         </h2>
                         <div className="flex items-center gap-2">
                             {metric === 'weight' && activeTab === 'weight' && (
                                 <button
+                                    type="button"
                                     onClick={() => setIsEnteringWeight(true)}
                                     className="p-1.5 bg-accent-blue/10 text-accent-blue hover:bg-accent-blue/20 rounded-md transition-colors text-xs font-semibold flex items-center gap-1"
                                 >
                                     <Plus className="w-4 h-4" /> Log
                                 </button>
                             )}
-                            <button
-                                onClick={onClose}
-                                className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors"
-                                type="button"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
+                            {onClose && (
+                                <button
+                                    onClick={onClose}
+                                    className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors"
+                                    type="button"
+                                    aria-label="Close"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            )}
                         </div>
                     </div>
 
-                    {metric === 'weight' && (
+                    {metric === 'weight' && showCompositionTab && (
                         <div className="flex gap-4 px-4">
                             <button
+                                type="button"
                                 onClick={() => setActiveTab('weight')}
                                 className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'weight' ? 'text-foreground border-accent-blue' : 'text-foreground-muted border-transparent hover:text-foreground-muted'}`}
                             >
                                 Weight History
                             </button>
                             <button
+                                type="button"
                                 onClick={() => setActiveTab('composition')}
                                 className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'composition' ? 'text-foreground border-accent-orange' : 'text-foreground-muted border-transparent hover:text-foreground-muted'}`}
                             >
@@ -304,7 +323,22 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                         </>
                     )}
                 </div>
-            </div>
+        </div>
+    );
+}
+
+export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalProps) {
+    if (!isOpen || !metric) return null;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 sm:items-center sm:justify-center">
+            <HealthTrendContent
+                metric={metric}
+                enabled={isOpen && !!metric}
+                showCompositionTab={true}
+                onClose={onClose}
+                isModal={true}
+            />
         </div>
     );
 }

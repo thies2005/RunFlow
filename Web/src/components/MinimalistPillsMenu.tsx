@@ -36,7 +36,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useTheme } from 'next-themes';
 import {
     ChevronLeft, ChevronRight, LogOut, Sun, Moon, Monitor,
-    Trophy, Heart, Activity, Bot, Link2, Bell, Settings,
+    Trophy, Heart, Activity, Sliders, Link2, Bell, Settings,
     Trash2, RefreshCw, Key, Copy, Check, ExternalLink,
     ShieldCheck, ShieldOff, AlertCircle, Save, Download,
 } from 'lucide-react';
@@ -343,7 +343,7 @@ function DesktopPopover({
     return (
         <div
             ref={popoverRef}
-            className="fixed top-16 right-4 z-[200] w-72 bg-background-secondary border border-line shadow-lg rounded-md overflow-hidden animate-slide-in"
+            className="fixed top-16 right-4 z-[200] w-72 bg-background-secondary border border-line rounded-md overflow-hidden animate-slide-in"
         >
             <div className="p-3 border-b border-line">
                 <p className="text-sm font-semibold text-foreground truncate">{session.user.name}</p>
@@ -458,8 +458,8 @@ function getMenuItems(
             label: 'Heart Rate & Power Zones',
             subtitle: 'Running HR, Cycling FTP & 7 zones',
             icon: Heart,
-            iconColor: 'text-accent-pink',
-            iconBg: 'bg-accent-pink/15',
+            iconColor: 'text-negative',
+            iconBg: 'bg-negative/15',
             rightIcon: ChevronRight,
             subPage: 'hr-zones',
         },
@@ -477,9 +477,9 @@ function getMenuItems(
             id: 'ai-coach',
             label: 'AI Coach',
             subtitle: 'Custom API, data access, feedback',
-            icon: Bot,
-            iconColor: 'text-accent-purple',
-            iconBg: 'bg-accent-purple/15',
+            icon: Sliders,
+            iconColor: 'text-accent-orange',
+            iconBg: 'bg-accent-orange/15',
             rightIcon: ChevronRight,
             subPage: 'ai-coach',
         },
@@ -498,8 +498,8 @@ function getMenuItems(
             label: 'Reminders',
             subtitle: 'Supplements, weigh-in, workouts',
             icon: Bell,
-            iconColor: 'text-accent-cyan',
-            iconBg: 'bg-accent-cyan/15',
+            iconColor: 'text-positive',
+            iconBg: 'bg-positive/15',
             rightIcon: ChevronRight,
             subPage: 'reminders',
         },
@@ -684,16 +684,16 @@ function HrZonesSubPage({ onBack: _onBack }: { onBack: () => void }) {
         { label: 'Zone 3 (Tempo)', desc: '88-94% LTHR', value: hrZone3Max, setter: setHrZone3Max, color: 'text-zone-3' },
         { label: 'Zone 4 (Threshold)', desc: '95-100% LTHR', value: hrZone4Max, setter: setHrZone4Max, color: 'text-zone-4' },
         { label: 'Zone 5 (VO2max)', desc: '101-105% LTHR', value: hrZone5Max, setter: setHrZone5Max, color: 'text-zone-5' },
-        { label: 'Zone 6 (Anaerobic)', desc: '106-110% LTHR', value: hrZone6Max, setter: setHrZone6Max, color: 'text-accent-pink' },
+        { label: 'Zone 6 (Anaerobic)', desc: '106-110% LTHR', value: hrZone6Max, setter: setHrZone6Max, color: 'text-negative' },
     ];
 
     const cogganPowerZones = [
-        { name: 'Z1 Active Recovery', pct: '<55% FTP', min: 0, max: Math.round(ftpWatts * 0.55), color: 'text-emerald-400' },
+        { name: 'Z1 Active Recovery', pct: '<55% FTP', min: 0, max: Math.round(ftpWatts * 0.55), color: 'text-zone-1' },
         { name: 'Z2 Endurance', pct: '56–75% FTP', min: Math.round(ftpWatts * 0.56), max: Math.round(ftpWatts * 0.75), color: 'text-blue-400' },
         { name: 'Z3 Tempo', pct: '76–90% FTP', min: Math.round(ftpWatts * 0.76), max: Math.round(ftpWatts * 0.90), color: 'text-cyan-400' },
         { name: 'Z4 Threshold', pct: '91–105% FTP', min: Math.round(ftpWatts * 0.91), max: Math.round(ftpWatts * 1.05), color: 'text-amber-400' },
         { name: 'Z5 VO2max', pct: '106–120% FTP', min: Math.round(ftpWatts * 1.06), max: Math.round(ftpWatts * 1.20), color: 'text-orange-400' },
-        { name: 'Z6 Anaerobic', pct: '121–150% FTP', min: Math.round(ftpWatts * 1.21), max: Math.round(ftpWatts * 1.50), color: 'text-purple-400' },
+        { name: 'Z6 Anaerobic', pct: '121–150% FTP', min: Math.round(ftpWatts * 1.21), max: Math.round(ftpWatts * 1.50), color: 'text-negative' },
         { name: 'Z7 Neuromuscular', pct: '>150% FTP', min: Math.round(ftpWatts * 1.51), max: null, color: 'text-rose-400' },
     ];
 
@@ -703,7 +703,7 @@ function HrZonesSubPage({ onBack: _onBack }: { onBack: () => void }) {
         { name: 'Z3 Tempo / Sweet Spot', min: Math.round(cyclingLthr * 0.87) + 1, max: Math.round(cyclingLthr * 0.94), color: 'text-zone-3' },
         { name: 'Z4 Threshold', min: Math.round(cyclingLthr * 0.94) + 1, max: cyclingLthr, color: 'text-zone-4' },
         { name: 'Z5 VO2max', min: cyclingLthr + 1, max: Math.round(cyclingLthr * 1.05), color: 'text-zone-5' },
-        { name: 'Z6 Anaerobic', min: Math.round(cyclingLthr * 1.05) + 1, max: Math.round(cyclingLthr * 1.10), color: 'text-accent-pink' },
+        { name: 'Z6 Anaerobic', min: Math.round(cyclingLthr * 1.05) + 1, max: Math.round(cyclingLthr * 1.10), color: 'text-negative' },
         { name: 'Z7 Neuromuscular', min: Math.round(cyclingLthr * 1.10) + 1, max: null, color: 'text-workout-long-run' },
     ];
 
@@ -730,7 +730,7 @@ function HrZonesSubPage({ onBack: _onBack }: { onBack: () => void }) {
                     onClick={() => setActiveTab('cycling')}
                     className={`py-2 px-3 rounded-md text-xs font-semibold transition-colors ${
                         activeTab === 'cycling'
-                            ? 'bg-accent-cyan text-white'
+                            ? 'bg-positive text-white'
                             : 'text-foreground-muted hover:text-foreground'
                     }`}
                 >
@@ -776,13 +776,13 @@ function HrZonesSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 max={600}
                                 value={ftpWatts}
                                 onChange={e => setFtpWatts(parseInt(e.target.value, 10) || 200)}
-                                className="w-full bg-surface border border-line rounded-lg px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-accent-cyan/50"
+                                className="w-full bg-surface border border-line rounded-lg px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-positive/50"
                             />
                             {cyclingData?.eFtpWatts && (
                                 <button
                                     type="button"
                                     onClick={() => setFtpWatts(cyclingData.eFtpWatts)}
-                                    className="text-[11px] text-accent-cyan hover:underline mt-1 block"
+                                    className="text-[11px] text-positive hover:underline mt-1 block"
                                 >
                                     Detected from rides/FTP test: {cyclingData.eFtpWatts}W (click to apply)
                                 </button>
@@ -796,7 +796,7 @@ function HrZonesSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 max={220}
                                 value={cyclingLthr}
                                 onChange={e => setCyclingLthr(parseInt(e.target.value, 10) || 160)}
-                                className="w-full bg-surface border border-line rounded-lg px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-accent-cyan/50"
+                                className="w-full bg-surface border border-line rounded-lg px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-positive/50"
                             />
                             <span className="text-[10px] text-foreground-muted mt-1 block">
                                 Typically ~5–10 bpm lower than Running LTHR
@@ -806,7 +806,7 @@ function HrZonesSubPage({ onBack: _onBack }: { onBack: () => void }) {
 
                     <div className="bg-surface border border-line rounded-lg p-3 space-y-2">
                         <div className="flex items-center justify-between border-b border-line pb-1.5">
-                            <span className="text-xs font-semibold text-accent-cyan">Coggan Power Zones (Biking Watts)</span>
+                            <span className="text-xs font-semibold text-positive">Coggan Power Zones (Biking Watts)</span>
                             {cyclingData?.weightKg && ftpWatts > 0 && (
                                 <span className="text-[11px] font-mono text-foreground-muted">
                                     {(ftpWatts / cyclingData.weightKg).toFixed(2)} W/kg
@@ -1185,8 +1185,8 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
 
             <div className="space-y-3 pt-2 border-t border-line">
                 <div className="flex items-center justify-between">
-                    <h4 className="text-xs text-accent-cyan font-semibold">Dashboard Status Layout &amp; Cycling / Running Metrics</h4>
-                    <span className="text-[10px] font-mono text-accent-cyan bg-accent-cyan/10 px-2 py-0.5 rounded border border-accent-cyan/30">
+                    <h4 className="text-xs text-positive font-semibold">Dashboard Status Layout &amp; Cycling / Running Metrics</h4>
+                    <span className="text-[10px] font-mono text-positive bg-positive/10 px-2 py-0.5 rounded border border-positive/30">
                         Live Preview
                     </span>
                 </div>
@@ -1203,13 +1203,13 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 aria-pressed={active}
                                 className={`p-2.5 rounded-md border text-left transition-all ${
                                     active
-                                        ? 'border-accent-cyan bg-accent-cyan/10 text-foreground'
+                                        ? 'border-positive bg-positive/10 text-foreground'
                                         : 'border-line bg-surface text-foreground-muted hover:text-foreground'
                                 }`}
                             >
                                 <div className="flex items-center justify-between gap-1">
                                     <span className="text-xs font-semibold text-foreground">{opt.badge}</span>
-                                    {active && <span className="text-[10px] font-mono text-accent-cyan">Active</span>}
+                                    {active && <span className="text-[10px] font-mono text-positive">Active</span>}
                                 </div>
                                 <p className="text-[11px] font-medium text-foreground mt-0.5">{opt.title}</p>
                                 <p className="text-[10px] text-foreground-muted mt-0.5 leading-snug">{opt.description}</p>
@@ -1220,7 +1220,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
 
                 {/* Metric Toggles */}
                 <div className="p-3 rounded-md bg-surface border border-line space-y-2.5">
-                    <p className="text-[11px] font-semibold text-accent-cyan">Cycling Metrics to Show</p>
+                    <p className="text-[11px] font-semibold text-positive">Cycling Metrics to Show</p>
                     <div className="grid grid-cols-2 gap-1.5">
                         {CYCLING_METRIC_OPTIONS.map((opt) => {
                             const checked = selectedCyclingMetrics.includes(opt.id);
@@ -1232,12 +1232,12 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                     aria-pressed={checked}
                                     className={`flex items-center justify-between px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
                                         checked
-                                            ? 'bg-accent-cyan/10 border-accent-cyan/40 text-foreground font-medium'
+                                            ? 'bg-positive/10 border-positive/40 text-foreground font-medium'
                                             : 'bg-background-tertiary border-line text-foreground-muted hover:text-foreground'
                                     }`}
                                 >
                                     <span className="truncate pr-1">{opt.shortLabel} ({opt.unit})</span>
-                                    <span className={`text-[10px] font-mono ${checked ? 'text-accent-cyan' : 'text-foreground-muted'}`}>
+                                    <span className={`text-[10px] font-mono ${checked ? 'text-positive' : 'text-foreground-muted'}`}>
                                         {checked ? 'ON' : 'OFF'}
                                     </span>
                                 </button>
@@ -1272,9 +1272,9 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                 </div>
 
                 {/* Live Interactive Preview inside Settings */}
-                <div className="p-3 rounded-md bg-background-tertiary/80 border border-accent-cyan/30 space-y-2">
+                <div className="p-3 rounded-md bg-background-tertiary/80 border border-positive/30 space-y-2">
                     <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-accent-cyan">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-positive">
                             Live Preview — {DASHBOARD_LAYOUT_MODE_OPTIONS.find((m) => m.id === dashboardLayoutMode)?.title}
                         </span>
                     </div>
@@ -1294,7 +1294,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                     </div>
                                     <div className="p-1.5 rounded bg-background-secondary">
                                         <span className="block text-[9px] text-foreground-muted">Running VO2max</span>
-                                        <span className="text-xs font-mono font-bold text-accent-cyan">53.2</span>
+                                        <span className="text-xs font-mono font-bold text-positive">53.2</span>
                                     </div>
                                 </div>
                                 <div className="flex flex-wrap gap-1">
@@ -1313,7 +1313,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                             <div className="p-3 rounded-md bg-surface border border-line space-y-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-semibold text-foreground">Cycling Status</span>
-                                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan">Cycling Card</span>
+                                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-positive/15 text-positive">Cycling Card</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="p-1.5 rounded bg-background-secondary">
@@ -1322,12 +1322,12 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                     </div>
                                     <div className="p-1.5 rounded bg-background-secondary">
                                         <span className="block text-[9px] text-foreground-muted">Cycling VO2max</span>
-                                        <span className="text-xs font-mono font-bold text-accent-purple">52.1</span>
+                                        <span className="text-xs font-mono font-bold text-foreground">52.1</span>
                                     </div>
                                 </div>
                                 <div className="flex flex-wrap gap-1">
                                     {CYCLING_METRIC_OPTIONS.filter((o) => selectedCyclingMetrics.includes(o.id)).map((o) => (
-                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-accent-cyan">
+                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-positive">
                                             {o.shortLabel}
                                         </span>
                                     ))}
@@ -1347,7 +1347,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                         ? 'Training Status — Hybrid Overview'
                                         : 'Training Status — Classic Running'}
                                 </span>
-                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan">Single Card</span>
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-positive/15 text-positive">Single Card</span>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="p-1.5 rounded bg-background-secondary">
@@ -1362,7 +1362,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                     <span className="block text-[9px] text-foreground-muted">
                                         {dashboardLayoutMode === 'CYCLING_HERO' ? 'Cycling VO2max' : 'Aerobic Fitness (VO2max)'}
                                     </span>
-                                    <span className="text-xs font-mono font-bold text-accent-cyan">
+                                    <span className="text-xs font-mono font-bold text-positive">
                                         {dashboardLayoutMode === 'CYCLING_HERO' ? '52.1 mL/kg' : '53.2 (Run VDOT · Bike VO2)'}
                                     </span>
                                 </div>
@@ -1370,7 +1370,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                             {dashboardLayoutMode !== 'CLASSIC_RUN' && (
                                 <div className="flex flex-wrap gap-1 pt-1">
                                     {CYCLING_METRIC_OPTIONS.filter((o) => selectedCyclingMetrics.includes(o.id)).map((o) => (
-                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-accent-cyan">
+                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-positive">
                                             {o.shortLabel} ({o.unit})
                                         </span>
                                     ))}
@@ -1615,14 +1615,14 @@ function ConnectionsSubPage({ onBack: _onBack }: { onBack: () => void }) {
             {/* MCP Server Documentation & Connected AI Clients Organization */}
             <div className="space-y-3 pt-3 border-t border-line">
                 <div className="flex items-center justify-between">
-                    <h4 className="text-xs text-accent-cyan font-semibold flex items-center gap-1.5">
-                        <Bot className="w-3.5 h-3.5" />
+                    <h4 className="text-xs text-positive font-semibold flex items-center gap-1.5">
+                        <Sliders className="w-3.5 h-3.5" aria-hidden="true" />
                         MCP Server & AI Clients
                     </h4>
                     <button
                         type="button"
                         onClick={() => setShowMcpDocs(!showMcpDocs)}
-                        className="text-[11px] text-accent-cyan hover:underline font-medium"
+                        className="text-[11px] text-positive hover:underline font-medium"
                     >
                         {showMcpDocs ? 'Hide Setup Guide' : 'MCP Setup Guide'}
                     </button>
@@ -1643,7 +1643,7 @@ function ConnectionsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 setCopiedMcpUrl(true);
                                 setTimeout(() => setCopiedMcpUrl(false), 2000);
                             }}
-                            className="px-2.5 py-1.5 bg-accent-cyan/15 text-accent-cyan hover:bg-accent-cyan/25 rounded text-xs font-medium flex items-center gap-1 shrink-0 transition-colors"
+                            className="px-2.5 py-1.5 bg-positive/15 text-positive hover:bg-positive/25 rounded text-xs font-medium flex items-center gap-1 shrink-0 transition-colors"
                         >
                             {copiedMcpUrl ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                             {copiedMcpUrl ? 'Copied' : 'Copy'}
@@ -1659,7 +1659,7 @@ function ConnectionsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                         <div>
                             <p className="font-semibold text-foreground mb-1">1. OAuth 2.1 Interactive Login (Full Read + Write)</p>
                             <p className="text-[11px] text-foreground-muted leading-relaxed">
-                                In Claude Desktop/Web, Cursor, or ChatGPT Connectors, add a Remote MCP Server with URL <code className="text-accent-cyan font-mono">{mcpEndpointUrl}</code>. RunFlow supports OAuth 2.1 Dynamic Client Registration + PKCE—your browser will open a consent screen to authorize full plan and workout tools (<code className="font-mono">create_planned_workout</code>, <code className="font-mono">update_planned_workout</code>, <code className="font-mono">complete_workout</code>, <code className="font-mono">swap_workout_days</code>, <code className="font-mono">log_daily_nutrition</code>).
+                                In Claude Desktop/Web, Cursor, or ChatGPT Connectors, add a Remote MCP Server with URL <code className="text-positive font-mono">{mcpEndpointUrl}</code>. RunFlow supports OAuth 2.1 Dynamic Client Registration + PKCE—your browser will open a consent screen to authorize full plan and workout tools (<code className="font-mono">create_planned_workout</code>, <code className="font-mono">update_planned_workout</code>, <code className="font-mono">complete_workout</code>, <code className="font-mono">swap_workout_days</code>, <code className="font-mono">log_daily_nutrition</code>).
                             </p>
                         </div>
                         <div className="border-t border-line pt-2.5">
@@ -1719,7 +1719,7 @@ function ConnectionsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                             <span className="text-xs font-semibold text-foreground truncate">
                                                 {tok.clientName || tok.clientId}
                                             </span>
-                                            <span className="px-1.5 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan text-[9px] font-mono">
+                                            <span className="px-1.5 py-0.5 rounded bg-positive/15 text-positive text-[9px] font-mono">
                                                 {tok.scope}
                                             </span>
                                         </div>
@@ -1923,8 +1923,8 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
             {/* Home Dashboard Layout & Metrics Customizer */}
             <div className="space-y-3 p-3.5 rounded-md bg-surface border border-line">
                 <div className="flex items-center justify-between">
-                    <h4 className="text-xs text-accent-cyan font-semibold">Home Dashboard Status Layout &amp; Metrics</h4>
-                    <span className="text-[10px] font-mono text-accent-cyan bg-accent-cyan/10 px-2 py-0.5 rounded border border-accent-cyan/30">
+                    <h4 className="text-xs text-positive font-semibold">Home Dashboard Status Layout &amp; Metrics</h4>
+                    <span className="text-[10px] font-mono text-positive bg-positive/10 px-2 py-0.5 rounded border border-positive/30">
                         Live Preview
                     </span>
                 </div>
@@ -1940,13 +1940,13 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 aria-pressed={active}
                                 className={`p-2.5 rounded-md border text-left transition-all ${
                                     active
-                                        ? 'border-accent-cyan bg-accent-cyan/10 text-foreground'
+                                        ? 'border-positive bg-positive/10 text-foreground'
                                         : 'border-line bg-background-secondary text-foreground-muted hover:text-foreground'
                                 }`}
                             >
                                 <div className="flex items-center justify-between gap-1">
                                     <span className="text-xs font-semibold text-foreground">{opt.badge}</span>
-                                    {active && <span className="text-[10px] font-mono text-accent-cyan">Active</span>}
+                                    {active && <span className="text-[10px] font-mono text-positive">Active</span>}
                                 </div>
                                 <p className="text-[11px] font-medium text-foreground mt-0.5">{opt.title}</p>
                                 <p className="text-[10px] text-foreground-muted mt-0.5 leading-snug">{opt.description}</p>
@@ -1956,7 +1956,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                 </div>
 
                 <div className="p-2.5 rounded-md bg-background-secondary border border-line space-y-2">
-                    <p className="text-[11px] font-semibold text-accent-cyan">Cycling Metrics to Show</p>
+                    <p className="text-[11px] font-semibold text-positive">Cycling Metrics to Show</p>
                     <div className="grid grid-cols-2 gap-1.5">
                         {CYCLING_METRIC_OPTIONS.map((opt) => {
                             const checked = selectedCyclingMetrics.includes(opt.id);
@@ -1968,12 +1968,12 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                     aria-pressed={checked}
                                     className={`flex items-center justify-between px-2 py-1 rounded text-left text-[10px] border transition-colors ${
                                         checked
-                                            ? 'bg-accent-cyan/10 border-accent-cyan/40 text-foreground font-medium'
+                                            ? 'bg-positive/10 border-positive/40 text-foreground font-medium'
                                             : 'bg-background-tertiary border-line text-foreground-muted hover:text-foreground'
                                     }`}
                                 >
                                     <span className="truncate pr-1">{opt.shortLabel} ({opt.unit})</span>
-                                    <span className={`text-[9px] font-mono ${checked ? 'text-accent-cyan' : 'text-foreground-muted'}`}>
+                                    <span className={`text-[9px] font-mono ${checked ? 'text-positive' : 'text-foreground-muted'}`}>
                                         {checked ? 'ON' : 'OFF'}
                                     </span>
                                 </button>
@@ -2008,8 +2008,8 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                 </div>
 
                 {/* Live Interactive Preview */}
-                <div className="p-2.5 rounded-md bg-background-tertiary/80 border border-accent-cyan/30 space-y-2">
-                    <span className="block text-[10px] font-semibold uppercase tracking-wider text-accent-cyan">
+                <div className="p-2.5 rounded-md bg-background-tertiary/80 border border-positive/30 space-y-2">
+                    <span className="block text-[10px] font-semibold uppercase tracking-wider text-positive">
                         Live Preview — {DASHBOARD_LAYOUT_MODE_OPTIONS.find((m) => m.id === dashboardLayoutMode)?.title}
                     </span>
                     {dashboardLayoutMode === 'DUAL_BOXES' ? (
@@ -2030,11 +2030,11 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                             <div className="p-2.5 rounded bg-surface border border-line space-y-1.5">
                                 <div className="flex items-center justify-between">
                                     <span className="text-[11px] font-semibold text-foreground">Cycling Status</span>
-                                    <span className="text-[9px] font-mono text-accent-cyan">Cycling Card</span>
+                                    <span className="text-[9px] font-mono text-positive">Cycling Card</span>
                                 </div>
                                 <div className="flex flex-wrap gap-1">
                                     {CYCLING_METRIC_OPTIONS.filter((o) => selectedCyclingMetrics.includes(o.id)).map((o) => (
-                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-accent-cyan">
+                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-positive">
                                             {o.shortLabel}
                                         </span>
                                     ))}
@@ -2051,12 +2051,12 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                         ? 'Training Status — Hybrid Overview'
                                         : 'Training Status — Classic Running'}
                                 </span>
-                                <span className="text-[9px] font-mono text-accent-cyan">Single Card</span>
+                                <span className="text-[9px] font-mono text-positive">Single Card</span>
                             </div>
                             {dashboardLayoutMode !== 'CLASSIC_RUN' && (
                                 <div className="flex flex-wrap gap-1">
                                     {CYCLING_METRIC_OPTIONS.filter((o) => selectedCyclingMetrics.includes(o.id)).map((o) => (
-                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-accent-cyan">
+                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-positive">
                                             {o.shortLabel} ({o.unit})
                                         </span>
                                     ))}
@@ -2070,7 +2070,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
             {/* Dashboard, Calendar & Effort Preferences */}
             <div className="space-y-4 p-3.5 rounded-md bg-surface border border-line">
                 <div>
-                    <h4 className="text-xs text-accent-cyan font-semibold">Dashboard, Calendar &amp; Effort Preferences</h4>
+                    <h4 className="text-xs text-positive font-semibold">Dashboard, Calendar &amp; Effort Preferences</h4>
                     <p className="text-[11px] text-foreground-muted mt-0.5">
                         Synchronized UI and effort display preferences across Web &amp; Mobile.
                     </p>
@@ -2085,13 +2085,13 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                             onClick={() => handleApplyPreset('NEW_DEFAULT')}
                             className={`p-2.5 rounded-md border text-left transition-all ${
                                 isNewDefaultActive
-                                    ? 'border-accent-cyan bg-accent-cyan/10 text-foreground ring-1 ring-accent-cyan/40'
+                                    ? 'border-positive bg-positive/10 text-foreground ring-1 ring-positive/40'
                                     : 'border-line bg-background-secondary text-foreground-muted hover:text-foreground'
                             }`}
                         >
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-semibold text-foreground">★ New Default UI</span>
-                                {isNewDefaultActive && <span className="text-[10px] font-mono text-accent-cyan">Active</span>}
+                                {isNewDefaultActive && <span className="text-[10px] font-mono text-positive">Active</span>}
                             </div>
                             <p className="text-[10px] text-foreground-muted mt-1 leading-snug">
                                 Option C compact rows, compact countdown bar, 4-wk calendar &amp; unified TSS.
@@ -2103,13 +2103,13 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                             onClick={() => handleApplyPreset('CLASSIC')}
                             className={`p-2.5 rounded-md border text-left transition-all ${
                                 isClassicActive
-                                    ? 'border-accent-cyan bg-accent-cyan/10 text-foreground ring-1 ring-accent-cyan/40'
+                                    ? 'border-positive bg-positive/10 text-foreground ring-1 ring-positive/40'
                                     : 'border-line bg-background-secondary text-foreground-muted hover:text-foreground'
                             }`}
                         >
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-semibold text-foreground">↺ Classic / Legacy UI</span>
-                                {isClassicActive && <span className="text-[10px] font-mono text-accent-cyan">Active</span>}
+                                {isClassicActive && <span className="text-[10px] font-mono text-positive">Active</span>}
                             </div>
                             <p className="text-[10px] text-foreground-muted mt-1 leading-snug">
                                 Multi-line workout cards, 2-box countdown, 6-week month &amp; TRIMP metrics.
@@ -2132,7 +2132,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 onClick={() => handleUpdatePref({ workoutCardStyle: 'OPTION_C' })}
                                 className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
                                     workoutCardStyle === 'OPTION_C'
-                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        ? 'bg-positive/10 border-positive text-foreground font-semibold'
                                         : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
                                 }`}
                             >
@@ -2143,7 +2143,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 onClick={() => handleUpdatePref({ workoutCardStyle: 'OPTION_A' })}
                                 className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
                                     workoutCardStyle === 'OPTION_A'
-                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        ? 'bg-positive/10 border-positive text-foreground font-semibold'
                                         : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
                                 }`}
                             >
@@ -2164,7 +2164,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 onClick={() => handleUpdatePref({ countdownStyle: 'COMPACT_BAR' })}
                                 className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
                                     countdownStyle === 'COMPACT_BAR'
-                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        ? 'bg-positive/10 border-positive text-foreground font-semibold'
                                         : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
                                 }`}
                             >
@@ -2175,7 +2175,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 onClick={() => handleUpdatePref({ countdownStyle: 'TWO_BOX_LEGACY' })}
                                 className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
                                     countdownStyle === 'TWO_BOX_LEGACY'
-                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        ? 'bg-positive/10 border-positive text-foreground font-semibold'
                                         : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
                                 }`}
                             >
@@ -2196,7 +2196,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 onClick={() => handleUpdatePref({ effortCardMode: 'WEEK_AND_MONTH' })}
                                 className={`px-2 py-1.5 rounded text-center text-[10px] border transition-colors ${
                                     effortCardMode === 'WEEK_AND_MONTH'
-                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        ? 'bg-positive/10 border-positive text-foreground font-semibold'
                                         : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
                                 }`}
                             >
@@ -2207,7 +2207,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 onClick={() => handleUpdatePref({ effortCardMode: 'WEEK_ONLY' })}
                                 className={`px-2 py-1.5 rounded text-center text-[10px] border transition-colors ${
                                     effortCardMode === 'WEEK_ONLY'
-                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        ? 'bg-positive/10 border-positive text-foreground font-semibold'
                                         : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
                                 }`}
                             >
@@ -2218,7 +2218,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 onClick={() => handleUpdatePref({ effortCardMode: 'LEGACY_KM' })}
                                 className={`px-2 py-1.5 rounded text-center text-[10px] border transition-colors ${
                                     effortCardMode === 'LEGACY_KM'
-                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        ? 'bg-positive/10 border-positive text-foreground font-semibold'
                                         : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
                                 }`}
                             >
@@ -2239,7 +2239,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 onClick={() => handleUpdatePref({ calendarWeeksMode: '4_WEEKS' })}
                                 className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
                                     calendarWeeksMode === '4_WEEKS'
-                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        ? 'bg-positive/10 border-positive text-foreground font-semibold'
                                         : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
                                 }`}
                             >
@@ -2250,7 +2250,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 onClick={() => handleUpdatePref({ calendarWeeksMode: '6_WEEKS_LEGACY' })}
                                 className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
                                     calendarWeeksMode === '6_WEEKS_LEGACY'
-                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        ? 'bg-positive/10 border-positive text-foreground font-semibold'
                                         : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
                                 }`}
                             >
@@ -2271,7 +2271,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 onClick={() => handleUpdatePref({ primaryLoadMetric: 'TSS' })}
                                 className={`px-2 py-1.5 rounded text-center text-[10px] border transition-colors ${
                                     primaryLoadMetric === 'TSS'
-                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        ? 'bg-positive/10 border-positive text-foreground font-semibold'
                                         : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
                                 }`}
                             >
@@ -2282,7 +2282,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 onClick={() => handleUpdatePref({ primaryLoadMetric: 'DUAL' })}
                                 className={`px-2 py-1.5 rounded text-center text-[10px] border transition-colors ${
                                     primaryLoadMetric === 'DUAL'
-                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        ? 'bg-positive/10 border-positive text-foreground font-semibold'
                                         : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
                                 }`}
                             >
@@ -2293,7 +2293,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 onClick={() => handleUpdatePref({ primaryLoadMetric: 'TRIMP' })}
                                 className={`px-2 py-1.5 rounded text-center text-[10px] border transition-colors ${
                                     primaryLoadMetric === 'TRIMP'
-                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        ? 'bg-positive/10 border-positive text-foreground font-semibold'
                                         : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
                                 }`}
                             >
@@ -2322,8 +2322,8 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                     onClick={() => setSection('privacy')}
                     className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-md transition-colors hover:bg-surface-hover"
                 >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-workout-long-run/15">
-                        <ShieldCheck className="w-4 h-4 text-workout-long-run" />
+                    <div className="w-8 h-8 rounded-md flex items-center justify-center bg-accent-blue/15">
+                        <ShieldCheck className="w-4 h-4 text-accent-blue" />
                     </div>
                     <div className="flex-1 text-left">
                         <div className="text-sm font-medium text-foreground">Privacy & Consent</div>
@@ -2409,8 +2409,8 @@ function ExportDataButton() {
                 disabled={isExporting}
                 className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-md transition-colors hover:bg-surface-hover"
             >
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-accent-cyan/15">
-                    <Download className={`w-4 h-4 text-accent-cyan ${isExporting ? 'animate-spin' : ''}`} />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-positive/15">
+                    <Download className={`w-4 h-4 text-positive ${isExporting ? 'animate-spin' : ''}`} />
                 </div>
                 <div className="flex-1 text-left">
                     <div className="text-sm font-medium text-foreground">Export Data</div>

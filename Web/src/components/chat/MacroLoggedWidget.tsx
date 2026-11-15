@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, Edit3 } from 'lucide-react';
+import { Utensils, Edit3 } from 'lucide-react';
 
 interface MacroLoggedWidgetProps {
     mealName: string;
@@ -27,8 +27,8 @@ export default function MacroLoggedWidget({
             <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <div className="bg-background-tertiary p-1.5 rounded-full">
-                            <Sparkles className="w-4 h-4 text-accent-orange" />
+                        <div className="bg-background-tertiary p-1.5 rounded-[3px] border border-line">
+                            <Utensils className="w-4 h-4 text-accent-orange" aria-hidden="true" />
                         </div>
                         <h3 className="font-semibold text-foreground">Added to Log</h3>
                     </div>
@@ -85,7 +85,7 @@ export default function MacroLoggedWidget({
             </div>
 
             <div className="bg-background-tertiary p-2 text-center border-t border-line">
-                <p className="text-xs text-foreground-muted">View this entry in your <a href="/nutrition" className="text-accent-blue hover:underline">Nutrition Log</a></p>
+                <p className="text-xs text-foreground-muted">View this entry in your <a href="/health" className="text-accent-blue hover:underline">Nutrition Log</a></p>
             </div>
         </div>
     );

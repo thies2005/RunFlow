@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { Trophy, Zap, Calendar, Lock, ChevronRight, Brain, FileSpreadsheet, BarChart3, Layers } from 'lucide-react';
@@ -16,7 +17,7 @@ function FeatureCard({ icon: Icon, title, description }: { icon: typeof Zap; tit
     );
 }
 
-function PremiumUpsell() {
+function PremiumUpsell({ isUnauthenticated = false }: { isUnauthenticated?: boolean }) {
     return (
         <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
             <div className="max-w-lg w-full space-y-8">
@@ -78,24 +79,18 @@ function PremiumUpsell() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <button
-                        type="button"
-                        onClick={() => {
-                            window.location.href = '/settings?tab=subscription';
-                        }}
-                        className="w-full px-4 py-2.5 rounded-md bg-accent-orange hover:bg-accent-orange/85 text-white font-medium text-sm transition-colors"
+                    <Link
+                        href={isUnauthenticated ? '/login' : '/support'}
+                        className="w-full px-4 py-2.5 rounded-md bg-accent-orange hover:bg-accent-orange/85 text-white font-medium text-sm transition-colors text-center"
                     >
-                        Upgrade to Pro
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            window.location.href = '/settings?tab=subscription';
-                        }}
-                        className="w-full px-4 py-2 rounded-md border border-foreground/20 text-foreground-secondary hover:text-foreground hover:border-foreground/30 text-xs transition-colors"
+                        {isUnauthenticated ? 'Sign in to continue' : 'Contact Support for Access'}
+                    </Link>
+                    <Link
+                        href="/plan"
+                        className="w-full px-4 py-2 rounded-md border border-foreground/20 text-foreground-secondary hover:text-foreground hover:border-foreground/30 text-xs transition-colors text-center"
                     >
-                        View pricing plans
-                    </button>
+                        Back to Training Plan
+                    </Link>
                 </div>
             </div>
         </div>
@@ -127,7 +122,7 @@ export default function PlanAdvancedLayout({ children }: { children: React.React
     }
 
     if (status === 'unauthenticated') {
-        return <PremiumUpsell />;
+        return <PremiumUpsell isUnauthenticated />;
     }
 
     if (userTier?.tier === 'none') {

@@ -1,4 +1,4 @@
-import { BookOpen, Camera, Search, Sparkles } from 'lucide-react';
+import { BookOpen, Camera, ScanLine, Search } from 'lucide-react';
 import { FastingWidget } from '../FastingWidget';
 
 interface Props {
@@ -14,7 +14,7 @@ export function QuickActions({ onOpenAiScan, onOpenBarcode, onOpenSearch, onOpen
             <FastingWidget />
             <div className="grid grid-cols-4 gap-3">
                 <button type="button" onClick={onOpenAiScan} className="glass-card glass-card-hover py-3 flex flex-col items-center gap-1.5">
-                    <Sparkles className="w-5 h-5 text-workout-tempo" />
+                    <ScanLine className="w-5 h-5 text-workout-tempo" />
                     <span className="text-[10px] font-semibold text-foreground">AI Scan</span>
                 </button>
                 <button type="button" onClick={onOpenBarcode} className="glass-card glass-card-hover py-3 flex flex-col items-center gap-1.5">

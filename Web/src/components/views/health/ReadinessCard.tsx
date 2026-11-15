@@ -1,9 +1,10 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { Heart, HeartPulse, Moon, Activity, Zap, RefreshCw, AlertTriangle } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Heart, HeartPulse, Moon, Activity, Zap, RefreshCw, AlertTriangle, MessageSquare, Check } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { getCurrentUtcDayKey, toUtcDayKey } from '@/lib/health/dates';
+import { useCoachDrawer } from '@/components/providers/CoachDrawerProvider';
 
 interface DailyReadiness {
     id: string;
@@ -24,6 +25,8 @@ interface DailyReadiness {
 }
 
 interface AdaptedWorkout {
+    id: string;
+    originalWorkoutId: string;
     originalType: string;
     adaptedType: string;
     adaptationType: string;
@@ -32,6 +35,7 @@ interface AdaptedWorkout {
     originalTargetDistance: number;
     adaptedTargetDistance: number | null;
     reason: string;
+    isAccepted: boolean;
 }
 
 const STATE_LABELS: Record<string, string> = {
@@ -68,6 +72,8 @@ function getChartStroke(score: number): string {
 }
 
 export default function ReadinessCard() {
+    const queryClient = useQueryClient();
+    const { openCoach } = useCoachDrawer();
     const today = getCurrentUtcDayKey();
     const now = new Date();
     const sixDaysAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 6));
@@ -104,6 +110,38 @@ export default function ReadinessCard() {
             }
         },
         retry: false,
+    });
+
+    const adaptMutation = useMutation({
+        mutationFn: async (action: 'APPLY' | 'RESTORE') => {
+            if (!adaptation?.id) throw new Error('No adaptation selected');
+            const res = await fetch('/api/health/readiness/adaptation', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    adaptationId: adaptation.id,
+                    action,
+                }),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'Failed to update adaptation');
+            }
+            return res.json() as Promise<AdaptedWorkout>;
+        },
+        onSuccess: (updated) => {
+            queryClient.setQueryData(['readiness-adaptation', today], updated);
+            queryClient.invalidateQueries({ queryKey: ['readiness-adaptation'] });
+            queryClient.invalidateQueries({ queryKey: ['readiness-daily'] });
+            queryClient.invalidateQueries({ queryKey: ['readiness-today'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+            queryClient.invalidateQueries({ queryKey: ['goals'] });
+            queryClient.invalidateQueries({ queryKey: ['plans'] });
+            queryClient.invalidateQueries({ queryKey: ['plan-advanced'] });
+            queryClient.invalidateQueries({ queryKey: ['workouts'] });
+            queryClient.invalidateQueries({ queryKey: ['plan'] });
+        },
     });
 
     if (isLoading) {
@@ -159,7 +197,7 @@ export default function ReadinessCard() {
         return (
             <div className="glass-card p-5">
                 <div className="flex items-center gap-2 mb-3">
-                    <Heart className="w-4 h-4 text-accent-pink" />
+                    <Heart className="w-4 h-4 text-negative" />
                     <h4 className="text-xs font-semibold text-foreground-muted">Readiness</h4>
                 </div>
                 <p className="text-sm text-foreground-muted text-center py-6">No readiness data yet</p>
@@ -201,7 +239,7 @@ export default function ReadinessCard() {
         <div className="glass-card p-5">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <Heart className="w-4 h-4 text-accent-pink" />
+                    <Heart className="w-4 h-4 text-negative" />
                     <h4 className="text-xs font-semibold text-foreground-muted">Readiness</h4>
                 </div>
                 <div className="flex items-center gap-2">
@@ -213,6 +251,21 @@ export default function ReadinessCard() {
                             Synced {new Date(daily.syncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                     )}
+                    <button
+                        type="button"
+                        onClick={() =>
+                            openCoach({
+                                title: 'Readiness & recovery',
+                                contextType: 'readiness',
+                                prompt: `My readiness today is ${Math.round(score)}/100 (${STATE_LABELS[daily.state] || daily.state}${todayHrv !== null ? `, HRV ${Math.round(todayHrv)} ms` : ''}). How should I approach training and recovery today?`,
+                                autoSend: true,
+                            })
+                        }
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-[3px] border border-line bg-background-secondary hover:bg-surface-hover text-[11px] font-medium text-foreground transition-colors"
+                    >
+                        <MessageSquare className="w-3 h-3 text-accent-orange" aria-hidden="true" />
+                        Ask Coach
+                    </button>
                 </div>
             </div>
 
@@ -234,7 +287,7 @@ export default function ReadinessCard() {
                 <ComponentIndicator icon={<Activity className="w-3.5 h-3.5" />} label="HRR" value={hrrScore} color="text-positive" />
                 <ComponentIndicator icon={<Moon className="w-3.5 h-3.5" />} label="Sleep" value={sleepScore} color="text-workout-long-run" />
                 <ComponentIndicator icon={<Zap className="w-3.5 h-3.5" />} label="Load" value={loadScore} color="text-workout-tempo" />
-                <ComponentIndicator icon={<Heart className="w-3.5 h-3.5" />} label="Feel" value={feelScore} color="text-accent-pink" />
+                <ComponentIndicator icon={<Heart className="w-3.5 h-3.5" />} label="Feel" value={feelScore} color="text-negative" />
                 {todayHrv !== null && (
                     <div className="flex flex-col items-center gap-1">
                         <div className="text-foreground-secondary"><HeartPulse className="w-3.5 h-3.5" /></div>
@@ -263,10 +316,18 @@ export default function ReadinessCard() {
             )}
 
             {adaptation && (
-                <div className="border border-line rounded-md p-3 bg-background-tertiary mb-3">
-                    <div className="flex items-center gap-2 mb-2">
-                        <RefreshCw className="w-3.5 h-3.5 text-accent-blue" />
-                        <span className="text-xs font-semibold text-accent-blue">Adaptation</span>
+                <div className="border border-line rounded-[3px] p-3 bg-background-tertiary mb-3">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                            <RefreshCw className="w-3.5 h-3.5 text-accent-blue" aria-hidden="true" />
+                            <span className="text-xs font-semibold text-accent-blue">Adaptation</span>
+                        </div>
+                        {adaptation.isAccepted && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[3px] border border-positive/30 bg-positive/10 text-[10px] font-mono text-positive">
+                                <Check className="w-3 h-3" aria-hidden="true" />
+                                Applied
+                            </span>
+                        )}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-foreground-muted">
                         <span className="capitalize">{adaptation.originalType.replace(/_/g, ' ')}</span>
@@ -274,13 +335,54 @@ export default function ReadinessCard() {
                         <span className="capitalize text-foreground font-medium">{adaptation.adaptedType.replace(/_/g, ' ')}</span>
                     </div>
                     {adaptation.adaptedTargetDuration != null && adaptation.originalTargetDuration > 0 && (
-                        <p className="text-[11px] text-foreground-muted mt-1">
+                        <p className="text-[11px] font-mono tabular-nums text-foreground-muted mt-1">
                             {adaptation.originalTargetDuration}min &rarr; {adaptation.adaptedTargetDuration}min
                         </p>
                     )}
                     {adaptation.reason && (
                         <p className="text-[11px] text-foreground-muted mt-1">{adaptation.reason}</p>
                     )}
+                    {adaptMutation.isError && (
+                        <p role="alert" className="text-[11px] text-negative mt-2">
+                            {(adaptMutation.error as Error)?.message || 'Failed to update adaptation.'}
+                        </p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-2 mt-3 pt-2 border-t border-line">
+                        {!adaptation.isAccepted ? (
+                            <button
+                                type="button"
+                                disabled={adaptMutation.isPending}
+                                onClick={() => adaptMutation.mutate('APPLY')}
+                                className="px-2.5 py-1 rounded-[3px] bg-[var(--primary-button-bg)] text-[var(--primary-button-fg)] text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+                            >
+                                {adaptMutation.isPending ? 'Applying...' : 'Apply adaptation'}
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                disabled={adaptMutation.isPending}
+                                onClick={() => adaptMutation.mutate('RESTORE')}
+                                className="px-2.5 py-1 rounded-[3px] border border-line bg-background hover:bg-surface-hover text-xs font-medium text-foreground disabled:opacity-50 transition-colors"
+                            >
+                                {adaptMutation.isPending ? 'Restoring...' : 'Undo adaptation'}
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() =>
+                                openCoach({
+                                    title: 'Workout adaptation',
+                                    contextType: 'readiness',
+                                    prompt: `My readiness is ${Math.round(score)}/100 and my plan suggests adapting ${adaptation.originalType.replace(/_/g, ' ')} to ${adaptation.adaptedType.replace(/_/g, ' ')}${adaptation.reason ? ` (${adaptation.reason})` : ''}. Should I apply this change?`,
+                                    autoSend: true,
+                                })
+                            }
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[3px] border border-line bg-background hover:bg-surface-hover text-xs font-medium text-foreground-muted hover:text-foreground transition-colors"
+                        >
+                            <MessageSquare className="w-3 h-3 text-accent-orange" aria-hidden="true" />
+                            Ask Coach
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

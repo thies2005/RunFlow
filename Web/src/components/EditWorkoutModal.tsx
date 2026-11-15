@@ -313,7 +313,7 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                                         Link Activity
                                     </span>
                                     {(workout as any)?.linkedActivity && (
-                                        <span className="text-[10px] text-accent-cyan truncate max-w-[200px]" title="Currently linked activity">
+                                        <span className="text-[10px] text-positive truncate max-w-[200px]" title="Currently linked activity">
                                             Linked: {getDisplayActivityTitle((workout as any).linkedActivity)}
                                         </span>
                                     )}

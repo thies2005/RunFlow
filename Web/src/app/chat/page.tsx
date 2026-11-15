@@ -3,7 +3,8 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Menu, X, Book, ArrowLeft } from 'lucide-react';
+import { Menu, X, Book } from 'lucide-react';
+import { AppTopBar } from '@/components/layout/AppTopBar';
 
 const AiChat = dynamic(() => import('@/components/AiChat'), { ssr: false, loading: () => <div className="flex-1 bg-background" /> });
 const AiSettingsModal = dynamic(() => import('@/components/AiSettingsModal'), { ssr: false, loading: () => null });
@@ -27,7 +28,9 @@ function ChatContent() {
     };
 
     return (
-        <div className="flex h-[100dvh] bg-background overflow-hidden">
+        <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
+            <AppTopBar className="hidden md:block shrink-0" />
+            <div className="flex flex-1 min-h-0 overflow-hidden">
             {/* Desktop Sidebar */}
             <aside className="hidden md:block w-[260px] flex-shrink-0">
                 <ChatSidebar sessionId={sessionId} onNewChat={handleNewChat} />
@@ -50,19 +53,6 @@ function ChatContent() {
 
             {/* Main Chat Area */}
             <main className="flex-1 flex flex-col min-w-0 bg-background">
-                {/* Desktop Header */}
-                <header className="topbar hidden md:flex items-center justify-between px-6 py-3 sticky top-0 z-50">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => router.push('/')}
-                            className="topbar-btn flex items-center gap-2 text-sm"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            Back to Dashboard
-                        </button>
-                    </div>
-                </header>
-
                 {/* Mobile Header */}
                 <header className="topbar md:hidden flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] sticky top-0 z-50">
                     <button
@@ -91,6 +81,7 @@ function ChatContent() {
                     />
                 </div>
             </main>
+            </div>
 
             <AiSettingsModal
                 isOpen={isAiSettingsOpen}

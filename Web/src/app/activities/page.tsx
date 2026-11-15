@@ -4,6 +4,8 @@ import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-quer
 import { useRouter } from 'next/navigation';
 import { RefreshCw, ArrowLeft, Plus } from 'lucide-react';
 import { ActivityList, Footer, ErrorBoundary, PullToRefresh } from '@/components';
+import { AppTopBar } from '@/components/layout/AppTopBar';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useSession } from 'next-auth/react';
 import { useState, lazy, Suspense } from 'react';
 import { AnalyticsStats, ActivitiesResponse } from '@/lib/types';
@@ -21,6 +23,7 @@ export default function ActivitiesPage() {
     const [deleteError, setDeleteError] = useState('');
     const [filter, setFilter] = useState('RUN'); // Default to RUN
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
     const { data: statsData } = useQuery<AnalyticsStats>({
         queryKey: ['analytics-stats'],
@@ -63,12 +66,18 @@ export default function ActivitiesPage() {
     const allActivities = data?.pages.flatMap((page) => page.activities) || [];
     const totalCount = data?.pages[0]?.total || 0;
     const changeFilter = (value: string) => { setFilter(value); setSelectedIds(new Set()); };
-    const deleteSelected = async () => {
+    const requestDeleteSelected = () => {
         if (selectedIds.size > 1000) {
             setDeleteError('Select at most 1,000 activities at a time.');
             return;
         }
-        if (!selectedIds.size || !window.confirm(`Delete ${selectedIds.size} selected ${selectedIds.size === 1 ? 'activity' : 'activities'} from RunFlow? Linked workouts will be unlinked. Imported activities may return on a future sync.`)) return;
+        if (!selectedIds.size) return;
+        setDeleteError('');
+        setIsDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteSelected = async () => {
+        if (!selectedIds.size) return;
         setDeleting(true);
         setDeleteError('');
         try {
@@ -78,9 +87,11 @@ export default function ActivitiesPage() {
             });
             if (!res.ok) throw new Error('Could not delete the selected activities. Please try again.');
             setSelectedIds(new Set());
+            setIsDeleteConfirmOpen(false);
             await Promise.all(['activities', 'dashboard', 'analytics-stats', 'plan', 'plans', 'plan-advanced'].map(key => queryClient.invalidateQueries({ queryKey: [key] })));
         } catch (error) {
             setDeleteError(error instanceof Error ? error.message : 'Could not delete the selected activities.');
+            setIsDeleteConfirmOpen(false);
         } finally { setDeleting(false); }
     };
 
@@ -99,7 +110,9 @@ export default function ActivitiesPage() {
 
     return (
         <ErrorBoundary componentName="Activities Page" showRetry>
-            <div className="min-h-screen bg-background p-4 md:p-8">
+            <div className="min-h-screen bg-background">
+                <AppTopBar />
+                <div className="p-4 md:p-8">
                 <PullToRefresh onRefresh={async () => { await refetch(); }}>
                     <div className="max-w-4xl mx-auto space-y-6">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -173,7 +186,7 @@ export default function ActivitiesPage() {
                                         onChange={event => setSelectedIds(event.target.checked ? new Set(allActivities.map(a => a.id)) : new Set())}
                                         disabled={!allActivities.length || deleting} /> Select loaded activities
                                 </label>
-                                <button type="button" onClick={deleteSelected} disabled={!selectedIds.size || deleting}
+                                <button type="button" onClick={requestDeleteSelected} disabled={!selectedIds.size || deleting}
                                     className="px-3 py-2 border border-line rounded-md text-foreground disabled:opacity-50">
                                     {deleting ? 'Deleting…' : `Delete selected (${selectedIds.size})`}
                                 </button>
@@ -221,7 +234,19 @@ export default function ActivitiesPage() {
                         onClose={() => setIsManualModalOpen(false)}
                     />
                 </Suspense>
+                <ConfirmDialog
+                    open={isDeleteConfirmOpen}
+                    onOpenChange={(open) => {
+                        if (!deleting) setIsDeleteConfirmOpen(open);
+                    }}
+                    title={`Delete ${selectedIds.size} ${selectedIds.size === 1 ? 'activity' : 'activities'}?`}
+                    description={`Delete ${selectedIds.size} selected ${selectedIds.size === 1 ? 'activity' : 'activities'} from RunFlow? Linked workouts will be unlinked. Imported activities may return on a future sync.`}
+                    confirmLabel="Delete"
+                    busy={deleting}
+                    onConfirm={confirmDeleteSelected}
+                />
                 <Footer />
+                </div>
             </div>
         </ErrorBoundary>
     );

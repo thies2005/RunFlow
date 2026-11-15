@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { format, isSameDay, startOfWeek, endOfWeek } from 'date-fns';
@@ -37,11 +37,95 @@ const AnalyticsView = dynamic(() => import('@/components/views/AnalyticsView'), 
     loading: () => <div className="h-full w-full bg-background" />,
 });
 const HealthView = dynamic(() => import('@/components/views/HealthView'), { ssr: false });
+const AiChat = dynamic(() => import('@/components/AiChat'), { ssr: false, loading: () => <div className="flex-1 bg-background" /> });
+const ChatSidebar = dynamic(() => import('@/components/ChatSidebar'), { ssr: false, loading: () => null });
+const AiSettingsModal = dynamic(() => import('@/components/AiSettingsModal'), { ssr: false, loading: () => null });
 const SettingsModal = dynamic(() => import('@/components/SettingsModal'), { ssr: false, loading: () => null });
 const EditWorkoutModal = dynamic(() => import('@/components/EditWorkoutModal'), { ssr: false, loading: () => null });
 const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false, loading: () => null });
 const ActivityDetailsModal = dynamic(() => import('@/components/ActivityDetailsModal'), { ssr: false, loading: () => null });
 const ShapeCalibrationModal = dynamic(() => import('@/components/ShapeCalibrationModal'), { ssr: false, loading: () => null });
+
+interface MobileChatPaneProps {
+    isSidebarOpen: boolean;
+    onOpenSidebar: () => void;
+    onCloseSidebar: () => void;
+    isPromptLibraryOpen: boolean;
+    onOpenPromptLibrary: () => void;
+    onClosePromptLibrary: () => void;
+    onOpenSettings: () => void;
+    chatResetKey: number;
+    onIncrementResetKey: () => void;
+}
+
+function MobileChatPane({
+    isSidebarOpen,
+    onOpenSidebar,
+    onCloseSidebar,
+    isPromptLibraryOpen,
+    onOpenPromptLibrary,
+    onClosePromptLibrary,
+    onOpenSettings,
+    chatResetKey,
+    onIncrementResetKey,
+}: MobileChatPaneProps) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const sessionId = searchParams.get('sessionId') || undefined;
+
+    const handleNewChat = useCallback(() => {
+        if (sessionId) {
+            router.replace('/chat', { scroll: false });
+        }
+        onIncrementResetKey();
+    }, [sessionId, router, onIncrementResetKey]);
+
+    return (
+        <div className="flex flex-col h-full w-full bg-background overflow-hidden">
+            <div className="topbar flex items-center justify-between px-4 py-2.5 shrink-0">
+                <button
+                    type="button"
+                    onClick={onOpenSidebar}
+                    className="topbar-btn px-2 py-1 text-xs font-medium"
+                    aria-label="Open chat history"
+                >
+                    History
+                </button>
+                <span className="text-sm font-semibold text-[color:var(--topbar-fg)]">Coach</span>
+                <button
+                    type="button"
+                    onClick={onOpenPromptLibrary}
+                    className="topbar-btn px-2 py-1 text-xs font-medium"
+                    aria-label="Open prompt library"
+                >
+                    Prompts
+                </button>
+            </div>
+            {isSidebarOpen && (
+                <div className="fixed inset-0 z-50 flex">
+                    <div className="fixed inset-0 bg-black/[var(--modal-backdrop-opacity)]" onClick={onCloseSidebar} />
+                    <aside className="relative w-[280px] bg-background-secondary h-full border-r border-line animate-slide-in">
+                        <ChatSidebar
+                            sessionId={sessionId}
+                            onCloseMobile={onCloseSidebar}
+                            onNewChat={handleNewChat}
+                        />
+                    </aside>
+                </div>
+            )}
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                <AiChat
+                    key={chatResetKey}
+                    sessionId={sessionId}
+                    onOpenSettings={onOpenSettings}
+                    isPromptLibraryOpen={isPromptLibraryOpen}
+                    onClosePromptLibrary={onClosePromptLibrary}
+                    onOpenPromptLibrary={onOpenPromptLibrary}
+                />
+            </div>
+        </div>
+    );
+}
 
 export function MobileLayout() {
     const { data: session, status } = useSession();
@@ -59,6 +143,10 @@ export function MobileLayout() {
     const [selectedActivity, setSelectedActivity] = useState<ActivityListItem | null>(null);
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
     const [activePath, setActivePath] = useState(() => (typeof window !== 'undefined' ? window.location.pathname : '/'));
+    const [isMobileChatSidebarOpen, setIsMobileChatSidebarOpen] = useState(false);
+    const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
+    const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
+    const [chatResetKey, setChatResetKey] = useState(0);
 
     // Plan State
     const [showUnlinked, setShowUnlinked] = useState(true);
@@ -395,13 +483,33 @@ export function MobileLayout() {
                         showHeader={false}
                     />
                 ) : <div className="h-full w-full" />}
-                {activePath === '/health' ? <HealthView /> : <div className="h-full w-full" />}
+                {activePath === '/health' ? <HealthView showHeader={false} /> : <div className="h-full w-full" />}
+
+                {/* Coach View - always index 4 */}
+                {activePath === '/chat' ? (
+                    <MobileChatPane
+                        isSidebarOpen={isMobileChatSidebarOpen}
+                        onOpenSidebar={() => setIsMobileChatSidebarOpen(true)}
+                        onCloseSidebar={() => setIsMobileChatSidebarOpen(false)}
+                        isPromptLibraryOpen={isPromptLibraryOpen}
+                        onOpenPromptLibrary={() => setIsPromptLibraryOpen(true)}
+                        onClosePromptLibrary={() => setIsPromptLibraryOpen(false)}
+                        onOpenSettings={() => setIsAiSettingsOpen(true)}
+                        chatResetKey={chatResetKey}
+                        onIncrementResetKey={() => setChatResetKey(prev => prev + 1)}
+                    />
+                ) : <div className="h-full w-full" />}
             </MobileSwipeLayout>
 
             {/* Modals */}
             <SettingsModal
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
+            />
+
+            <AiSettingsModal
+                isOpen={isAiSettingsOpen}
+                onClose={() => setIsAiSettingsOpen(false)}
             />
 
             <EditWorkoutModal

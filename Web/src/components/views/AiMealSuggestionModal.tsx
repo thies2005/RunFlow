@@ -2,10 +2,33 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { X, Sparkles, Loader2, ArrowRight } from 'lucide-react';
+import { X, Utensils, Loader2, ArrowRight } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getCurrentUtcDayKey } from '@/lib/health/dates';
+
+const formatMealSuggestError = (
+    rawMessage: unknown,
+    fallback: string,
+    retryAfterSeconds?: unknown,
+    retryAfterHeader?: string | null
+): string => {
+    const cleaned = typeof rawMessage === 'string'
+        ? rawMessage.replace(/^(?:[A-Za-z]*Error:\s*)+/i, '').trim()
+        : '';
+    const base = cleaned || fallback;
+    const rawRetry = retryAfterSeconds ?? retryAfterHeader;
+    const seconds = typeof rawRetry === 'number'
+        ? rawRetry
+        : typeof rawRetry === 'string' && rawRetry.trim()
+            ? Number(rawRetry)
+            : NaN;
+    if (Number.isFinite(seconds) && seconds > 0 && !/\b\d+\s*s(?:ec(?:ond)?s?)?\b/i.test(base)) {
+        const ceil = Math.ceil(seconds);
+        return /[.!?]$/.test(base) ? `${base} Try again in ${ceil}s.` : `${base} (Try again in ${ceil}s)`;
+    }
+    return base;
+};
 
 interface Props {
     isOpen: boolean;
@@ -17,9 +40,10 @@ interface Props {
         fats: number;
     };
     onLogSuccess: () => void;
+    embedded?: boolean;
 }
 
-export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogSuccess }: Props) {
+export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogSuccess, embedded = false }: Props) {
     const { data: session } = useSession();
     const userId = session?.user?.id;
     const queryClient = useQueryClient();
@@ -38,23 +62,25 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                     remainingFats: remainingMacros.fats,
                 }),
             });
-            const contentType = res.headers.get('content-type') || '';
+            const contentType = res.headers?.get?.('content-type') || '';
             const isJson = contentType.includes('application/json');
 
             if (!res.ok) {
-                const errorBody = await res.text();
-                let message = `Failed to fetch suggestion (${res.status})`;
-                try {
-                    const err = JSON.parse(errorBody);
-                    if (err?.error) {
-                        message = String(err.error).replace(/^Error:\s*/i, '');
-                        if (typeof err.retryAfterSeconds === 'number' && err.retryAfterSeconds > 0) {
-                            message += ` (Try again in ${err.retryAfterSeconds}s)`;
-                        }
+                const errorBody = await res.text().catch(() => '');
+                let errData: { error?: unknown; message?: unknown; retryAfterSeconds?: unknown; retryAfter?: unknown } | null = null;
+                if (errorBody && (isJson || errorBody.trim().startsWith('{'))) {
+                    try {
+                        errData = JSON.parse(errorBody);
+                    } catch {
+                        errData = null;
                     }
-                } catch {
-                    // Ignore JSON parse failure and use fallback message.
                 }
+                const message = formatMealSuggestError(
+                    errData?.error ?? errData?.message,
+                    `Failed to fetch suggestion (${res.status})`,
+                    errData?.retryAfterSeconds ?? errData?.retryAfter,
+                    res.headers?.get?.('retry-after')
+                );
                 throw new Error(message);
             }
 
@@ -68,8 +94,11 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
         onSuccess: (data) => {
             setSuggestion(data);
         },
-        onError: (err: any) => {
-            toast.error(err.message || 'Error generating suggestion.');
+        onError: (err: unknown) => {
+            const message = err instanceof Error
+                ? formatMealSuggestError(err.message, 'Error generating suggestion.')
+                : 'Error generating suggestion.';
+            toast.error(message);
         }
     });
 
@@ -97,7 +126,10 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                     }
                 })
             });
-            if (!res.ok) throw new Error('Failed to log suggestion');
+            if (!res.ok) {
+                const errData = await res.json().catch(() => null);
+                throw new Error(formatMealSuggestError(errData?.error, 'Failed to log suggestion'));
+            }
             return res.json();
         },
         onSuccess: () => {
@@ -107,8 +139,11 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
             onClose();
             setSuggestion(null);
         },
-        onError: (err: any) => {
-            toast.error(err.message || 'Failed to log suggestion');
+        onError: (err: unknown) => {
+            const message = err instanceof Error
+                ? formatMealSuggestError(err.message, 'Failed to log suggestion')
+                : 'Failed to log suggestion';
+            toast.error(message);
         }
     });
 
@@ -122,20 +157,20 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center p-4">
-            <div className="bg-background-secondary border border-line w-full max-w-md rounded-md flex flex-col overflow-hidden animate-in zoom-in-95">
-
-                {/* Header */}
+    const innerContent = (
+        <div className={embedded ? 'flex flex-col flex-1 min-h-0' : 'bg-background-secondary border border-line w-full max-w-md rounded-md flex flex-col overflow-hidden animate-in zoom-in-95'}>
+            {/* Header */}
+            {!embedded && (
                 <div className="flex items-center justify-between p-4 border-b border-line bg-background-tertiary">
                     <div className="flex items-center gap-2 text-foreground">
-                        <Sparkles className="w-5 h-5 text-workout-tempo" />
+                        <Utensils className="w-5 h-5 text-workout-tempo" />
                         <h2 className="text-lg font-semibold">What should I eat?</h2>
                     </div>
                     <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors rounded-full hover:bg-glass-bg-hover">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
+            )}
 
                 <div className="p-4 flex flex-col gap-4">
                     {!suggestion ? (
@@ -144,7 +179,7 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                                 <>
                                     <div className="w-16 h-16 rounded-full bg-accent-blue/10 flex items-center justify-center mb-4 relative">
                                         <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-accent-blue animate-spin"></div>
-                                        <Sparkles className="w-8 h-8 text-accent-blue" />
+                                        <Utensils className="w-8 h-8 text-accent-blue" />
                                     </div>
                                     <h3 className="text-foreground font-semibold flex items-center gap-2">
                                         Analyzing your macros...
@@ -156,17 +191,30 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                             ) : (
                                 <>
                                     <div className="w-16 h-16 rounded-full bg-workout-tempo/10 flex items-center justify-center mb-4">
-                                        <Sparkles className="w-8 h-8 text-workout-tempo" />
+                                        <Utensils className="w-8 h-8 text-workout-tempo" />
                                     </div>
                                     <h3 className="text-foreground font-semibold mb-2">Find the Perfect Meal</h3>
                                     <p className="text-sm text-foreground-muted max-w-[280px]">
                                         Let AI suggest a meal from your recipes or history that perfectly fits your remaining {Math.round(remainingMacros.calories)} calories.
                                     </p>
+                                    {suggestMutation.isError && (
+                                        <div
+                                            role="alert"
+                                            className="mt-4 w-full bg-negative/10 border border-negative/20 rounded-md p-3 text-sm text-negative text-left"
+                                        >
+                                            {formatMealSuggestError(
+                                                suggestMutation.error instanceof Error
+                                                    ? suggestMutation.error.message
+                                                    : undefined,
+                                                'Error generating suggestion.'
+                                            )}
+                                        </div>
+                                    )}
                                     <button
                                         onClick={() => suggestMutation.mutate()}
                                         className="mt-6 w-full py-3 rounded-md bg-accent-orange text-white font-semibold hover:bg-accent-orange/90 transition-colors flex items-center justify-center gap-2"
                                     >
-                                        <Sparkles className="w-4 h-4" />
+                                        <Utensils className="w-4 h-4" />
                                         Generate Suggestion
                                     </button>
                                 </>
@@ -183,7 +231,7 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                                         <div className="text-[10px] text-foreground-muted font-semibold mb-1">Cals</div>
                                         <div className="text-foreground font-semibold font-mono tabular-nums">{suggestion.totalCalories}</div>
                                     </div>
-                                    <div className="bg-glass-bg rounded-md p-2 text-center border-b-2 border-accent-pink">
+                                    <div className="bg-glass-bg rounded-md p-2 text-center border-b-2 border-negative">
                                         <div className="text-[10px] text-foreground-muted font-semibold mb-1">Pro</div>
                                         <div className="text-foreground font-semibold font-mono tabular-nums">{suggestion.totalProtein}</div>
                                     </div>
@@ -225,7 +273,14 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                     )}
                 </div>
 
-            </div>
+        </div>
+    );
+
+    if (embedded) return innerContent;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center p-4">
+            {innerContent}
         </div>
     );
 }

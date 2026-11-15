@@ -109,7 +109,7 @@ export default function WorkoutScheduleCard({
         staleTime: 60000,
     });
 
-    const readinessScore: number | null = readinessData?.readinessScore ?? null;
+    const readinessScore: number | null = readinessData?.compositeScore ?? null;
 
     // Defensive 7-day filter: strictly the current Monday–Sunday week
     const currentWeekWorkouts = useMemo(() => {
@@ -327,7 +327,7 @@ export default function WorkoutScheduleCard({
                                     <button
                                         type="button"
                                         onClick={() => onCompleteWorkout(workout)}
-                                        className="shrink-0 ml-2 px-2.5 py-1 text-xs font-semibold rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 flex items-center gap-1 transition-colors"
+                                        className="shrink-0 ml-2 px-2.5 py-1 text-xs font-semibold rounded-md bg-positive/15 text-positive border border-positive/30 hover:bg-positive/25 flex items-center gap-1 transition-colors"
                                         title="Open completion and activity linking"
                                     >
                                         <Check className="w-3.5 h-3.5" />
@@ -340,7 +340,7 @@ export default function WorkoutScheduleCard({
                                     <div className="flex items-center gap-2 text-xs text-foreground-muted font-mono flex-wrap">
                                         {durationStr && <span>{durationStr}</span>}
                                         {tssStr && (
-                                            <span className="text-accent-cyan">
+                                            <span className="text-positive">
                                                 {durationStr ? '· ' : ''}{tssStr}
                                             </span>
                                         )}
@@ -374,8 +374,8 @@ export default function WorkoutScheduleCard({
 
                                 {/* Auto-Link Suggestion Banner (Decision U2) */}
                                 {showAutoLink && (
-                                    <div className="mt-2 p-2 rounded bg-accent-cyan/10 border border-accent-cyan/30 flex items-center justify-between gap-2 text-[11px]">
-                                        <span className="text-accent-cyan truncate flex items-center gap-1.5">
+                                    <div className="mt-2 p-2 rounded bg-positive/10 border border-positive/30 flex items-center justify-between gap-2 text-[11px]">
+                                        <span className="text-positive truncate flex items-center gap-1.5">
                                             <Link2 className="w-3.5 h-3.5 shrink-0" />
                                             Link &ldquo;{suggestedActivity.name}&rdquo; to this workout?
                                         </span>
@@ -384,7 +384,7 @@ export default function WorkoutScheduleCard({
                                                 type="button"
                                                 disabled={isMutatingId === workout.id}
                                                 onClick={() => handleAcceptAutoLink(workout, suggestedActivity)}
-                                                className="px-2 py-0.5 rounded bg-accent-cyan text-background font-semibold hover:bg-accent-cyan/90 transition-colors"
+                                                className="px-2 py-0.5 rounded bg-positive text-background font-semibold hover:bg-positive/90 transition-colors"
                                             >
                                                 Accept
                                             </button>
@@ -525,7 +525,7 @@ export default function WorkoutScheduleCard({
                                         <button
                                             type="button"
                                             onClick={() => openActivityModal(workout)}
-                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border border-accent-cyan/20 shrink-0 transition-colors"
+                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-positive/10 text-positive hover:bg-positive/20 border border-positive/20 shrink-0 transition-colors"
                                             title="View linked activity details"
                                         >
                                             <Link2 className="w-2.5 h-2.5" />
@@ -548,7 +548,7 @@ export default function WorkoutScheduleCard({
                                         {workout.isCompleted ? <Link2 className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
                                     </button>
                                     {workout.isCompleted ? (
-                                        <span className="text-emerald-400 text-[11px] font-medium flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                                        <span className="text-positive text-[11px] font-medium flex items-center gap-1 px-1.5 py-0.5 rounded bg-positive/10 border border-positive/20">
                                             <Check className="w-3 h-3" /> {workout.linkedActivityId ? 'Completed · linked' : 'Completed · manual'}
                                         </span>
                                     ) : (

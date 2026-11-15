@@ -6,9 +6,16 @@ export const MacroRing = ({ value, target, color, label }: { value: number, targ
     const strokeDashoffset = circumference - percentage * circumference;
 
     return (
-        <div className="flex items-center gap-2">
+        <div
+            className="flex items-center gap-2"
+            role="progressbar"
+            aria-label={label}
+            aria-valuenow={Math.round(value)}
+            aria-valuemin={0}
+            aria-valuemax={Math.round(target)}
+        >
             <div className="relative w-8 h-8 flex items-center justify-center flex-shrink-0">
-                <svg className="transform -rotate-90 w-8 h-8">
+                <svg className="transform -rotate-90 w-8 h-8" aria-hidden="true">
                     <circle cx="16" cy="16" r={radius} stroke="var(--line)" strokeWidth="4" fill="transparent" />
                     <circle
                         cx="16"
@@ -23,7 +30,7 @@ export const MacroRing = ({ value, target, color, label }: { value: number, targ
                         strokeLinecap="round"
                     />
                 </svg>
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none mt-px">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none mt-px" aria-hidden="true">
                     <span className="text-[9px] font-bold font-mono text-foreground leading-none">{Math.round(value)}</span>
                 </div>
             </div>

@@ -169,7 +169,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-line shrink-0">
                     <div className="flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-accent-pink" />
+                        <Calendar className="w-5 h-5 text-negative" />
                         <h2 className="text-lg font-semibold text-foreground">Food History</h2>
                     </div>
                     <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors rounded-full hover:bg-background-tertiary">
@@ -206,7 +206,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                 const isEditing = editingId === log.id;
 
                                                 return (
-                                                    <div key={log.id} className={`bg-background-tertiary border ${isEditing ? 'border-accent-pink/50' : 'border-line'} rounded-md overflow-hidden`}>
+                                                    <div key={log.id} className={`bg-background-tertiary border ${isEditing ? 'border-negative/50' : 'border-line'} rounded-md overflow-hidden`}>
                                                         <div className="p-3">
                                                             <div className="flex justify-between items-start mb-2">
                                                                 <div className="flex-1 pr-3">
@@ -276,7 +276,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                     <button
                                                                         onClick={() => editMutation.mutate(log.id)}
                                                                         disabled={isSavingEdit || !editQuantity || isNaN(Number(editQuantity))}
-                                                                        className="text-[11px] bg-accent-pink/10 text-accent-pink hover:bg-accent-pink/20 px-3 py-1 rounded-md transition-colors flex items-center gap-1 disabled:opacity-50"
+                                                                        className="text-[11px] bg-negative/10 text-negative hover:bg-negative/20 px-3 py-1 rounded-md transition-colors flex items-center gap-1 disabled:opacity-50"
                                                                     >
                                                                         {isSavingEdit ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
                                                                         Save

@@ -235,7 +235,7 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
 
                         {/* Food Tracking Reminders */}
                         <ReminderSection
-                            icon={<UtensilsCrossed className="w-4 h-4 text-accent-pink" />}
+                            icon={<UtensilsCrossed className="w-4 h-4 text-negative" />}
                             title="Food Tracking Reminders"
                             color="pink"
                         >

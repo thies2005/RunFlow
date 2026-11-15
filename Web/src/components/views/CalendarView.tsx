@@ -388,7 +388,7 @@ export function CalendarView({ showHeader: _showHeader = true }: CalendarViewPro
                     actions={activeGoal ? (
                         <><Link href={`/plan-advanced/${activeGoal.id}?import=csv`} className="px-2.5 py-1.5 rounded-md text-xs font-medium border border-accent-orange/30 text-accent-orange">Import plan</Link><Link
                             href={`/plan-advanced/${activeGoal.id}`}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 ml-1 rounded-md text-xs font-medium text-accent-orange hover:text-accent-pink hover:bg-accent-orange/10 border border-accent-orange/30 transition-colors"
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 ml-1 rounded-md text-xs font-medium text-accent-orange hover:text-negative hover:bg-accent-orange/10 border border-accent-orange/30 transition-colors"
                             title="Open this plan in the advanced editor"
                         >
                             <PencilRuler className="w-3.5 h-3.5" />

@@ -67,7 +67,7 @@ export function UserMenu({
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-56 glass-card shadow-lg z-[100] overflow-hidden animate-slide-in">
+                <div className="absolute right-0 mt-2 w-56 glass-card z-[100] overflow-hidden animate-slide-in">
                     <div className="p-3 border-b border-line">
                         <p className="text-sm font-semibold text-foreground truncate">{session.user.name}</p>
                         <p className="text-xs text-foreground-muted truncate">{session.user.email}</p>
@@ -92,7 +92,7 @@ export function UserMenu({
                             }}
                             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-surface-hover rounded-lg transition-colors"
                         >
-                            <User className="w-4 h-4 text-accent-purple" />
+                            <User className="w-4 h-4 text-foreground-muted" />
                             <span>Profile Settings</span>
                         </button>
 

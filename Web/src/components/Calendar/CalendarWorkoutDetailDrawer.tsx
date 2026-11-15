@@ -64,9 +64,9 @@ export function CalendarWorkoutDetailDrawer({
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/50 animate-fade-in">
             <div
-                className="w-full max-w-md h-full bg-background-secondary border-l border-line flex flex-col shadow-2xl animate-slide-left overflow-hidden"
+                className="w-full max-w-md h-full bg-background-secondary border-l border-line flex flex-col animate-slide-left overflow-hidden"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Planned Workout Details"
@@ -172,7 +172,7 @@ export function CalendarWorkoutDetailDrawer({
                             <div className="h-12 w-full bg-background rounded border border-line flex items-end p-1 gap-1 overflow-hidden">
                                 {parsedV2.steps.map((node, i) => {
                                     const heightPercent = node.kind === 'repeat' ? 85 : node.kind === 'work' ? 80 : node.kind === 'warmup' || node.kind === 'cooldown' ? 50 : 35;
-                                    const barColor = node.kind === 'work' ? 'bg-accent-orange' : node.kind === 'repeat' ? 'bg-accent-pink' : 'bg-accent-blue/60';
+                                    const barColor = node.kind === 'work' ? 'bg-accent-orange' : node.kind === 'repeat' ? 'bg-negative' : 'bg-accent-blue/60';
                                     return (
                                         <div
                                             key={i}
@@ -218,7 +218,7 @@ export function CalendarWorkoutDetailDrawer({
                                 URL.revokeObjectURL(url);
                                 document.body.removeChild(a);
                             }}
-                            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md border border-accent-cyan/40 bg-accent-cyan/10 text-accent-cyan font-semibold text-xs hover:bg-accent-cyan/20 transition-colors"
+                            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md border border-positive/40 bg-positive/10 text-positive font-semibold text-xs hover:bg-positive/20 transition-colors"
                         >
                             <Download className="w-4 h-4" />
                             Export Workout to MyWhoosh (.zwo)
@@ -243,7 +243,7 @@ function StepNodeRow({ node, depth = 0 }: { node: StepNode; depth?: number }) {
     if (node.kind === 'repeat') {
         return (
             <div className={`space-y-1 ${depth > 0 ? 'ml-3 pl-2 border-l border-line' : ''}`}>
-                <div className="font-semibold text-accent-pink flex items-center gap-1.5">
+                <div className="font-semibold text-negative flex items-center gap-1.5">
                     <span>{node.times}× Repeat Set</span>
                     {node.setRest && (
                         <span className="text-[10px] text-foreground-muted font-normal font-mono">

@@ -246,7 +246,7 @@ export function GoalTimeline({
                             <span className="font-mono tabular-nums text-foreground font-medium">
                                 {actualTss} / {plannedTss} TSS
                                 {plannedTss > 0 && (
-                                    <span className="ml-1 text-[10px] text-accent-cyan">
+                                    <span className="ml-1 text-[10px] text-positive">
                                         ({Math.round((actualTss / plannedTss) * 100)}%)
                                     </span>
                                 )}

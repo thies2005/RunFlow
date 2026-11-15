@@ -397,7 +397,7 @@ export default function ShapeCalibrationModal({
                 </button>
                 <button
                     onClick={() => setMode('EVO2MAX')}
-                    className={`flex-1 py-3 text-sm font-medium transition ${mode === 'EVO2MAX' ? 'text-accent-cyan border-b-2 border-accent-cyan' : 'text-foreground-muted hover:text-foreground'}`}
+                    className={`flex-1 py-3 text-sm font-medium transition ${mode === 'EVO2MAX' ? 'text-positive border-b-2 border-positive' : 'text-foreground-muted hover:text-foreground'}`}
                 >
                     Effective VO2max
                 </button>
@@ -548,8 +548,8 @@ export default function ShapeCalibrationModal({
                 {/* Effective VO2max Mode (two-stage stage 1: race predictions) */}
                 {mode === 'EVO2MAX' && (
                     <div className="space-y-4">
-                        <div className="bg-accent-cyan/10 p-3 rounded-md border border-accent-cyan/20">
-                            <p className="text-sm text-accent-cyan">
+                        <div className="bg-positive/10 p-3 rounded-md border border-positive/20">
+                            <p className="text-sm text-positive">
                                 Calibrate your Effective VO2max Correction Factor. This scales your HR-based
                                 aerobic fitness (raw VO2max) for race predictions and marathon shape.
                             </p>
@@ -559,7 +559,7 @@ export default function ShapeCalibrationModal({
                         <div className="space-y-2">
                             <label className="text-sm text-foreground-muted">Auto-calibrate from a race (5K &ndash; Half Marathon)</label>
                             <select
-                                className="w-full bg-background-secondary border border-line rounded-md px-3 py-2 text-foreground text-sm focus:border-accent-cyan outline-hidden"
+                                className="w-full bg-background-secondary border border-line rounded-md px-3 py-2 text-foreground text-sm focus:border-positive outline-hidden"
                                 value={selectedEvo2ActivityId}
                                 onChange={(e) => handleEvo2ActivitySelect(e.target.value)}
                             >
@@ -582,7 +582,7 @@ export default function ShapeCalibrationModal({
                                 <button
                                     key={rt}
                                     onClick={() => setEvo2RaceType(rt)}
-                                    className={`px-3 py-1.5 rounded-md text-sm ${evo2RaceType === rt ? 'bg-accent-cyan text-white' : 'bg-background-secondary text-foreground-muted'}`}
+                                    className={`px-3 py-1.5 rounded-md text-sm ${evo2RaceType === rt ? 'bg-positive text-white' : 'bg-background-secondary text-foreground-muted'}`}
                                 >
                                     {rt === 'HALF' ? 'Half Marathon' : rt}
                                 </button>
@@ -661,7 +661,7 @@ export default function ShapeCalibrationModal({
                                     type="range" min="0.85" max="1.15" step="0.01"
                                     value={manualEffectiveFactor}
                                     onChange={e => setManualEffectiveFactor(e.target.value)}
-                                    className="flex-1 accent-accent-cyan"
+                                    className="flex-1 accent-positive"
                                 />
                                 <input
                                     type="number" step="0.01" min="0.85" max="1.15"

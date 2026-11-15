@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, useRef, ReactNode } from 'react';
+import React, { useEffect, useId, useRef, ReactNode } from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 export interface ConfirmDialogProps {
     open: boolean;
-    onOpenChange: (open: boolean) => void;
+    onOpenChange: (_open: boolean) => void;
     title?: ReactNode;
     description?: ReactNode;
     /** Plan name; when set and no description given, the standard plan-deletion copy is used. */
@@ -27,28 +27,48 @@ export function ConfirmDialog({
     confirmLabel = 'Delete',
     busy = false,
 }: ConfirmDialogProps) {
-    const dialogRef = useRef<HTMLDivElement>(null);
+    const dialogRef = useRef<HTMLDialogElement>(null);
+    const titleId = useId();
+    const onOpenChangeRef = useRef(onOpenChange);
+    onOpenChangeRef.current = onOpenChange;
+    const busyRef = useRef(busy);
+    busyRef.current = busy;
 
-    // Escape key handler + focus management (mirrors Modal.tsx)
     useEffect(() => {
         if (!open) return;
 
-        const focusTimer = setTimeout(() => {
-            dialogRef.current?.focus();
-        }, 0);
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+
+        if (typeof dialog.showModal === 'function') {
+            if (!dialog.open) {
+                try {
+                    dialog.showModal();
+                } catch {
+                    dialog.setAttribute('open', '');
+                }
+            }
+        } else {
+            dialog.setAttribute('open', '');
+        }
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                onOpenChange(false);
+            if (e.key === 'Escape' && !busyRef.current) {
+                e.preventDefault();
+                onOpenChangeRef.current(false);
             }
         };
 
         document.addEventListener('keydown', handleKeyDown);
         return () => {
-            clearTimeout(focusTimer);
             document.removeEventListener('keydown', handleKeyDown);
+            if (typeof dialog.close === 'function') {
+                if (dialog.open) dialog.close();
+            } else {
+                dialog.removeAttribute('open');
+            }
         };
-    }, [open, onOpenChange]);
+    }, [open]);
 
     if (!open) return null;
 
@@ -56,54 +76,76 @@ export function ConfirmDialog({
         ?? (planName ? `${planName} and all its workouts will be removed.` : 'This action cannot be undone.');
 
     const dialogContent = (
-        <div
+        <dialog
             ref={dialogRef}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/[var(--modal-backdrop-opacity,0.55)] animate-fade-in p-4 pt-safe pb-safe"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="confirm-dialog-title"
+            className="w-[calc(100%-2rem)] max-w-sm m-auto p-6 relative animate-slide-in bg-background-secondary border border-line rounded-md text-foreground"
+            aria-labelledby={titleId}
             tabIndex={-1}
-            onClick={() => onOpenChange(false)}
+            {...({ closedby: busy ? 'none' : 'any' } as Record<string, string>)}
+            onCancel={(e) => {
+                e.preventDefault();
+                if (!busy) {
+                    onOpenChangeRef.current(false);
+                }
+            }}
+            onClose={() => {
+                if (open && !busy) {
+                    onOpenChangeRef.current(false);
+                }
+            }}
+            onClick={(e) => {
+                if (
+                    !busy &&
+                    typeof HTMLDialogElement !== 'undefined' &&
+                    !('closedBy' in HTMLDialogElement.prototype) &&
+                    e.target === dialogRef.current
+                ) {
+                    const rect = dialogRef.current.getBoundingClientRect();
+                    const clickedOutside =
+                        e.clientX < rect.left ||
+                        e.clientX > rect.right ||
+                        e.clientY < rect.top ||
+                        e.clientY > rect.bottom;
+                    if (clickedOutside) {
+                        onOpenChangeRef.current(false);
+                    }
+                }
+            }}
         >
-            <div
-                className="w-full max-w-sm p-6 relative animate-slide-in bg-background-secondary border border-line rounded-md shadow-lg"
-                onClick={e => e.stopPropagation()}
-            >
-                <div className="flex items-start gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-full bg-negative/10 flex items-center justify-center shrink-0">
-                        <AlertTriangle className="w-5 h-5 text-negative" />
-                    </div>
-                    <div className="min-w-0">
-                        <h3 id="confirm-dialog-title" className="text-base font-bold text-foreground break-words">
-                            {title}
-                        </h3>
-                        <p className="text-xs text-foreground-muted mt-1 break-words">{resolvedDescription}</p>
-                    </div>
+            <div className="flex items-start gap-3 mb-5">
+                <div className="w-10 h-10 rounded-full bg-negative/10 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-5 h-5 text-negative" aria-hidden="true" />
                 </div>
-                <div className="flex justify-end gap-2">
-                    <button
-                        type="button"
-                        onClick={() => onOpenChange(false)}
-                        disabled={busy}
-                        className="px-3 py-1.5 rounded-md bg-background-tertiary text-foreground-secondary text-xs hover:bg-foreground/15 disabled:opacity-50 transition-colors"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onConfirm}
-                        disabled={busy}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-negative text-white text-xs hover:bg-negative/85 disabled:opacity-50 transition-colors"
-                    >
-                        {busy && <Loader2 className="w-3 h-3 animate-spin" />}
-                        {confirmLabel}
-                    </button>
+                <div className="min-w-0">
+                    <h3 id={titleId} className="text-base font-bold text-foreground break-words">
+                        {title}
+                    </h3>
+                    <p className="text-xs text-foreground-muted mt-1 break-words">{resolvedDescription}</p>
                 </div>
             </div>
-        </div>
+            <div className="flex justify-end gap-2">
+                <button
+                    type="button"
+                    autoFocus
+                    onClick={() => onOpenChange(false)}
+                    disabled={busy}
+                    className="px-3 py-1.5 rounded-md bg-background-tertiary text-foreground-secondary text-xs hover:bg-foreground/15 disabled:opacity-50 transition-colors"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    onClick={onConfirm}
+                    disabled={busy}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-negative text-white text-xs hover:bg-negative/85 disabled:opacity-50 transition-colors"
+                >
+                    {busy && <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />}
+                    {confirmLabel}
+                </button>
+            </div>
+        </dialog>
     );
 
-    // Render in portal if we are in the browser
     if (typeof document !== 'undefined') {
         return createPortal(dialogContent, document.body);
     }

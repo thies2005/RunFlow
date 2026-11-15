@@ -9,7 +9,7 @@
 import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Shield, LayoutDashboard, Database, LogOut, Menu, X, Users, Bot, BarChart3, ClipboardList, ArrowRightLeft, Cpu, Activity, ListChecks } from 'lucide-react';
+import { Shield, LayoutDashboard, Database, LogOut, Menu, X, Users, Sliders, BarChart3, ClipboardList, ArrowRightLeft, Cpu, Activity, ListChecks } from 'lucide-react';
 import { csrfHeaders } from '@/lib/admin/csrfHelper';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
@@ -35,7 +35,7 @@ function AdminLayoutContent({
         { href: '/admin?tab=users', label: 'Users', icon: Users, tab: 'users' },
         { href: '/admin?tab=analytics', label: 'Analytics', icon: BarChart3, tab: 'analytics' },
         { href: '/admin?tab=templates', label: 'Workout Templates', icon: ListChecks, tab: 'templates' },
-        { href: '/admin?tab=ai', label: 'AI Settings', icon: Bot, tab: 'ai' },
+        { href: '/admin?tab=ai', label: 'AI Settings', icon: Sliders, tab: 'ai' },
         { href: '/admin?tab=feedback-queue', label: 'Feedback Queue', icon: Activity, tab: 'feedback-queue' },
         { href: '/admin?tab=performance', label: 'Performance', icon: Cpu, tab: 'performance' },
         { href: '/admin?tab=audit', label: 'Audit Trail', icon: ClipboardList, tab: 'audit' },
@@ -131,7 +131,7 @@ function AdminLayoutContent({
             </aside>
 
             <div className="flex-1 flex flex-col min-w-0">
-                <header className="topbar h-14 sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 shrink-0 border-b border-line bg-background-secondary/95 backdrop-blur-sm">
+                <header className="topbar h-14 sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 shrink-0 border-b border-line bg-background-secondary">
                     <div className="flex items-center space-x-3">
                         <button
                             type="button"

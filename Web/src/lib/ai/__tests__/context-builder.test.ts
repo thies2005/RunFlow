@@ -1,14 +1,42 @@
-import { buildActivityContext, buildExtendedHistoryContext, formatContextForAi, UserContext } from '../context-builder';
+import { buildActivityContext, buildExtendedHistoryContext, buildUserContext, formatContextForAi, UserContext } from '../context-builder';
 import { prisma } from '@/lib/db';
 
 jest.mock('@/lib/db', () => ({
     prisma: {
+        user: {
+            findUnique: jest.fn(),
+        },
+        userAiSettings: {
+            findUnique: jest.fn(),
+        },
         activity: {
             findFirst: jest.fn(),
             findMany: jest.fn(),
         },
         workout: {
             findFirst: jest.fn(),
+            findMany: jest.fn(),
+        },
+        dailyHealthLog: {
+            findFirst: jest.fn(),
+        },
+        dailyReadinessRecord: {
+            findFirst: jest.fn(),
+        },
+        fastingSession: {
+            findFirst: jest.fn(),
+        },
+        supplement: {
+            findMany: jest.fn(),
+        },
+        supplementLog: {
+            findMany: jest.fn(),
+        },
+        nutritionLog: {
+            findMany: jest.fn(),
+        },
+        userNutritionTarget: {
+            findUnique: jest.fn(),
         },
     },
 }));
@@ -329,5 +357,212 @@ describe('buildExtendedHistoryContext', () => {
         const result = await buildExtendedHistoryContext('user-1');
 
         expect(result).toBe('No activity history found.');
+    });
+});
+
+describe('formatContextForAi Phase 3 enrichments', () => {
+    it('formats recentCompletedWorkouts, cycling FTP, and healthRecovery cleanly', () => {
+        const context: UserContext = {
+            performance: {
+                currentVdot: 52.5,
+                vdotCorrectionFactor: 1,
+                ftpWatts: 285,
+                thresholdPace: 245,
+                swimCssSecPer100m: 95,
+            },
+            trainingPlan: {
+                upcomingWorkouts: [
+                    { date: '2026-11-16', type: 'TEMPO', description: 'Tempo run' },
+                ],
+                recentCompletedWorkouts: [
+                    { date: '2026-11-14', type: 'EASY', completed: true },
+                    { date: '2026-11-13', type: 'INTERVALS', completed: false },
+                ],
+            },
+            healthRecovery: {
+                readiness: {
+                    date: '2026-11-15',
+                    compositeScore: 82,
+                    state: 'GOOD',
+                    confidence: 'high',
+                    hrv: 68,
+                    sleepHours: 7.5,
+                    restingHr: 48,
+                },
+                dailyHealth: {
+                    date: '2026-11-15',
+                    steps: 9400,
+                    waterIntake: 2100,
+                    weight: 69.5,
+                },
+                fasting: {
+                    isActive: true,
+                    startedAt: '2026-11-15T06:00:00Z',
+                    elapsedHours: 14.2,
+                },
+                supplements: {
+                    totalScheduled: 4,
+                    takenCount: 3,
+                },
+            },
+        };
+
+        const result = formatContextForAi(context);
+        expect(result).toContain('Cycling FTP: 285W');
+        expect(result).toContain('Threshold Pace: 4:05/km');
+        expect(result).toContain('Swim CSS: 1:35/100m');
+        expect(result).toContain('Recent workouts: 2026-11-14: EASY (completed), 2026-11-13: INTERVALS (missed)');
+        expect(result).toContain('Readiness (2026-11-15): 82/100 (GOOD, high confidence) | HRV: 68ms, Sleep: 7.5h, RHR: 48bpm');
+        expect(result).toContain('Daily Health (2026-11-15): Steps: 9400, Water: 2100ml, Weight: 69.5kg');
+        expect(result).toContain('Fasting: Active (14.2h elapsed)');
+        expect(result).toContain('Supplements Today: 3/4 taken');
+    });
+});
+
+describe('buildUserContext permission gating', () => {
+    const baseUser = {
+        id: 'user-1',
+        name: 'Alice',
+        weight: 65,
+        height: 170,
+        birthDate: new Date('1992-05-01T00:00:00Z'),
+        sex: 'FEMALE',
+        vdotCorrectionFactor: 1.0,
+        ftpWatts: 260,
+        thresholdPace: 250,
+        swimCssSecPer100m: 100,
+        hrMax: 188,
+        hrRest: 48,
+        thresholdHeartRate: 168,
+        hrZone1Max: 130,
+        hrZone2Max: 148,
+        hrZone3Max: 160,
+        hrZone4Max: 170,
+        hrZone5Max: 178,
+        hrZone6Max: 185,
+        goals: [{ currentVdot: 51 }],
+        DailyFitness: [],
+    };
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (prisma.user.findUnique as jest.Mock).mockResolvedValue(baseUser);
+    });
+
+    it('omits healthRecovery, biometrics, and FTP when permissions are denied', async () => {
+        (prisma.userAiSettings.findUnique as jest.Mock).mockResolvedValue({
+            accessFitnessMetrics: false,
+            accessActivityHistory: false,
+            accessHeartRateData: false,
+            accessGoals: false,
+            accessTrainingPlan: false,
+            accessPerformance: false,
+            accessBiometrics: false,
+            accessNutritionLogs: false,
+            accessActivityLogs: false,
+        });
+
+        const ctx = await buildUserContext('user-1');
+
+        expect(ctx.name).toBe('Alice');
+        expect(ctx.biometrics).toBeUndefined();
+        expect(ctx.performance).toBeUndefined();
+        expect(ctx.healthRecovery).toBeUndefined();
+        expect(prisma.dailyReadinessRecord.findFirst).not.toHaveBeenCalled();
+        expect(prisma.dailyHealthLog.findFirst).not.toHaveBeenCalled();
+        expect(prisma.fastingSession.findFirst).not.toHaveBeenCalled();
+        expect(prisma.supplement.findMany).not.toHaveBeenCalled();
+    });
+
+    it('includes healthRecovery, latest DailyHealthLog weight, and cycling FTP when permissions are granted', async () => {
+        (prisma.userAiSettings.findUnique as jest.Mock).mockResolvedValue({
+            accessFitnessMetrics: false,
+            accessActivityHistory: false,
+            accessHeartRateData: false,
+            accessGoals: false,
+            accessTrainingPlan: false,
+            accessPerformance: true,
+            accessBiometrics: true,
+            accessNutritionLogs: true,
+            accessActivityLogs: false,
+        });
+        (prisma.nutritionLog.findMany as jest.Mock).mockResolvedValue([]);
+        (prisma.userNutritionTarget.findUnique as jest.Mock).mockResolvedValue(null);
+        (prisma.dailyHealthLog.findFirst as jest.Mock).mockResolvedValue({
+            date: new Date(),
+            steps: 8200,
+            waterIntake: 1750,
+            weight: 63.4,
+        });
+        (prisma.dailyReadinessRecord.findFirst as jest.Mock).mockResolvedValue({
+            date: new Date(),
+            compositeScore: 79,
+            state: 'GOOD',
+            confidence: 'high',
+            componentScores: { hrr: { score: 85, isAvailable: true }, sleep: { score: 75, isAvailable: true } },
+            hrvJson: { todayHrv: 64 },
+            sleepJson: { hours: 7.2 },
+            rhrJson: { todayRhr: 49 },
+            restingHr: 49,
+        });
+        (prisma.fastingSession.findFirst as jest.Mock).mockResolvedValue({
+            id: 'fast-1',
+            startTime: new Date(Date.now() - 10 * 60 * 60 * 1000),
+            endTime: null,
+        });
+        (prisma.supplement.findMany as jest.Mock).mockResolvedValue([
+            { id: 's1', daysOfWeek: [] },
+            { id: 's2', daysOfWeek: [] },
+        ]);
+        (prisma.supplementLog.findMany as jest.Mock).mockResolvedValue([
+            { supplementId: 's1' },
+        ]);
+
+        const ctx = await buildUserContext('user-1');
+
+        expect(ctx.performance?.ftpWatts).toBe(260);
+        expect(ctx.biometrics?.weight).toBe(63.4);
+        expect(ctx.healthRecovery?.readiness?.compositeScore).toBe(79);
+        expect(ctx.healthRecovery?.readiness?.hrv).toBe(64);
+        expect(ctx.healthRecovery?.readiness?.sleepHours).toBe(7.2);
+        expect(ctx.healthRecovery?.readiness?.restingHr).toBe(49);
+        expect(ctx.healthRecovery?.dailyHealth?.steps).toBe(8200);
+        expect(ctx.healthRecovery?.dailyHealth?.waterIntake).toBe(1750);
+        expect(ctx.healthRecovery?.fasting?.isActive).toBe(true);
+        expect(ctx.healthRecovery?.supplements).toEqual({ totalScheduled: 2, takenCount: 1 });
+    });
+
+    it('selects the most recent 5 past workouts when >5 exist in trainingPlan', async () => {
+        (prisma.userAiSettings.findUnique as jest.Mock).mockResolvedValue({
+            accessFitnessMetrics: false,
+            accessActivityHistory: false,
+            accessHeartRateData: false,
+            accessGoals: false,
+            accessTrainingPlan: true,
+            accessPerformance: false,
+            accessBiometrics: false,
+            accessNutritionLogs: false,
+            accessActivityLogs: false,
+        });
+
+        const now = Date.now();
+        const pastWorkouts = [7, 6, 5, 4, 3, 2, 1].map((daysAgo) => ({
+            scheduledDate: new Date(now - daysAgo * 24 * 60 * 60 * 1000),
+            workoutType: `DAY_${daysAgo}`,
+            description: `Workout ${daysAgo}d ago`,
+            isCompleted: daysAgo % 2 === 0,
+        }));
+        (prisma.workout.findMany as jest.Mock).mockResolvedValue(pastWorkouts);
+
+        const ctx = await buildUserContext('user-1');
+
+        expect(ctx.trainingPlan?.recentCompletedWorkouts).toHaveLength(5);
+        expect(ctx.trainingPlan?.recentCompletedWorkouts.map((w) => w.type)).toEqual([
+            'DAY_5',
+            'DAY_4',
+            'DAY_3',
+            'DAY_2',
+            'DAY_1',
+        ]);
     });
 });

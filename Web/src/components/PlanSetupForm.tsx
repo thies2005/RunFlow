@@ -1066,18 +1066,18 @@ export default function PlanSetupForm({
 
             {/* Direct Plan Import in Plan Setup Phase (CSV / Calendar Screenshot AI / .zwo) */}
             <div className="border-t border-glass-border pt-6">
-                <div className="p-4 rounded-md bg-surface border border-accent-cyan/40 space-y-3">
+                <div className="p-4 rounded-md bg-surface border border-positive/40 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-accent-cyan">
+                        <span className="text-xs font-semibold text-positive">
                             Import Existing Training Plan Directly (CSV / Calendar Picture / .zwo)
                         </span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-positive/10 text-positive border border-positive/30">
                             Direct Setup Import
                         </span>
                     </div>
                     <p className="text-[11px] text-foreground-muted leading-relaxed">
                         Already have a schedule from a <strong>CSV file</strong>, a <strong>MyWhoosh / Coach Calendar screenshot</strong>, or a <strong>.zwo workout</strong>? Import it directly right here instead of generating from scratch. All cycling workouts can also be exported as <strong>.zwo</strong> files for{' '}
-                        <a href="https://workout.mywhoosh.com" target="_blank" rel="noopener noreferrer" className="text-accent-cyan underline">
+                        <a href="https://workout.mywhoosh.com" target="_blank" rel="noopener noreferrer" className="text-positive underline">
                             workout.mywhoosh.com
                         </a>.
                     </p>
@@ -1163,7 +1163,7 @@ export default function PlanSetupForm({
                             type="button"
                             disabled={isImportingSetupPlan || isLoading}
                             onClick={() => setupCsvInputRef.current?.click()}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-accent-cyan/15 border border-accent-cyan/40 text-accent-cyan text-xs font-semibold hover:bg-accent-cyan/25 transition-colors disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-positive/15 border border-positive/40 text-positive text-xs font-semibold hover:bg-positive/25 transition-colors disabled:opacity-50"
                         >
                             <Upload className="w-3.5 h-3.5" />
                             {isImportingSetupPlan ? 'Importing CSV...' : 'Upload & Import CSV (.csv)'}
@@ -1207,9 +1207,9 @@ export default function PlanSetupForm({
                                     setIsImportingSetupPlan(false);
                                 }
                             }}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-surface-hover border border-glass-border text-foreground text-xs font-medium hover:border-accent-cyan/50 transition-colors disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-surface-hover border border-glass-border text-foreground text-xs font-medium hover:border-positive/50 transition-colors disabled:opacity-50"
                         >
-                            <ImagePlus className="w-3.5 h-3.5 text-accent-cyan" />
+                            <ImagePlus className="w-3.5 h-3.5 text-positive" />
                             Import from Calendar Picture (AI)
                         </button>
 

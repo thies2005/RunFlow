@@ -87,7 +87,7 @@ function DraggableWorkoutItem({
                 isSelected
                     ? `${colors.bg} ring-1 ring-foreground-muted`
                     : `${colors.bg} hover:brightness-125`
-            } ${isDragging ? 'opacity-50 shadow-lg ring-2 ring-accent-blue scale-105' : ''}`}
+            } ${isDragging ? 'opacity-50 ring-2 ring-accent-blue scale-105' : ''}`}
         >
             <div
                 {...attributes}
@@ -191,7 +191,7 @@ function DroppableDayRow({
             <button
                 type="button"
                 onClick={() => onAddWorkout(day)}
-                className="ml-auto p-1 rounded text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary sm:opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all shrink-0"
+                className="ml-auto p-1 rounded text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary sm:opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-all shrink-0"
                 title="Add workout"
             >
                 <Plus className="w-3.5 h-3.5" />
@@ -587,8 +587,8 @@ export function WorkoutListPanel({
 
             {/* Paste Week Modal with Scaling */}
             {showPasteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="bg-background-secondary border border-glass-border rounded-lg p-4 max-w-sm w-full space-y-3 shadow-xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+                    <div className="bg-background-secondary border border-line rounded-md p-4 max-w-sm w-full space-y-3">
                         <div className="flex items-center justify-between">
                             <h3 className="text-xs font-semibold text-foreground">
                                 Paste Week to Week {week.weekNumber}

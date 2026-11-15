@@ -27,7 +27,7 @@ export const Footer: React.FC = () => {
                         Impressum
                     </Link>
                 </div>
-                <p className="text-foreground-muted text-xs flex items-center gap-1">RunFlow • Built with <Heart className="w-3 h-3 text-accent-pink" /> for athletes</p>
+                <p className="text-foreground-muted text-xs flex items-center gap-1">RunFlow • Built with <Heart className="w-3 h-3 text-negative" /> for athletes</p>
                 <span className="text-foreground-muted text-xs font-mono">v{version}</span>
             </div>
         </footer>

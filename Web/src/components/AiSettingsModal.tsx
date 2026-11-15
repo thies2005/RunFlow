@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     Save,
     AlertCircle,
-    Bot,
+    Sliders,
     Key,
     Eye,
     EyeOff,
@@ -285,7 +285,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
             isOpen={isOpen}
             onClose={onClose}
             title="AI Features"
-            icon={<Bot className="w-6 h-6 text-accent-purple" />}
+            icon={<Sliders className="w-6 h-6 text-accent-orange" aria-hidden="true" />}
             maxWidth="lg"
         >
             <div className="flex flex-col max-h-[75vh]">
@@ -293,7 +293,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                 <div className="flex-1 overflow-y-auto pr-2 space-y-6">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-12">
-                            <Loader2 className="w-8 h-8 text-accent-purple animate-spin" />
+                            <Loader2 className="w-8 h-8 text-accent-orange animate-spin" />
                         </div>
                     ) : isError ? (
                         <p role="alert" className="text-sm text-negative">Unable to load AI access settings. Close and try again.</p>
@@ -302,7 +302,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                             {/* Master Toggle */}
                             <div className={`p-4 rounded-md border transition-all ${data?.settings?.adminAllowed
                                 ? aiEnabled
-                                    ? 'bg-accent-purple/10 border-accent-purple/50'
+                                    ? 'bg-accent-orange/10 border-accent-orange/50'
                                     : 'bg-background-tertiary border-line'
                                 : 'bg-negative/5 border-negative/30 grayscale'
                                 }`}>
@@ -320,7 +320,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                     <button
                                         onClick={() => setAiEnabled(!aiEnabled)} role="switch" aria-checked={aiEnabled} aria-label="Enable AI features"
                                         disabled={!data?.settings?.adminAllowed}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-hidden ${aiEnabled ? 'bg-accent-purple' : 'bg-foreground/15'
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-hidden ${aiEnabled ? 'bg-accent-orange' : 'bg-foreground/15'
                                             } ${!data?.settings?.adminAllowed ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                     >
                                         <span
@@ -433,7 +433,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                 placeholder={data?.settings?.hasCustomApiKey ? '••••••••••••••••' : 'API Key'}
                                                 value={customApiKey}
                                                 onChange={(e) => setCustomApiKey(e.target.value)}
-                                                className="w-full bg-background-tertiary border border-line rounded-md px-3 py-2 pr-10 text-foreground text-sm focus:border-accent-purple focus:outline-hidden"
+                                                className="w-full bg-background-tertiary border border-line rounded-md px-3 py-2 pr-10 text-foreground text-sm focus:border-accent-orange focus:outline-hidden"
                                             />
                                             <button
                                                 type="button"
@@ -505,7 +505,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => toggleAllAccess(true)}
-                                                className="text-xs text-accent-purple hover:text-accent-purple"
+                                                className="text-xs text-accent-orange hover:text-accent-orange/80"
                                             >
                                                 Enable All
                                             </button>
@@ -537,7 +537,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                             [option.key]: e.target.checked,
                                                         }))
                                                     }
-                                                    className="mt-1 w-4 h-4 rounded border-line bg-background-tertiary text-accent-purple focus:ring-accent-purple"
+                                                    className="mt-1 w-4 h-4 rounded border-line bg-background-tertiary text-accent-orange focus:ring-accent-orange"
                                                 />
                                                 <div>
                                                     <p className="text-sm text-foreground">{option.label}</p>
@@ -562,11 +562,11 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                 onClick={() => setFeedbackMode(mode.value)}
                                                 aria-pressed={feedbackMode === mode.value}
                                                 className={`p-3 rounded-md border text-left transition-colors ${feedbackMode === mode.value
-                                                    ? 'border-accent-purple bg-accent-purple/10'
+                                                    ? 'border-accent-orange bg-accent-orange/10'
                                                     : 'border-line hover:border-line-strong'
                                                     }`}
                                             >
-                                                <p className={`text-sm font-medium ${feedbackMode === mode.value ? 'text-accent-purple' : 'text-foreground'
+                                                <p className={`text-sm font-medium ${feedbackMode === mode.value ? 'text-accent-orange' : 'text-foreground'
                                                     }`}>
                                                     {mode.label}
                                                 </p>

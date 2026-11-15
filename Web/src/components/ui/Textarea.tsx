@@ -1,4 +1,4 @@
-import { TextareaHTMLAttributes, forwardRef } from 'react';
+import { TextareaHTMLAttributes, forwardRef, useId } from 'react';
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
     label?: string;
@@ -7,8 +7,12 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-    ({ className = '', label, error, helperText, id, ...props }, ref) => {
-        const textareaId = id || label?.toLowerCase().replace(/\s+/g, '-');
+    ({ className = '', label, error, helperText, id, 'aria-describedby': ariaDescribedBy, ...props }, ref) => {
+        const generatedId = useId();
+        const textareaId = id || generatedId;
+        const messageId = `${textareaId}-message`;
+        const hasMessage = Boolean(error || helperText);
+        const describedBy = [ariaDescribedBy, hasMessage ? messageId : undefined].filter(Boolean).join(' ') || undefined;
 
         return (
             <div className={`w-full ${className}`}>
@@ -20,18 +24,22 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
                 <textarea
                     ref={ref}
                     id={textareaId}
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={describedBy}
                     className={`
-                        w-full bg-background-secondary border border-line rounded-md px-4 py-3 text-foreground placeholder:text-foreground-muted
-                        focus:outline-hidden focus:ring-2 focus:ring-accent-orange/50 transition-colors min-h-[100px] resize-y
+                        w-full bg-background-secondary border border-line rounded-md px-4 py-3 text-base sm:text-sm text-foreground placeholder:text-foreground-muted
+                        focus:outline-hidden focus:ring-2 focus:ring-accent-orange/50 transition-colors
+                        [field-sizing:content] [min-block-size:3lh] [max-block-size:10lh] resize-y
+                        user-invalid:border-negative
                         ${error ? 'border-negative focus:border-negative' : 'focus:border-accent-orange'}
                     `}
                     {...props}
                 />
                 {error && (
-                    <p className="mt-1.5 text-xs text-negative">{error}</p>
+                    <p id={messageId} className="mt-1.5 text-xs text-negative">{error}</p>
                 )}
                 {helperText && !error && (
-                    <p className="mt-1.5 text-xs text-foreground-muted">{helperText}</p>
+                    <p id={messageId} className="mt-1.5 text-xs text-foreground-muted">{helperText}</p>
                 )}
             </div>
         );

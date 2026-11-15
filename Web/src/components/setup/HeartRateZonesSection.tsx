@@ -80,12 +80,12 @@ export default function HeartRateZonesSection({
     const runLthr = parseInt(thresholdHR, 10) || Math.round(maxHeartRate * 0.9);
     const bikeLthr = Math.max(100, runLthr - 8);
     const cogganZones = [
-        { label: 'Z1 Active Recovery (<55%)', min: 0, max: Math.round(activeFtp * 0.55), color: 'text-emerald-400' },
+        { label: 'Z1 Active Recovery (<55%)', min: 0, max: Math.round(activeFtp * 0.55), color: 'text-zone-1' },
         { label: 'Z2 Endurance (56–75%)', min: Math.round(activeFtp * 0.56), max: Math.round(activeFtp * 0.75), color: 'text-blue-400' },
         { label: 'Z3 Tempo (76–90%)', min: Math.round(activeFtp * 0.76), max: Math.round(activeFtp * 0.90), color: 'text-cyan-400' },
         { label: 'Z4 Threshold (91–105%)', min: Math.round(activeFtp * 0.91), max: Math.round(activeFtp * 1.05), color: 'text-amber-400' },
         { label: 'Z5 VO2max (106–120%)', min: Math.round(activeFtp * 1.06), max: Math.round(activeFtp * 1.20), color: 'text-orange-400' },
-        { label: 'Z6 Anaerobic (121–150%)', min: Math.round(activeFtp * 1.21), max: Math.round(activeFtp * 1.50), color: 'text-purple-400' },
+        { label: 'Z6 Anaerobic (121–150%)', min: Math.round(activeFtp * 1.21), max: Math.round(activeFtp * 1.50), color: 'text-negative' },
         { label: 'Z7 Neuromuscular (>150%)', min: Math.round(activeFtp * 1.51), max: 9999, color: 'text-rose-400' },
     ];
     const bikeHrZones = [
@@ -220,7 +220,7 @@ export default function HeartRateZonesSection({
                                     type="button"
                                     onClick={() => setZoneSportTab('cycling')}
                                     className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                                        zoneSportTab === 'cycling' ? 'bg-accent-cyan text-white' : 'text-foreground-muted hover:text-foreground'
+                                        zoneSportTab === 'cycling' ? 'bg-positive text-white' : 'text-foreground-muted hover:text-foreground'
                                     }`}
                                 >
                                     Cycling Power & HR
@@ -258,7 +258,7 @@ export default function HeartRateZonesSection({
                                     />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-semibold text-accent-cyan mb-2">Cycling Power Zones (Coggan 7-Zone)</p>
+                                    <p className="text-xs font-semibold text-positive mb-2">Cycling Power Zones (Coggan 7-Zone)</p>
                                     <div className="space-y-1">
                                         {cogganZones.map((z, i) => (
                                             <div key={i} className="flex justify-between items-center text-xs p-1.5 hover:bg-surface-hover rounded">

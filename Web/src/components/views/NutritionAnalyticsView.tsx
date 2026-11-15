@@ -31,8 +31,10 @@ import { NutritionGoalsModal } from './NutritionGoalsModal';
 import { WeeklyInsightsCard } from './WeeklyInsightsCard';
 
 interface NutritionAnalyticsViewProps {
-  onClose: () => void;
+  onClose?: () => void;
   onOpenGoals?: () => void;
+  embedded?: boolean;
+  hideWeeklyInsights?: boolean;
 }
 
 interface AnalyticsData {
@@ -100,11 +102,11 @@ type DateRangePreset = '7days' | '30days' | '90days';
 
 // Chart colors - semantic tokens (work in light and dark mode)
 const COLORS = {
-  protein: 'var(--accent-pink)',
+  protein: 'var(--negative)',
   carbs: 'var(--accent-blue)',
   fats: 'var(--workout-tempo)',
   calories: 'var(--accent-orange)',
-  fiber: 'var(--accent-cyan)',
+  fiber: 'var(--positive)',
   warning: 'var(--negative)',
   success: 'var(--positive)',
 };
@@ -115,7 +117,7 @@ const MICRO_LIMITS = {
   fiber: 30,     // g per day recommended minimum
 };
 
-export default function NutritionAnalyticsView({ onClose, onOpenGoals }: NutritionAnalyticsViewProps) {
+export default function NutritionAnalyticsView({ onClose, onOpenGoals, embedded = false, hideWeeklyInsights = false }: NutritionAnalyticsViewProps) {
   const [dateRange, setDateRange] = useState<DateRangePreset>('7days');
   const [isGoalsOpen, setIsGoalsOpen] = useState(false);
 
@@ -168,7 +170,7 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
       return (
         <div className="flex items-center justify-center h-[60vh]">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-accent-pink border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-12 h-12 border-4 border-negative border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-foreground-muted">Loading analytics...</p>
           </div>
         </div>
@@ -190,14 +192,14 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
     if (analytics.daysWithLogs === 0 && analytics.target.isDefault) {
       return (
         <div className="p-4">
-          <div className="glass-card border-accent-pink/20 p-4 flex items-start gap-3 mb-6">
-            <Target className="w-5 h-5 text-accent-pink shrink-0 mt-0.5" />
+          <div className="glass-card border-negative/20 p-4 flex items-start gap-3 mb-6">
+            <Target className="w-5 h-5 text-negative shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-accent-pink mb-1">Set Up Your Goals</h4>
+              <h4 className="text-sm font-semibold text-negative mb-1">Set Up Your Goals</h4>
               <p className="text-xs text-foreground-muted mb-3">Set your calorie and macro targets for personalized adherence scoring.</p>
               <button
                 onClick={handleOpenGoals}
-                className="bg-accent-pink/10 text-accent-pink px-4 py-2 rounded-md text-xs font-semibold border border-accent-pink/20 hover:bg-accent-pink/20 transition-colors"
+                className="bg-negative/10 text-negative px-4 py-2 rounded-md text-xs font-semibold border border-negative/20 hover:bg-negative/20 transition-colors"
               >
                 Set Nutrition Goals
               </button>
@@ -220,7 +222,7 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
               key={key}
               onClick={() => setDateRange(key)}
               className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${dateRange === key
-                ? 'bg-accent-pink/10 text-accent-pink border border-accent-pink/30'
+                ? 'bg-negative/10 text-negative border border-negative/30'
                 : 'bg-background-tertiary text-foreground-muted border border-line'
                 }`}
             >
@@ -232,7 +234,7 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
         {/* Daily Goal Ring */}
         <div className="glass-card p-4">
           <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
-            <Target className="w-4 h-4 text-accent-pink" />
+            <Target className="w-4 h-4 text-negative" />
             Today&apos;s Progress
           </h3>
           <div className="flex items-center gap-6">
@@ -403,12 +405,12 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
           </div>
         </div>
 
-        <WeeklyInsightsCard />
+        {!hideWeeklyInsights && <WeeklyInsightsCard />}
 
         {/* Micronutrient Details */}
         <div className="glass-card p-4">
           <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
-            <Zap className="w-4 h-4 text-accent-cyan" />
+            <Zap className="w-4 h-4 text-positive" />
             Average Daily Micronutrients
           </h3>
           <div className="grid grid-cols-2 gap-3">
@@ -546,7 +548,7 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
                         <span className="text-xs font-mono text-foreground-muted">#{idx + 1}</span>
                         <span className="text-sm text-foreground">{food.foodName}</span>
                       </div>
-                      <span className="text-sm font-medium font-mono tabular-nums text-accent-pink">
+                      <span className="text-sm font-medium font-mono tabular-nums text-negative">
                         {food.amount}g
                       </span>
                     </div>
@@ -586,25 +588,27 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
   };
 
   return (
-    <div className="min-h-full bg-background pb-20">
-      <header className="border-b border-line bg-background sticky top-0 z-50">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center">
-            <button onClick={onClose} className="mr-3">
-              <ArrowLeft className="w-5 h-5 text-foreground" />
+    <div className={embedded ? 'bg-background' : 'min-h-full bg-background pb-20'}>
+      {!embedded && (
+        <header className="border-b border-line bg-background sticky top-0 z-50">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center">
+              <button onClick={onClose} className="mr-3">
+                <ArrowLeft className="w-5 h-5 text-foreground" />
+              </button>
+              <span className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Utensils className="w-5 h-5 text-negative" /> Nutrition Analytics
+              </span>
+            </div>
+            <button
+              onClick={handleOpenGoals}
+              className="bg-negative/10 text-negative px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 border border-negative/20"
+            >
+              <Target className="w-3.5 h-3.5" /> Goals
             </button>
-            <span className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Utensils className="w-5 h-5 text-accent-pink" /> Nutrition Analytics
-            </span>
           </div>
-          <button
-            onClick={handleOpenGoals}
-            className="bg-accent-pink/10 text-accent-pink px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 border border-accent-pink/20"
-          >
-            <Target className="w-3.5 h-3.5" /> Goals
-          </button>
-        </div>
-      </header>
+        </header>
+      )}
 
       {renderContent()}
 

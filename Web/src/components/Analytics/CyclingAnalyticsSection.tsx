@@ -11,7 +11,6 @@ import {
     Edit2,
     Check,
     X,
-    Sparkles,
     ShieldCheck,
     AlertCircle,
     Info,
@@ -117,7 +116,7 @@ const ZONE_COLORS = [
     { bg: 'bg-cyan-500', text: 'text-cyan-500', hex: '#06b6d4', label: 'Z3 Tempo', pct: '76 - 90%' },
     { bg: 'bg-amber-500', text: 'text-amber-500', hex: '#f59e0b', label: 'Z4 Sweet Spot / Threshold', pct: '91 - 105%' },
     { bg: 'bg-orange-500', text: 'text-orange-500', hex: '#f97316', label: 'Z5 VO2max', pct: '106 - 120%' },
-    { bg: 'bg-purple-500', text: 'text-purple-500', hex: '#a855f7', label: 'Z6 Anaerobic', pct: '121 - 150%' },
+    { bg: 'bg-workout-long-run', text: 'text-workout-long-run', hex: '#a855f7', label: 'Z6 Anaerobic', pct: '121 - 150%' },
     { bg: 'bg-rose-500', text: 'text-rose-500', hex: '#f43f5e', label: 'Z7 Neuromuscular', pct: '> 150%' },
 ];
 
@@ -266,7 +265,7 @@ export default function CyclingAnalyticsSection({
     if (error || !data) {
         return (
             <div className="glass-card p-8 text-center space-y-3">
-                <AlertCircle className="w-10 h-10 text-accent-pink mx-auto" />
+                <AlertCircle className="w-10 h-10 text-negative mx-auto" />
                 <h3 className="text-base font-semibold text-foreground">Could not load cycling analytics</h3>
                 <p className="text-xs text-foreground-muted">Please refresh the page or try again in a moment.</p>
             </div>
@@ -314,18 +313,18 @@ export default function CyclingAnalyticsSection({
                 {/* Cycling VO2max & eFTP Card */}
                 <div className="glass-card p-4 flex flex-col justify-between">
                     <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1 font-medium">
-                        <Sparkles className="w-3.5 h-3.5 text-accent-purple" /> Cycling VO2max
+                        <TrendingUp className="w-3.5 h-3.5 text-accent-blue" /> Cycling VO2max
                     </div>
                     <div>
                         <div className="flex items-baseline gap-1.5">
-                            <span className="text-2xl font-mono font-bold text-accent-purple tabular-nums">
+                            <span className="text-2xl font-mono font-bold text-accent-blue tabular-nums">
                                 {data.ftp.cyclingVo2max ? data.ftp.cyclingVo2max.toFixed(1) : '-'}
                             </span>
                             <span className="text-xs text-foreground-muted font-medium">mL/kg/min</span>
                         </div>
                         <div className="text-xs text-foreground-muted mt-0.5 flex items-center justify-between">
                             <span>eFTP: {data.ftp.eFtpWatts ? `${data.ftp.eFtpWatts} W` : '-'}</span>
-                            <span className="text-[10px] text-accent-purple/90 font-mono">ACSM MAP</span>
+                            <span className="text-[10px] text-accent-blue/90 font-mono">ACSM MAP</span>
                         </div>
                     </div>
                 </div>
@@ -333,18 +332,18 @@ export default function CyclingAnalyticsSection({
                 {/* Bike PMC (CTL / ATL / TSB) */}
                 <div className="glass-card p-4 flex flex-col justify-between">
                     <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1 font-medium">
-                        <ActivityIcon className="w-3.5 h-3.5 text-accent-cyan" /> Bike Fitness
+                        <ActivityIcon className="w-3.5 h-3.5 text-positive" /> Bike Fitness
                     </div>
                     <div>
                         <div className="flex items-baseline gap-1.5">
-                            <span className="text-2xl font-mono font-bold text-accent-cyan tabular-nums">
+                            <span className="text-2xl font-mono font-bold text-positive tabular-nums">
                                 {latestPmc?.ctlBike !== undefined ? latestPmc.ctlBike.toFixed(0) : '-'}
                             </span>
                             <span className="text-xs text-foreground-muted font-medium">CTL</span>
                         </div>
                         <div className="text-xs text-foreground-muted mt-0.5 flex items-center gap-2">
                             <span>ATL: <span className="text-foreground font-mono font-medium">{latestPmc?.atlBike?.toFixed(0) ?? '–'}</span></span>
-                            <span>TSB: <span className={`font-mono font-medium ${(latestPmc?.tsbBike ?? 0) >= 0 ? 'text-positive' : 'text-accent-pink'}`}>
+                            <span>TSB: <span className={`font-mono font-medium ${(latestPmc?.tsbBike ?? 0) >= 0 ? 'text-positive' : 'text-negative'}`}>
                                 {latestPmc?.tsbBike !== undefined ? (latestPmc.tsbBike > 0 ? `+${latestPmc.tsbBike.toFixed(0)}` : latestPmc.tsbBike.toFixed(0)) : '–'}
                             </span></span>
                         </div>
@@ -390,7 +389,7 @@ export default function CyclingAnalyticsSection({
                 {/* Efficiency Factor (EF) */}
                 <div className="glass-card p-4 flex flex-col justify-between">
                     <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1 font-medium">
-                        <Heart className="w-3.5 h-3.5 text-accent-pink" /> Avg Aerobic EF
+                        <Heart className="w-3.5 h-3.5 text-negative" /> Avg Aerobic EF
                     </div>
                     <div>
                         <div className="flex items-baseline gap-1.5">
@@ -447,10 +446,10 @@ export default function CyclingAnalyticsSection({
                             <span className="w-2.5 h-2.5 bg-accent-orange rounded-xs inline-block" /> NP (W)
                         </span>
                         <span className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 bg-accent-cyan rounded-xs inline-block" /> Avg (W)
+                            <span className="w-2.5 h-2.5 bg-positive rounded-xs inline-block" /> Avg (W)
                         </span>
                         <span className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 bg-accent-purple rounded-full inline-block" /> IF
+                            <span className="w-2.5 h-2.5 bg-accent-blue rounded-full inline-block" /> IF
                         </span>
                     </div>
                 </div>
@@ -493,7 +492,7 @@ export default function CyclingAnalyticsSection({
                                         if (!active || !payload?.length) return null;
                                         const p = payload[0]?.payload;
                                         return (
-                                            <div className="bg-background-secondary border border-line rounded-lg p-3 shadow-xl text-xs space-y-1.5 min-w-[190px]">
+                                            <div className="bg-background-secondary border border-line rounded-lg p-3 text-xs space-y-1.5 min-w-[190px]">
                                                 <div className="font-semibold text-foreground border-b border-line pb-1">
                                                     <div>{p.name}</div>
                                                     <div className="text-[11px] font-normal text-foreground-muted">
@@ -506,11 +505,11 @@ export default function CyclingAnalyticsSection({
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-foreground-muted">Avg Power:</span>
-                                                    <span className="font-mono text-accent-cyan">{p.avg ? `${p.avg} W` : '-'}</span>
+                                                    <span className="font-mono text-positive">{p.avg ? `${p.avg} W` : '-'}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-foreground-muted">Intensity Factor (IF):</span>
-                                                    <span className="font-mono text-accent-purple">{p.if ? p.if.toFixed(2) : '-'}</span>
+                                                    <span className="font-mono text-accent-blue">{p.if ? p.if.toFixed(2) : '-'}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-foreground-muted">Bike TSS:</span>
@@ -569,7 +568,7 @@ export default function CyclingAnalyticsSection({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
                     <div>
                         <div className="flex items-center gap-2">
-                            <ActivityIcon className="w-5 h-5 text-accent-cyan" />
+                            <ActivityIcon className="w-5 h-5 text-positive" />
                             <h3 className="text-lg font-semibold text-foreground">
                                 7-Zone Coggan Power Distribution
                             </h3>
@@ -674,7 +673,7 @@ export default function CyclingAnalyticsSection({
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
                         <div>
                             <div className="flex items-center gap-2">
-                                <Heart className="w-5 h-5 text-accent-pink" />
+                                <Heart className="w-5 h-5 text-negative" />
                                 <h3 className="text-lg font-semibold text-foreground">
                                     Aerobic Efficiency & Decoupling (EF & Pw:HR)
                                 </h3>
@@ -728,7 +727,7 @@ export default function CyclingAnalyticsSection({
                                             const p = payload[0]?.payload;
                                             const isGood = p.decouplingPct !== null && p.decouplingPct < 5;
                                             return (
-                                                <div className="bg-background-secondary border border-line rounded-lg p-3 shadow-xl text-xs space-y-1.5 min-w-[200px]">
+                                                <div className="bg-background-secondary border border-line rounded-lg p-3 text-xs space-y-1.5 min-w-[200px]">
                                                     <div className="font-semibold text-foreground border-b border-line pb-1">
                                                         <div>{p.name}</div>
                                                         <div className="text-[11px] font-normal text-foreground-muted">
@@ -737,7 +736,7 @@ export default function CyclingAnalyticsSection({
                                                     </div>
                                                     <div className="flex justify-between">
                                                         <span className="text-foreground-muted">Efficiency Factor (EF):</span>
-                                                        <span className="font-mono font-bold text-accent-pink">
+                                                        <span className="font-mono font-bold text-negative">
                                                             {p.ef ? `${p.ef.toFixed(2)} W/bpm` : '-'}
                                                         </span>
                                                     </div>
@@ -794,7 +793,7 @@ export default function CyclingAnalyticsSection({
                 <div className="glass-card p-6 flex flex-col justify-between">
                     <div>
                         <div className="flex items-center gap-2 mb-3">
-                            <Info className="w-5 h-5 text-accent-cyan" />
+                            <Info className="w-5 h-5 text-positive" />
                             <h4 className="font-semibold text-foreground text-sm">Understanding Cycling Metrics</h4>
                         </div>
                         <div className="space-y-4 text-xs text-foreground-muted leading-relaxed">
@@ -829,8 +828,8 @@ export default function CyclingAnalyticsSection({
 
             {/* === INLINE FTP EDIT MODAL === */}
             {isFtpModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
-                    <div className="bg-background border border-line rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-slide-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-fade-in">
+                    <div className="bg-background border border-line rounded-md max-w-md w-full p-6 space-y-4 animate-slide-in">
                         <div className="flex items-center justify-between border-b border-line pb-3">
                             <div className="flex items-center gap-2">
                                 <Zap className="w-5 h-5 text-accent-orange" />
@@ -845,7 +844,7 @@ export default function CyclingAnalyticsSection({
                         </div>
 
                         {editError && (
-                            <div className="p-3 rounded-md bg-accent-pink/10 border border-accent-pink/20 text-accent-pink text-xs">
+                            <div className="p-3 rounded-md bg-negative/10 border border-negative/20 text-negative text-xs">
                                 {editError}
                             </div>
                         )}

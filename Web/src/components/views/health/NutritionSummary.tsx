@@ -1,6 +1,9 @@
-import { ChevronRight, Sparkles, Target } from 'lucide-react';
+'use client';
+
+import { ChevronRight, Utensils, Target, MessageSquare } from 'lucide-react';
 import { MacroRing } from './shared';
 import type { NutritionTarget } from '@/lib/types/health';
+import { useCoachDrawer } from '@/components/providers/CoachDrawerProvider';
 
 interface Props {
     targetData: NutritionTarget;
@@ -37,13 +40,15 @@ export function NutritionSummary({
     onOpenAnalytics,
     onOpenMealSuggestion,
 }: Props) {
+    const { openCoach } = useCoachDrawer();
+
     return (
         <>
             {targetData?.isDefault ? (
-                <div className="glass-card border-accent-pink/20 p-4 flex items-start gap-3">
-                    <Target className="w-5 h-5 text-accent-pink shrink-0 mt-0.5" />
+                <div className="glass-card border-negative/20 p-4 flex items-start gap-3">
+                    <Target className="w-5 h-5 text-negative shrink-0 mt-0.5" />
                     <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-accent-pink mb-1">Set Your Nutrition Goals</h4>
+                        <h4 className="text-sm font-semibold text-negative mb-1">Set Your Nutrition Goals</h4>
                         <p className="text-xs text-foreground-muted mb-3">Define your calorie and macro targets to unlock personalized insights and detailed adherence scoring.</p>
                         <button
                             type="button"
@@ -81,7 +86,7 @@ export function NutritionSummary({
                     </div>
                     <div className="h-2 w-full bg-background-tertiary rounded-full mb-3 overflow-hidden">
                         <div
-                            className={`h-full rounded-full transition-all duration-500 ${(effectiveTarget - totalCalories) < 0 ? 'bg-accent-pink' : 'bg-accent-orange'}`}
+                            className={`h-full rounded-full transition-all duration-500 ${(effectiveTarget - totalCalories) < 0 ? 'bg-negative' : 'bg-accent-orange'}`}
                             style={{ width: `${Math.min(100, (totalCalories / (effectiveTarget || 1)) * 100)}%` }}
                         />
                     </div>
@@ -100,7 +105,7 @@ export function NutritionSummary({
                         </div>
                     )}
                     <div className="flex justify-between">
-                        <MacroRing value={totalProtein} target={targetProtein} color="var(--accent-pink)" label="Protein" />
+                        <MacroRing value={totalProtein} target={targetProtein} color="var(--negative)" label="Protein" />
                         <MacroRing value={totalCarbs} target={targetCarbs} color="var(--accent-blue)" label="Carbs" />
                         <MacroRing value={totalFats} target={targetFats} color="var(--workout-tempo)" label="Fats" />
                     </div>
@@ -113,8 +118,8 @@ export function NutritionSummary({
                 className="glass-card glass-card-hover p-4 w-full flex items-center justify-between"
             >
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-accent-blue/10 flex items-center justify-center flex-shrink-0 border border-accent-blue/20">
-                        <Sparkles className="w-5 h-5 text-workout-tempo" />
+                    <div className="w-10 h-10 rounded-md bg-accent-blue/10 flex items-center justify-center flex-shrink-0 border border-accent-blue/20">
+                        <Utensils className="w-5 h-5 text-workout-tempo" aria-hidden="true" />
                     </div>
                     <div className="text-left font-sans">
                         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">What should I eat?</h3>
@@ -124,6 +129,25 @@ export function NutritionSummary({
                 <div className="w-8 h-8 rounded-full bg-background-tertiary flex items-center justify-center">
                     <ChevronRight className="w-4 h-4 text-foreground-muted" />
                 </div>
+            </button>
+
+            <button
+                type="button"
+                onClick={() =>
+                    openCoach({
+                        title: 'Fueling & macros',
+                        contextType: 'nutrition',
+                        prompt: `Today I have eaten ${Math.round(totalCalories)} of ${Math.round(effectiveTarget)} kcal (P: ${Math.round(totalProtein)}/${Math.round(targetProtein)}g, C: ${Math.round(totalCarbs)}/${Math.round(targetCarbs)}g, F: ${Math.round(totalFats)}/${Math.round(targetFats)}g). How should I fuel the rest of the day around my training?`,
+                        autoSend: true,
+                    })
+                }
+                className="w-full flex items-center justify-between px-4 py-2.5 rounded-[3px] border border-line bg-background-secondary hover:bg-surface-hover text-xs font-medium text-foreground transition-colors"
+            >
+                <span className="flex items-center gap-2">
+                    <MessageSquare className="w-3.5 h-3.5 text-accent-orange" aria-hidden="true" />
+                    Ask Coach about today&apos;s fueling
+                </span>
+                <ChevronRight className="w-4 h-4 text-foreground-muted" aria-hidden="true" />
             </button>
         </>
     );

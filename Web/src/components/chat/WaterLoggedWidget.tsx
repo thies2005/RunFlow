@@ -30,7 +30,7 @@ export default function WaterLoggedWidget({ amount }: WaterLoggedWidgetProps) {
             </div>
 
             <div className="bg-background-tertiary p-2 text-center border-t border-line">
-                <p className="text-xs text-foreground-muted">View this in your <a href="/nutrition" className="text-accent-blue hover:underline">Nutrition Log</a></p>
+                <p className="text-xs text-foreground-muted">View this in your <a href="/health" className="text-accent-blue hover:underline">Nutrition Log</a></p>
             </div>
         </div>
     );

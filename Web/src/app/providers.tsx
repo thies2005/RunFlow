@@ -9,6 +9,7 @@ import { NotificationProvider } from '@/components/providers/NotificationProvide
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { UnitProvider } from '@/lib/units';
 import { HealthSyncProvider } from '@/components/providers/HealthSyncProvider';
+import { CoachDrawerProvider } from '@/components/providers/CoachDrawerProvider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient({
@@ -30,7 +31,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
                         <NotificationProvider>
                             <HealthSyncProvider>
                                 <UserMetricsProvider>
-                                    {children}
+                                    <CoachDrawerProvider>
+                                        {children}
+                                    </CoachDrawerProvider>
                                 </UserMetricsProvider>
                             </HealthSyncProvider>
                         </NotificationProvider>

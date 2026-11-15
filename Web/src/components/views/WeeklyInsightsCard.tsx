@@ -1,15 +1,17 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Sparkles, RefreshCw, Calendar, TrendingUp } from 'lucide-react';
+import { FileText, RefreshCw, Calendar, TrendingUp, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
 import DOMPurify from 'dompurify';
+import { useCoachDrawer } from '@/components/providers/CoachDrawerProvider';
 
 export function WeeklyInsightsCard() {
     const queryClient = useQueryClient();
+    const { openCoach } = useCoachDrawer();
 
     const { data: insightData, isLoading: _isLoadingInsight } = useQuery({
         queryKey: ['health-insight'],
@@ -41,7 +43,7 @@ export function WeeklyInsightsCard() {
         return (
             <div className="glass-card p-5">
                 <div className="flex items-center gap-2 mb-2 text-foreground font-semibold">
-                    <Sparkles className="w-5 h-5 text-accent-blue" />
+                    <FileText className="w-5 h-5 text-accent-blue" aria-hidden="true" />
                     AI Weekly Insights
                 </div>
                 <p className="text-sm text-foreground-muted mb-4">
@@ -61,17 +63,36 @@ export function WeeklyInsightsCard() {
         <div className="glass-card p-5">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2 text-foreground font-semibold">
-                    <Sparkles className="w-5 h-5 text-accent-blue" />
+                    <FileText className="w-5 h-5 text-accent-blue" aria-hidden="true" />
                     Weekly Insights
                 </div>
-                <button
-                    onClick={() => generateMutation.mutate()}
-                    disabled={isGenerating}
-                    className="p-1.5 rounded-md bg-background-tertiary hover:bg-glass-bg-hover text-foreground-muted transition-colors"
-                    title="Generate New Insight"
-                >
-                    <RefreshCw className={`w-4 h-4 ${isGenerating ? 'animate-spin text-accent-blue' : ''}`} />
-                </button>
+                <div className="flex items-center gap-2">
+                    {insight && (
+                        <button
+                            type="button"
+                            onClick={() =>
+                                openCoach({
+                                    title: 'Weekly insight',
+                                    contextType: 'insight',
+                                    prompt: `Let's discuss my weekly insight (${format(new Date(insight.rangeStart), 'MMM d')} - ${format(new Date(insight.rangeEnd), 'MMM d')}): what are the top 1-2 adjustments I should make next week?`,
+                                    autoSend: true,
+                                })
+                            }
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-[3px] border border-line bg-background-secondary hover:bg-surface-hover text-[11px] font-medium text-foreground transition-colors"
+                        >
+                            <MessageSquare className="w-3 h-3 text-accent-orange" aria-hidden="true" />
+                            Ask Coach
+                        </button>
+                    )}
+                    <button
+                        onClick={() => generateMutation.mutate()}
+                        disabled={isGenerating}
+                        className="p-1.5 rounded-[3px] border border-line bg-background-tertiary hover:bg-surface-hover text-foreground-muted transition-colors"
+                        title="Generate New Insight"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${isGenerating ? 'animate-spin text-accent-blue' : ''}`} />
+                    </button>
+                </div>
             </div>
 
             {isGenerating ? (

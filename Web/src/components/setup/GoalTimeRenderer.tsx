@@ -386,7 +386,7 @@ export default function GoalTimeRenderer({
                 {goalTimeSeconds !== null && (
                     <button
                         onClick={resetToProjected}
-                        className="text-xs text-foreground-muted hover:text-accent-cyan transition-colors"
+                        className="text-xs text-foreground-muted hover:text-positive transition-colors"
                     >
                         Reset to projected
                     </button>
@@ -394,7 +394,7 @@ export default function GoalTimeRenderer({
             </div>
 
             {calibrationFactor !== 1.0 && (
-                <div className="mb-3 text-xs text-accent-cyan bg-accent-cyan/10 px-2 py-1 rounded inline-block">
+                <div className="mb-3 text-xs text-positive bg-positive/10 px-2 py-1 rounded inline-block">
                     Using calibrated VDOT ({(currentVdot * calibrationFactor).toFixed(1)})
                 </div>
             )}
@@ -481,7 +481,7 @@ export default function GoalTimeRenderer({
                     <span className="text-foreground-muted block mb-1">VDOT</span>
                     <span className="text-foreground font-semibold font-mono tabular-nums">{calibratedVdot.toFixed(1)}</span>
                     <span className="text-foreground-muted"> → </span>
-                    <span className="text-accent-cyan font-semibold font-mono tabular-nums">{projection.projectedVdot}</span>
+                    <span className="text-positive font-semibold font-mono tabular-nums">{projection.projectedVdot}</span>
                     {projection.improvementPercent > 0 && (
                         <span className="text-positive ml-1 font-mono tabular-nums">(+{projection.improvementPercent}%)</span>
                     )}
@@ -490,7 +490,7 @@ export default function GoalTimeRenderer({
                     <span className="text-foreground-muted block mb-1">Marathon Shape</span>
                     <span className="text-foreground font-semibold font-mono tabular-nums">{shapePercent}%</span>
                     <span className="text-foreground-muted"> → </span>
-                    <span className="text-accent-cyan font-semibold font-mono tabular-nums">{projection.projectedShape}%</span>
+                    <span className="text-positive font-semibold font-mono tabular-nums">{projection.projectedShape}%</span>
                     {projection.shapeImprovementPercent > 0 && (
                         <span className="text-positive ml-1 font-mono tabular-nums">(+{projection.shapeImprovementPercent.toFixed(1)}%)</span>
                     )}

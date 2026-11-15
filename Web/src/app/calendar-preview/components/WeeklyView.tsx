@@ -384,7 +384,7 @@ function DraggableWorkoutPill({
                     <button
                         type="button"
                         onClick={handleExportZwo}
-                        className="px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-background-tertiary hover:bg-background border border-line text-accent-cyan hover:text-accent-cyan"
+                        className="px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-background-tertiary hover:bg-background border border-line text-positive hover:text-positive"
                         title="Export as MyWhoosh/Zwift .zwo"
                     >
                         .ZWO

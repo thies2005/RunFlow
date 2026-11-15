@@ -1,12 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { RefreshCw, AlertCircle, BarChart3, Hand, Target } from 'lucide-react';
+import { RefreshCw, AlertCircle, Hand, Target, LinkIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Session } from 'next-auth';
+import { signIn } from 'next-auth/react';
 import { UseMutationResult } from '@tanstack/react-query';
 import { RaceCountdown, ActivityList, Footer, MinimalistPillsMenu, UserAvatar } from '@/components';
+import { AppTopBar } from '@/components/layout/AppTopBar';
 import * as TrainingStatusCardModule from '@/components/dashboard/TrainingStatusCard';
 import TrainingStatusCard, { readDashboardLayoutMode, EVENT_DASHBOARD_LAYOUT_CHANGE, type DashboardStatusLayoutMode } from '@/components/dashboard/TrainingStatusCard';
 import WorkoutScheduleCard from '@/components/dashboard/WorkoutScheduleCard';
@@ -105,48 +106,45 @@ export function DashboardView({
     return (
         <div className="min-h-screen bg-background">
             <UserMetricsProvider stats={statsData}>
-                {showHeader && (
-                    <header className="topbar sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="flex items-center justify-between h-16">
-                                <div className="flex items-center gap-3">
-                                    <Image
-                                        src="/icons/app-icon-192.png"
-                                        alt="RunFlow"
-                                        width={40}
-                                        height={40}
-                                        className="rounded-md"
-                                    />
-                                    <span className="text-xl brand">Run<span>Flow</span></span>
-                                </div>
+                {showHeader && <AppTopBar />}
 
-                                <div className="flex items-center gap-4">
-                                    <button onClick={() => router.push('/analytics')} className="topbar-btn flex items-center gap-2">
-                                        <BarChart3 className="w-5 h-5" />
-                                        <span className="hidden sm:inline">Analytics</span>
+                {hasError && (() => {
+                    const errMsg = syncMutation.error?.message || error?.message || '';
+                    const isAuthError = errMsg.toLowerCase().includes('authenticate') ||
+                        errMsg.toLowerCase().includes('token') ||
+                        errMsg.includes('400') || errMsg.includes('401');
+                    return (
+                        <div className="bg-negative/10 border-b border-negative/20 py-3 px-4">
+                            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center gap-2 text-negative">
+                                <div className="flex items-center gap-2 flex-1">
+                                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                                    <span className="text-sm">
+                                        {isAuthError ? 'Strava connection lost. Please reconnect to resume syncing.' : (errMsg || 'An error occurred')}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {isAuthError && (
+                                        <button
+                                            type="button"
+                                            onClick={() => signIn('strava', { callbackUrl: window.location.href })}
+                                            className="px-4 py-1.5 bg-accent-orange hover:bg-accent-orange/90 text-white text-sm rounded-md flex items-center gap-2 transition-colors font-medium"
+                                        >
+                                            <LinkIcon className="w-4 h-4" />
+                                            Reconnect Strava
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => { onInvalidateQueries(); syncMutation.reset(); }}
+                                        className="text-sm underline hover:no-underline"
+                                    >
+                                        {isAuthError ? 'Dismiss' : 'Retry'}
                                     </button>
-                                    <div className="flex items-center gap-3">
-                                        <MinimalistPillsMenu />
-                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </header>
-                )}
-
-                {hasError && (
-                    <div className="bg-accent-pink/10 border-b border-accent-pink/20 py-3 px-4">
-                        <div className="max-w-7xl mx-auto flex items-center gap-2 text-accent-pink">
-                            <AlertCircle className="w-5 h-5" />
-                            <span className="text-sm">
-                                {syncMutation.error?.message || error?.message || 'An error occurred'}
-                            </span>
-                            <button onClick={() => { onInvalidateQueries(); syncMutation.reset(); }} className="ml-auto text-sm underline hover:no-underline">
-                                Retry
-                            </button>
-                        </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="mb-8">

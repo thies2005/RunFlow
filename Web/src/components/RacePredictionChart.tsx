@@ -96,7 +96,7 @@ function RacePredictionChart({
                         value={simulatedVO2Max}
                         onChange={(e) => setSimulatedVO2Max(parseFloat(e.target.value) || 0)}
                         step="0.1"
-                        className="w-16 bg-transparent text-accent-cyan font-semibold font-mono text-right focus:outline-hidden focus:border-b focus:border-accent-cyan"
+                        className="w-16 bg-transparent text-positive font-semibold font-mono text-right focus:outline-hidden focus:border-b focus:border-positive"
                     />
                 </div>
             </div>
@@ -107,7 +107,7 @@ function RacePredictionChart({
                 <div className="p-3 bg-background-tertiary rounded-md">
                     <div className="flex items-center justify-between mb-2">
                         <label className="text-xs text-foreground-muted">Simulated Aerobic Fitness (VO2max)</label>
-                        <span className="text-base font-semibold text-accent-cyan font-mono tabular-nums">{simulatedVO2Max.toFixed(1)}</span>
+                        <span className="text-base font-semibold text-positive font-mono tabular-nums">{simulatedVO2Max.toFixed(1)}</span>
                     </div>
                     <input
                         type="range"
@@ -116,11 +116,11 @@ function RacePredictionChart({
                         step="0.1"
                         value={simulatedVO2Max}
                         onChange={(e) => setSimulatedVO2Max(parseFloat(e.target.value))}
-                        className="w-full h-2 bg-foreground/15 rounded-md appearance-none cursor-pointer accent-accent-cyan"
+                        className="w-full h-2 bg-foreground/15 rounded-md appearance-none cursor-pointer accent-positive"
                     />
                     <div className="flex justify-between text-[10px] text-foreground-muted mt-1">
                         <span>20 (Low)</span>
-                        <span className="text-accent-cyan">Current: {effectiveVO2max.toFixed(1)}</span>
+                        <span className="text-positive">Current: {effectiveVO2max.toFixed(1)}</span>
                         <span>80 (Elite)</span>
                     </div>
                 </div>
@@ -129,7 +129,7 @@ function RacePredictionChart({
                 <div className="p-3 bg-background-tertiary rounded-md">
                     <div className="flex items-center justify-between mb-2">
                         <label className="text-xs text-foreground-muted">Marathon Shape</label>
-                        <span className="text-base font-semibold text-accent-cyan font-mono tabular-nums">{shapePercent}%</span>
+                        <span className="text-base font-semibold text-positive font-mono tabular-nums">{shapePercent}%</span>
                     </div>
                     <input
                         type="range"
@@ -137,11 +137,11 @@ function RacePredictionChart({
                         max="100"
                         value={shapePercent}
                         onChange={(e) => setShapePercent(parseInt(e.target.value))}
-                        className="w-full h-2 bg-foreground/15 rounded-md appearance-none cursor-pointer accent-accent-cyan"
+                        className="w-full h-2 bg-foreground/15 rounded-md appearance-none cursor-pointer accent-positive"
                     />
                     <div className="flex justify-between text-[10px] text-foreground-muted mt-1">
                         <span>0% (Unfit)</span>
-                        <span className="text-accent-cyan">Current: {currentShape}%</span>
+                        <span className="text-positive">Current: {currentShape}%</span>
                         <span>100% (Peak)</span>
                     </div>
                 </div>

@@ -1,76 +1,24 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, RefreshCw, Activity as ActivityIcon, Zap, Layers, Trophy, TrendingUp, Sparkles, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
-import type { PmcRange } from '@/components/Analytics/SplitPmcChart';
+import { useAnalyticsMetrics } from '@/hooks/useAnalyticsMetrics';
+import AnalyticsView from '@/components/views/AnalyticsView';
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-// Maps the page TimeRange to the equivalent PMC/cycling range
-const timeRangeToPmcRange = (range: TimeRange): PmcRange =>
-    range === '1M' ? '42d'
-        : range === '3M' ? '90d'
-            : range === '6M' ? '180d'
-                : range === '1Y' ? '1y'
-                    : 'all';
-
-// Dynamic imports for heavy chart components to enable lazy loading and reduce initial bundle size
 const ShapeCalibrationModal = dynamic(() => import('@/components/ShapeCalibrationModal'), { ssr: false });
-const RacePredictionChart = dynamic(() => import('@/components/RacePredictionChart'), { ssr: false });
-const RacePredictionTimeChart = dynamic(() => import('@/components/RacePredictionTimeChart'), { ssr: false });
-const CombinedAnalyticsChart = dynamic(() => import('@/components/CombinedAnalyticsChart'), { ssr: false });
-const TrendChartsSection = dynamic(() => import('@/components/analytics/TrendChartsSection'), { ssr: false });
-const ZoneDistributionSection = dynamic(() => import('@/components/analytics/ZoneDistributionSection'), { ssr: false });
-const TopMetricsSection = dynamic(() => import('@/components/analytics/TopMetricsSection'), { ssr: false });
-const TrainingPacesSection = dynamic(() => import('@/components/analytics/TrainingPacesSection'), { ssr: false });
-const FitnessChart = dynamic(() => import('@/components/FitnessChart'), { ssr: false });
-const CyclingAnalyticsSection = dynamic(() => import('@/components/Analytics/CyclingAnalyticsSection'), { ssr: false });
-const SplitPmcChart = dynamic(() => import('@/components/Analytics/SplitPmcChart'), { ssr: false });
-import { Footer } from '@/components';
-import {
-    calculatePredictedTimes,
-    calculateAllRacePredictions,
-    calculateEffectiveVO2max,
-} from '@/lib/metrics/runalyze';
-import {
-    calculateTrainingPaces,
-} from '@/lib/metrics/vdot';
-import type { Activity, Goal } from '@/lib/types';
 
 export default function AnalyticsPage() {
     const { status } = useSession();
     const router = useRouter();
     const queryClient = useQueryClient();
-    const [selectedSport, setSelectedSport] = useState<'COMBINED' | 'RUNNING' | 'CYCLING'>('COMBINED');
     const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
     const [timeRange, setTimeRange] = useState<TimeRange>('1Y');
+    const [zonesTimeRange, setZonesTimeRange] = useState<'1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL'>('1Y');
 
-    // Filter helpers
-    const filterByTimeRange = <T extends { date?: string; week?: string }>(data: T[], range: TimeRange): T[] => {
-        if (range === 'ALL' || !data.length) return data;
-        const now = new Date();
-        const cutoff = new Date();
-
-        switch (range) {
-            case '1Y': cutoff.setFullYear(now.getFullYear() - 1); break;
-            case '6M': cutoff.setMonth(now.getMonth() - 6); break;
-            case '3M': cutoff.setMonth(now.getMonth() - 3); break;
-            case '1M': cutoff.setMonth(now.getMonth() - 1); break;
-        }
-
-        return data.filter(d => {
-            const dateStr = d.date || d.week;
-            if (!dateStr) return true;
-            return new Date(dateStr) >= cutoff;
-        });
-    };
-
-    // Fetch ALL activities
     const { data: activitiesData, isLoading } = useQuery({
         queryKey: ['all-activities'],
         queryFn: async () => {
@@ -81,7 +29,6 @@ export default function AnalyticsPage() {
         enabled: status === 'authenticated',
     });
 
-    // Fetch user settings (for maxHR)
     const { data: userData } = useQuery({
         queryKey: ['user-settings'],
         queryFn: async () => {
@@ -92,7 +39,6 @@ export default function AnalyticsPage() {
         enabled: status === 'authenticated',
     });
 
-    // Fetch active goal for calibration factor
     const { data: goalsData } = useQuery({
         queryKey: ['goals'],
         queryFn: async () => {
@@ -103,7 +49,6 @@ export default function AnalyticsPage() {
         enabled: status === 'authenticated',
     });
 
-    // Fetch analytics stats for VDOT correction factor and current metrics
     const { data: statsData } = useQuery({
         queryKey: ['analytics-stats'],
         queryFn: async () => {
@@ -114,16 +59,15 @@ export default function AnalyticsPage() {
         enabled: status === 'authenticated',
     });
 
-    // Fetch analytics history for server-calculated trends (shape, VO2, fitness)
     const { data: historyData } = useQuery({
         queryKey: ['analytics-history', timeRange],
         queryFn: async () => {
             const rangeMap: Record<string, string> = {
-                'ALL': 'ALL',
+                ALL: 'ALL',
                 '1Y': '1_YEAR',
                 '6M': '6_MONTHS',
                 '3M': '12_WEEKS',
-                '1M': '4_WEEKS'
+                '1M': '4_WEEKS',
             };
             const res = await fetch(`/api/analytics/history?range=${rangeMap[timeRange] || '1_YEAR'}`);
             if (!res.ok) throw new Error('Failed to fetch history');
@@ -132,16 +76,15 @@ export default function AnalyticsPage() {
         enabled: status === 'authenticated',
     });
 
-    // Fetch cycling analytics for split PMC and combined metrics
     const { data: cyclingData } = useQuery({
         queryKey: ['cycling-analytics', timeRange],
         queryFn: async () => {
             const rangeMap: Record<string, string> = {
-                'ALL': 'all',
+                ALL: 'all',
                 '1Y': '1y',
                 '6M': '180d',
                 '3M': '90d',
-                '1M': '42d'
+                '1M': '42d',
             };
             const res = await fetch(`/api/analytics/cycling?range=${rangeMap[timeRange] || '90d'}`);
             if (!res.ok) return null;
@@ -150,7 +93,6 @@ export default function AnalyticsPage() {
         enabled: status === 'authenticated',
     });
 
-    // Recalculate mutation
     const recalculateMutation = useMutation({
         mutationFn: async () => {
             const res = await fetch('/api/settings/recalculate-vdot', { method: 'POST' });
@@ -165,635 +107,60 @@ export default function AnalyticsPage() {
         },
     });
 
-    // Calculated data - uses server data where available, local calculations for derived values only
-    const { runalyzeMetrics, vo2TrendData, shapeTrendData, fitnessData, combinedData, trainingPaces } = useMemo(() => {
-        const activities: Activity[] = activitiesData?.activities || [];
-
-        // Get values from server APIs
-        const effectiveVO2max = statsData?.effectiveVO2max || 0;
-        // Performance VDOT — drives the training-paces section (planning/pace
-        // context). The HR-based effectiveVO2max above is the aerobic-fitness
-        // trend and only powers the fitness-based predictions.
-        const vdot = statsData?.vdot || 0;
-        const activeGoal = goalsData?.goals?.find((g: Goal) => g.isActive);
-        const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
-
-        // Use server-provided marathon shape
-        const shapeFromServer = statsData?.marathonShape || { shape: 0, mileageScore: 0, longRunScore: 0, crossTrainingScore: 0, details: {} };
-
-        // Calculate race predictions and training paces from server values
-        const times = effectiveVO2max > 0
-            ? calculatePredictedTimes(effectiveVO2max, shapeFromServer.shape, calibrationFactor)
-            : { optimal: 0, predicted: 0 };
-        const allPredictions = effectiveVO2max > 0
-            ? calculateAllRacePredictions(effectiveVO2max, shapeFromServer.shape, calibrationFactor)
-            : [];
-        const trainingPaces = vdot > 0
-            ? calculateTrainingPaces(vdot)
-            : null;
-
-        // Use server-provided trend data
-        const serverShapeTrend = historyData?.shapeTrend || [];
-        const shapeTrend: { week: string; shape: number }[] = serverShapeTrend.map((s: { week: string; shape: number }) => ({
-            week: s.week,
-            shape: s.shape
-        }));
-
-        // Use server-provided VO2 trend (weekly) with rolling average
-        const serverVo2Trend = historyData?.vo2Trend || [];
-        const vo2Trend: { date: string; vo2: number; vo2Rolling?: number }[] = [];
-        serverVo2Trend.forEach((point: { week: string; vo2: number }, index: number) => {
-            const windowSize = 4;
-            const windowValues: number[] = [];
-            for (let i = index; i >= 0 && windowValues.length < windowSize; i--) {
-                windowValues.push(serverVo2Trend[i].vo2);
-            }
-            if (windowValues.length > 0) {
-                const sum = windowValues.reduce((a, b) => a + b, 0);
-                const avg = sum / windowValues.length;
-                vo2Trend.push({
-                    date: point.week,
-                    vo2: point.vo2,
-                    vo2Rolling: Math.round(avg * 10) / 10
-                });
-            } else {
-                vo2Trend.push({ date: point.week, vo2: point.vo2 });
-            }
-        });
-
-        // Use server-provided fitness trend. Pass the FULL point through (not just
-        // ctl/atl/tsb): SplitPmcChart consumes the multi-sport fields
-        // (ctlRunning/ctlBike/atlBike/tsbBike/runTss/bikeTss/trimp) as fallback data
-        // when /api/analytics/cycling has no series.
-        const serverFitnessTrend = historyData?.fitnessTrend || [];
-        const fitness = serverFitnessTrend as Array<
-            { date: string; ctl: number; atl: number; tsb: number } & { [key: string]: unknown }
-        >;
-
-        // === Combined Data for Charts (Volume + Training Time) - still local ===
-        const dailyVolumeMap = new Map<string, number>();
-        const dailyTimeMap = new Map<string, number>();
-        const dailyVO2Map = new Map<string, { values: number[]; vo2max?: number }>();
-        const maxHR = userData?.user?.hrMax || userData?.hrMax || 190;
-        // Daily VO2max trend uses the Effective VO2max calibration (race-prediction baseline),
-        // not the Training Pace (vdotCorrectionFactor) adjustment.
-        const factor = statsData?.effectiveVo2maxCorrectionFactor || 1.0;
-
-        activities.forEach(activity => {
-            const dateKey = new Date(activity.startDate).toISOString().split('T')[0];
-
-            // Always add to Training Time (minutes) - All Activity Types
-            const minutes = activity.movingTime / 60;
-            dailyTimeMap.set(dateKey, (dailyTimeMap.get(dateKey) || 0) + minutes);
-
-            // Run-specific metrics (Volume, VO2)
-            if (activity.type === 'RUN') {
-                dailyVolumeMap.set(dateKey, (dailyVolumeMap.get(dateKey) || 0) + activity.distance / 1000);
-
-                // Calculate VO2max for this run if it has HR (for detailed daily trend)
-                if (activity.hasHeartrate && activity.averageHr && activity.distance >= 3000) {
-                    const vo2 = calculateEffectiveVO2max(activity.distance, activity.movingTime, activity.averageHr, maxHR);
-                    if (vo2 > 0) {
-                        const existing = dailyVO2Map.get(dateKey) || { values: [] };
-                        existing.values.push(vo2 * factor);
-                        dailyVO2Map.set(dateKey, existing);
-                    }
-                }
-            }
-        });
-
-        // Calculate average VO2max for each day
-        dailyVO2Map.forEach((entry) => {
-            if (entry.values.length > 0) {
-                entry.vo2max = Math.round(entry.values.reduce((a, b) => a + b, 0) / entry.values.length * 10) / 10;
-            }
-        });
-
-        // Helper to safe-normalize dates (using string manipulation to avoid timezone issues)
-        const normalizeDate = (d: string) => {
-            if (!d) return '';
-            // If it's already YYYY-MM-DD, return it. If it's ISO, take first 10 chars.
-            return d.length >= 10 ? d.substring(0, 10) : d;
-        };
-
-        // Build combined data array - INCLUDE server fitness dates (for rest days)
-        const fitnessDateSet = new Set<string>(serverFitnessTrend.map((f: { date: string }) => normalizeDate(f.date)));
-        const allDates = new Set<string>([
-            ...Array.from(dailyVolumeMap.keys()),
-            ...Array.from(dailyTimeMap.keys()),
-            ...Array.from(fitnessDateSet)  // Include server fitness dates (including rest days up to today)
-        ]);
-
-        // Fill a contiguous daily range from the earliest known date through today,
-        // so rest days without activities exist and rolling windows sum full weeks
-        // even when serverFitnessTrend is empty or sparse.
-        if (allDates.size > 0) {
-            const sortedDates = Array.from(allDates).sort();
-            const startMs = new Date(`${sortedDates[0]}T00:00:00Z`).getTime();
-            const todayMs = new Date();
-            todayMs.setUTCHours(0, 0, 0, 0);
-            for (let t = startMs; t <= todayMs.getTime(); t += MS_PER_DAY) {
-                allDates.add(new Date(t).toISOString().split('T')[0]);
-            }
-        }
-
-        const combinedDataRaw = Array.from(allDates).sort().map((date: string) => {
-            // date is YYYY-MM-DD from dailyVolumeMap
-            const fitnessEntry = serverFitnessTrend.find((f: { date: string }) => normalizeDate(f.date) === date);
-            return {
-                date,
-                volume: dailyVolumeMap.get(date) || 0,
-                trainingTime: dailyTimeMap.get(date) || 0,
-                vo2max: dailyVO2Map.get(date)?.vo2max,
-                ctl: fitnessEntry?.ctl,
-                atl: fitnessEntry?.atl,
-                tsb: fitnessEntry?.tsb,
-            };
-        });
-
-        // 7-calendar-day rolling sums (weekly km / weekly minutes / VO2 average).
-        // Window by date distance, not array index, so it stays correct even if a
-        // day is ever missing from combinedDataRaw.
-        const combinedDataWithRolling = combinedDataRaw.map((d, index) => {
-            let volSum = 0, timeSum = 0, vo2Sum = 0, vo2Count = 0;
-            const endTime = new Date(`${d.date}T00:00:00Z`).getTime();
-
-            for (let i = index; i >= 0; i--) {
-                const pointTime = new Date(`${combinedDataRaw[i].date}T00:00:00Z`).getTime();
-                if (endTime - pointTime > 6 * MS_PER_DAY) break; // 7 calendar days incl. today
-                volSum += combinedDataRaw[i].volume;
-                timeSum += combinedDataRaw[i].trainingTime;
-                if (combinedDataRaw[i].vo2max) {
-                    vo2Sum += combinedDataRaw[i].vo2max!;
-                    vo2Count++;
-                }
-            }
-
-            return {
-                ...d,
-                vo2maxRolling: vo2Count > 0 ? Math.round(vo2Sum / vo2Count * 10) / 10 : undefined,
-                volumeRolling: Math.round(volSum * 10) / 10,
-                trainingTimeRolling: Math.round(timeSum)
-            };
-        });
-
-        // Zone distribution from activities
-        const zoneDistribution = activities.reduce((acc: Record<string, number>, activity: Activity) => {
-            acc.Z1 = (acc.Z1 || 0) + (activity.hrZone1Time || 0);
-            acc.Z2 = (acc.Z2 || 0) + (activity.hrZone2Time || 0);
-            acc.Z3 = (acc.Z3 || 0) + (activity.hrZone3Time || 0);
-            acc.Z4 = (acc.Z4 || 0) + (activity.hrZone4Time || 0);
-            acc.Z5 = (acc.Z5 || 0) + (activity.hrZone5Time || 0);
-            acc.Z6 = (acc.Z6 || 0) + (activity.hrZone6Time || 0);
-            acc.Z7 = (acc.Z7 || 0) + (activity.hrZone7Time || 0);
-            return acc;
-        }, {});
-
-        return {
-            runalyzeMetrics: {
-                effectiveVO2max,
-                vdot,
-                rawVO2max: statsData?.rawVO2max || 0,
-                vdotCorrectionFactor: statsData?.vdotCorrectionFactor || 1.0,
-                shape: shapeFromServer.shape,
-                mileageScore: shapeFromServer.mileageScore,
-                longRunScore: shapeFromServer.longRunScore,
-                crossTrainingScore: shapeFromServer.crossTrainingScore || 0,
-                details: shapeFromServer.details,
-                optimalTime: times.optimal,
-                predictedTime: times.predicted,
-                calibrationFactor
-            },
-            vo2TrendData: vo2Trend,
-            shapeTrendData: shapeTrend,
-            fitnessData: fitness,
-            racePredictions: allPredictions,
-            trainingPaces,
-            combinedData: combinedDataWithRolling,
-            zoneDistribution
-        };
-    }, [activitiesData, userData, goalsData, statsData, historyData]);
-
-    // Apply filtering to the data used in stand-alone charts
-    const filteredVo2Trend = useMemo(() => filterByTimeRange(vo2TrendData, timeRange), [vo2TrendData, timeRange]);
-    const filteredShapeTrend = useMemo(() => filterByTimeRange(shapeTrendData, timeRange), [shapeTrendData, timeRange]);
-    const filteredFitness = useMemo(() => filterByTimeRange(fitnessData, timeRange), [fitnessData, timeRange]);
-
-    // Combined sport stats for overview
-    const combinedSportStats = useMemo(() => {
-        const activities: Activity[] = activitiesData?.activities || [];
-        let runDistM = 0;
-        let bikeDistM = 0;
-        let totalMovingSec = 0;
-        let runCount = 0;
-        let bikeCount = 0;
-
-        activities.forEach(a => {
-            totalMovingSec += a.movingTime;
-            if (a.type === 'RUN') {
-                runDistM += a.distance;
-                runCount++;
-            } else if (a.type === 'RIDE' || (a as any).type === 'VIRTUAL_RIDE') {
-                bikeDistM += a.distance;
-                bikeCount++;
-            }
-        });
-
-        const latestPmc = cyclingData?.pmcSeries?.[cyclingData.pmcSeries.length - 1];
-
-        return {
-            runDistKm: (runDistM / 1000).toFixed(1),
-            bikeDistKm: (bikeDistM / 1000).toFixed(1),
-            totalHours: Math.round(totalMovingSec / 3600),
-            totalActivities: activities.length,
-            runCount,
-            bikeCount,
-            ctlCombined: latestPmc?.ctlCombined ?? fitnessData?.[fitnessData.length - 1]?.ctl ?? 0,
-            atlCombined: latestPmc?.atlCombined ?? fitnessData?.[fitnessData.length - 1]?.atl ?? 0,
-            tsbCombined: latestPmc?.tsbCombined ?? fitnessData?.[fitnessData.length - 1]?.tsb ?? 0,
-        };
-    }, [activitiesData, cyclingData, fitnessData]);
+    const analyticsMetrics = useAnalyticsMetrics(
+        activitiesData,
+        goalsData,
+        statsData,
+        historyData,
+        userData
+    );
 
     if (status === 'unauthenticated') {
         router.push('/login');
         return null;
     }
 
-    const showLoading = status === 'loading' || isLoading;
-    // PMC/cycling range matching the page-level time range selector
-    const pmcRange = timeRangeToPmcRange(timeRange);
+    if (status === 'loading' || isLoading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-foreground-muted">Loading analytics...</div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-background">
-            <header className="topbar sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center gap-4">
-                            <button onClick={() => router.push('/')} className="p-2 transition-colors">
-                                <ArrowLeft className="w-5 h-5" />
-                            </button>
-                            <h1 className="text-xl font-bold">Performance Analytics</h1>
-                        </div>
-                        <button
-                            onClick={() => recalculateMutation.mutate()}
-                            disabled={recalculateMutation.isPending}
-                            className="btn-secondary flex items-center gap-2 py-2 px-4"
-                        >
-                            <RefreshCw className={`w-4 h-4 ${recalculateMutation.isPending ? 'animate-spin' : ''}`} />
-                            Refresh
-                        </button>
-                    </div>
-                </div>
-            </header>
+        <>
+            <AnalyticsView
+                runalyzeMetrics={analyticsMetrics.runalyzeMetrics}
+                vo2TrendData={analyticsMetrics.vo2TrendData}
+                shapeTrendData={analyticsMetrics.shapeTrendData}
+                fitnessData={analyticsMetrics.fitnessData}
+                combinedData={analyticsMetrics.combinedData}
+                trainingPaces={analyticsMetrics.trainingPaces}
+                userData={userData}
+                activitiesData={activitiesData}
+                cyclingData={cyclingData}
+                timeRange={timeRange}
+                zonesTimeRange={zonesTimeRange}
+                setTimeRange={setTimeRange}
+                setZonesTimeRange={setZonesTimeRange}
+                onRecalculate={() => recalculateMutation.mutate()}
+                isRecalculating={recalculateMutation.isPending}
+                onOpenCalibration={() => setIsCalibrationOpen(true)}
+                showHeader={true}
+            />
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-                {showLoading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <div className="text-foreground-muted">Loading analytics...</div>
-                    </div>
-                ) : (
-                    <>
-                        {/* === SPORT SELECTOR & RANGE BAR === */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-line">
-                            <div className="inline-flex rounded-lg bg-background-tertiary p-1 border border-line text-xs sm:text-sm">
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedSport('COMBINED')}
-                                    className={`flex items-center gap-2 px-4 py-2 font-medium rounded-md transition-all ${
-                                        selectedSport === 'COMBINED'
-                                            ? 'bg-accent-cyan text-background font-semibold shadow-xs'
-                                            : 'text-foreground-muted hover:text-foreground'
-                                    }`}
-                                >
-                                    <Layers className="w-4 h-4" />
-                                    Combined
-                                </button>
-                                {combinedSportStats.runCount > 0 && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedSport('RUNNING')}
-                                        className={`flex items-center gap-2 px-4 py-2 font-medium rounded-md transition-all ${
-                                            selectedSport === 'RUNNING'
-                                                ? 'bg-accent-blue text-white font-semibold shadow-xs'
-                                                : 'text-foreground-muted hover:text-foreground'
-                                        }`}
-                                    >
-                                        <ActivityIcon className="w-4 h-4" />
-                                        Running
-                                    </button>
-                                )}
-                                {combinedSportStats.bikeCount > 0 && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedSport('CYCLING')}
-                                        className={`flex items-center gap-2 px-4 py-2 font-medium rounded-md transition-all ${
-                                            selectedSport === 'CYCLING'
-                                                ? 'bg-accent-orange text-white font-semibold shadow-xs'
-                                                : 'text-foreground-muted hover:text-foreground'
-                                        }`}
-                                    >
-                                        <Zap className="w-4 h-4" />
-                                        Cycling
-                                    </button>
-                                )}
-                            </div>
-
-                            {/* Range Selector */}
-                            <div className="inline-flex rounded-lg bg-background-tertiary p-1 border border-line text-xs self-start sm:self-auto">
-                                {(['42d', '90d', '180d', '1y', 'all'] as const).map((r) => {
-                                    const mappedRange: TimeRange = r === '42d' ? '1M' : r === '90d' ? '3M' : r === '180d' ? '6M' : r === '1y' ? '1Y' : 'ALL';
-                                    const isActive = timeRange === mappedRange;
-                                    return (
-                                        <button
-                                            key={r}
-                                            type="button"
-                                            onClick={() => setTimeRange(mappedRange)}
-                                            className={`px-3 py-1.5 uppercase font-medium rounded-md transition-all ${
-                                                isActive
-                                                    ? 'bg-surface-hover text-foreground font-semibold'
-                                                    : 'text-foreground-muted hover:text-foreground'
-                                            }`}
-                                        >
-                                            {r}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* === COMBINED SPORT VIEW === */}
-                        {selectedSport === 'COMBINED' && (
-                            <div className="space-y-8 animate-fade-in">
-                                {/* Combined KPI Strip */}
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div className="glass-card p-4">
-                                        <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1.5 font-medium">
-                                            <ActivityIcon className="w-3.5 h-3.5 text-accent-cyan" /> Combined Fitness
-                                        </div>
-                                        <div className="text-2xl font-mono font-bold text-foreground">
-                                            {combinedSportStats.ctlCombined.toFixed(0)} <span className="text-xs text-foreground-muted font-normal">CTL</span>
-                                        </div>
-                                        <div className="text-xs text-foreground-muted mt-1 flex items-center gap-2">
-                                            <span>ATL: {combinedSportStats.atlCombined.toFixed(0)}</span>
-                                            <span>TSB: <span className={combinedSportStats.tsbCombined >= 0 ? 'text-positive' : 'text-accent-pink'}>
-                                                {combinedSportStats.tsbCombined >= 0 ? `+${combinedSportStats.tsbCombined.toFixed(0)}` : combinedSportStats.tsbCombined.toFixed(0)}
-                                            </span></span>
-                                        </div>
-                                    </div>
-
-                                    <div className="glass-card p-4">
-                                        <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1.5 font-medium">
-                                            <ActivityIcon className="w-3.5 h-3.5 text-accent-blue" /> Running Volume
-                                        </div>
-                                        <div className="text-2xl font-mono font-bold text-foreground">
-                                            {combinedSportStats.runDistKm} <span className="text-xs text-foreground-muted font-normal">km</span>
-                                        </div>
-                                        <div className="text-xs text-foreground-muted mt-1">
-                                            {combinedSportStats.runCount} runs recorded
-                                        </div>
-                                    </div>
-
-                                    <div className="glass-card p-4">
-                                        <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1.5 font-medium">
-                                            <Zap className="w-3.5 h-3.5 text-accent-orange" /> Cycling Distance
-                                        </div>
-                                        <div className="text-2xl font-mono font-bold text-foreground">
-                                            {combinedSportStats.bikeDistKm} <span className="text-xs text-foreground-muted font-normal">km</span>
-                                        </div>
-                                        <div className="text-xs text-foreground-muted mt-1">
-                                            {combinedSportStats.bikeCount} rides recorded
-                                        </div>
-                                    </div>
-
-                                    <div className="glass-card p-4">
-                                        <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1.5 font-medium">
-                                            <TrendingUp className="w-3.5 h-3.5 text-accent-purple" /> Total Training Time
-                                        </div>
-                                        <div className="text-2xl font-mono font-bold text-foreground">
-                                            {combinedSportStats.totalHours} <span className="text-xs text-foreground-muted font-normal">hours</span>
-                                        </div>
-                                        <div className="text-xs text-foreground-muted mt-1">
-                                            {combinedSportStats.totalActivities} total activities
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Split & Combined PMC Chart */}
-                                <SplitPmcChart
-                                    data={cyclingData?.pmcSeries?.length ? cyclingData.pmcSeries : fitnessData}
-                                    initialView="combined"
-                                    title="Multi-Sport Performance Management (PMC)"
-                                    hideRangeSelector
-                                    currentRange={pmcRange}
-                                />
-
-                                {/* Combined Volume & Training Time Chart */}
-                                <CombinedAnalyticsChart
-                                    data={combinedData}
-                                    timeRange={timeRange}
-                                    onTimeRangeChange={setTimeRange}
-                                />
-
-                                {/* Highlights Section */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Running Highlights */}
-                                    <div className="glass-card p-6 flex flex-col justify-between">
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <ActivityIcon className="w-5 h-5 text-accent-blue" />
-                                                    <h3 className="font-semibold text-foreground text-base">Running Highlights</h3>
-                                                </div>
-                                                <span className="text-xs font-mono bg-accent-blue/15 text-accent-blue px-2 py-0.5 rounded-full font-medium">
-                                                    VDOT {runalyzeMetrics.vdot > 0 ? runalyzeMetrics.vdot.toFixed(1) : '-'}
-                                                </span>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
-                                                <div className="p-3 bg-background-tertiary rounded-lg border border-line">
-                                                    <span className="text-foreground-muted block mb-1">Effective VO2max</span>
-                                                    <span className="text-lg font-mono font-bold text-foreground">
-                                                        {runalyzeMetrics.effectiveVO2max > 0 ? runalyzeMetrics.effectiveVO2max.toFixed(1) : '-'}
-                                                    </span>
-                                                </div>
-                                                <div className="p-3 bg-background-tertiary rounded-lg border border-line">
-                                                    <span className="text-foreground-muted block mb-1">Marathon Shape</span>
-                                                    <span className="text-lg font-mono font-bold text-foreground">
-                                                        {runalyzeMetrics.shape}%
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <p className="text-xs text-foreground-muted">
-                                                Weekly average: <span className="font-mono text-foreground font-medium">{runalyzeMetrics.details.avgWeeklyKm} km</span> (Target: {runalyzeMetrics.details.targetWeeklyKm} km)
-                                            </p>
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedSport('RUNNING')}
-                                            className="mt-6 w-full py-2.5 px-4 rounded-lg bg-background-tertiary border border-line hover:bg-surface-hover text-foreground font-medium text-xs flex items-center justify-center gap-1.5 transition-colors"
-                                        >
-                                            Open Full Running Analytics
-                                            <ChevronRight className="w-4 h-4 text-accent-blue" />
-                                        </button>
-                                    </div>
-
-                                    {/* Cycling Highlights */}
-                                    <div className="glass-card p-6 flex flex-col justify-between">
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <Zap className="w-5 h-5 text-accent-orange" />
-                                                    <h3 className="font-semibold text-foreground text-base">Cycling Highlights</h3>
-                                                </div>
-                                                <span className="text-xs font-mono bg-accent-orange/15 text-accent-orange px-2 py-0.5 rounded-full font-medium">
-                                                    FTP {cyclingData?.ftp?.ftpWatts ?? cyclingData?.ftp?.eFtpWatts ?? '-'} W
-                                                </span>
-                                            </div>
-                                            <div className="grid grid-cols-3 gap-2.5 pt-2 text-xs">
-                                                <div className="p-3 bg-background-tertiary rounded-lg border border-line">
-                                                    <span className="text-foreground-muted block mb-1">Cycling VO2max</span>
-                                                    <span className="text-lg font-mono font-bold text-accent-purple">
-                                                        {cyclingData?.ftp?.cyclingVo2max ? cyclingData.ftp.cyclingVo2max.toFixed(1) : '-'}
-                                                    </span>
-                                                </div>
-                                                <div className="p-3 bg-background-tertiary rounded-lg border border-line">
-                                                    <span className="text-foreground-muted block mb-1">Period Bike TSS</span>
-                                                    <span className="text-lg font-mono font-bold text-foreground">
-                                                        {cyclingData?.summary?.totalBikeTss ? cyclingData.summary.totalBikeTss.toLocaleString() : '0'}
-                                                    </span>
-                                                </div>
-                                                <div className="p-3 bg-background-tertiary rounded-lg border border-line">
-                                                    <span className="text-foreground-muted block mb-1">Aerobic EF</span>
-                                                    <span className="text-lg font-mono font-bold text-foreground">
-                                                        {cyclingData?.summary?.avgEfficiencyFactor ? `${cyclingData.summary.avgEfficiencyFactor.toFixed(2)}` : '-'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <p className="text-xs text-foreground-muted">
-                                                Mechanical energy output: <span className="font-mono text-foreground font-medium">{cyclingData?.summary?.totalKilojoules ? `${Math.round(cyclingData.summary.totalKilojoules).toLocaleString()} kJ` : '-'}</span>
-                                            </p>
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedSport('CYCLING')}
-                                            className="mt-6 w-full py-2.5 px-4 rounded-lg bg-background-tertiary border border-line hover:bg-surface-hover text-foreground font-medium text-xs flex items-center justify-center gap-1.5 transition-colors"
-                                        >
-                                            Open Full Cycling Analytics
-                                            <ChevronRight className="w-4 h-4 text-accent-orange" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* === RUNNING SPORT VIEW === */}
-                        {selectedSport === 'RUNNING' && (
-                            <div className="space-y-8 animate-fade-in">
-                                {/* Top Running Metrics */}
-                                <TopMetricsSection
-                                    runalyzeMetrics={runalyzeMetrics}
-                                    setIsCalibrationOpen={setIsCalibrationOpen}
-                                />
-
-                                {/* Running PMC */}
-                                <SplitPmcChart
-                                    data={cyclingData?.pmcSeries?.length ? cyclingData.pmcSeries : fitnessData}
-                                    initialView="running"
-                                    title="Running Fitness & Fatigue (rTSS PMC)"
-                                    hideRangeSelector
-                                    currentRange={pmcRange}
-                                />
-
-                                {/* Combined Analytics Chart */}
-                                <CombinedAnalyticsChart
-                                    data={combinedData}
-                                    timeRange={timeRange}
-                                    onTimeRangeChange={setTimeRange}
-                                />
-
-                                {/* Time in Zones Pie Chart */}
-                                <ZoneDistributionSection
-                                    activities={activitiesData?.activities || []}
-                                    userData={userData}
-                                />
-
-                                {/* Race Prediction Chart with Shape Slider */}
-                                <RacePredictionChart
-                                    effectiveVO2max={runalyzeMetrics.effectiveVO2max}
-                                    currentShape={runalyzeMetrics.shape}
-                                    calibrationFactor={runalyzeMetrics.calibrationFactor}
-                                />
-
-                                {/* Race Prediction Time Trends Chart */}
-                                <RacePredictionTimeChart
-                                    vo2TrendData={vo2TrendData}
-                                    shapeTrendData={shapeTrendData}
-                                    calibrationFactor={runalyzeMetrics.calibrationFactor}
-                                />
-
-                                {/* Training Paces & Heart Rate Section (VDOT-driven) */}
-                                <TrainingPacesSection
-                                    currentVdot={runalyzeMetrics.vdot}
-                                    trainingPaces={trainingPaces}
-                                    maxHr={userData?.user?.hrMax || userData?.hrMax}
-                                />
-
-                                {/* Trend Charts */}
-                                <TrendChartsSection
-                                    filteredVo2Trend={filteredVo2Trend}
-                                    filteredShapeTrend={filteredShapeTrend}
-                                    timeRange={timeRange}
-                                />
-
-                                {/* Fitness & Form Chart */}
-                                <FitnessChart data={filteredFitness} />
-
-                                {/* Shape Details */}
-                                <div className="glass-card p-4">
-                                    <div className="grid grid-cols-4 gap-4 text-center text-sm">
-                                        <div>
-                                            <p className="text-foreground-muted">Avg weekly</p>
-                                            <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.details.avgWeeklyKm} km</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-foreground-muted">Target weekly</p>
-                                            <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.details.targetWeeklyKm} km</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-foreground-muted">Long run points</p>
-                                            <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.details.longRunPoints} / 10</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-foreground-muted">Calibration</p>
-                                            <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.calibrationFactor.toFixed(2)}x</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* === CYCLING SPORT VIEW === */}
-                        {selectedSport === 'CYCLING' && (
-                            <CyclingAnalyticsSection initialRange={pmcRange} />
-                        )}
-                    </>
-                )}
-            </main>
-
-            {/* Calibration Modal */}
             <ShapeCalibrationModal
                 isOpen={isCalibrationOpen}
                 onClose={() => setIsCalibrationOpen(false)}
-                currentFactor={runalyzeMetrics.calibrationFactor}
-                effectiveVO2max={runalyzeMetrics.effectiveVO2max}
-                rawVO2max={runalyzeMetrics.rawVO2max}
-                vdotCorrectionFactor={runalyzeMetrics.vdotCorrectionFactor}
+                currentFactor={analyticsMetrics.runalyzeMetrics.calibrationFactor}
+                effectiveVO2max={analyticsMetrics.runalyzeMetrics.effectiveVO2max}
+                rawVO2max={analyticsMetrics.runalyzeMetrics.rawVO2max}
+                vdotCorrectionFactor={analyticsMetrics.runalyzeMetrics.vdotCorrectionFactor}
                 effectiveVo2maxCorrectionFactor={statsData?.effectiveVo2maxCorrectionFactor || 1.0}
-                shapePercent={runalyzeMetrics.shape}
+                shapePercent={analyticsMetrics.runalyzeMetrics.shape}
                 activities={activitiesData?.activities || []}
             />
-            <Footer />
-        </div>
+        </>
     );
 }

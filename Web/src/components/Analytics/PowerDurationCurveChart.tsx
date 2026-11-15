@@ -60,7 +60,7 @@ function CustomPowerTooltip({ active, payload }: CustomTooltipProps) {
     const pctFtp = ftp && rangePower > 0 ? Math.round((rangePower / ftp) * 100) : null;
 
     return (
-        <div className="bg-background-secondary border border-line rounded-lg p-3 shadow-xl backdrop-blur-md text-xs space-y-1.5 min-w-[170px]">
+        <div className="bg-background-secondary border border-line rounded-md p-3 text-xs space-y-1.5 min-w-[170px]">
             <div className="font-semibold text-foreground border-b border-line pb-1 flex justify-between">
                 <span>Duration: {durationLabel}</span>
                 {pctFtp !== null && (
@@ -78,7 +78,7 @@ function CustomPowerTooltip({ active, payload }: CustomTooltipProps) {
             </div>
             <div className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-1.5 text-foreground-muted">
-                    <span className="w-2.5 h-2.5 rounded-full bg-accent-purple inline-block" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-foreground inline-block" />
                     All-Time Best:
                 </span>
                 <span className="font-mono font-medium text-foreground-muted">
@@ -88,7 +88,7 @@ function CustomPowerTooltip({ active, payload }: CustomTooltipProps) {
             {ftp !== null && (
                 <div className="flex items-center justify-between gap-3 pt-1 border-t border-line text-[11px] text-foreground-muted">
                     <span>Active FTP:</span>
-                    <span className="font-mono text-accent-cyan">{ftp} {unit}</span>
+                    <span className="font-mono text-positive">{ftp} {unit}</span>
                 </div>
             )}
         </div>

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
-import { X, Camera, Upload, Sparkles, Loader2, MessageSquare } from 'lucide-react';
+import { X, Camera, Upload, ScanLine, Loader2, MessageSquare } from 'lucide-react';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 
@@ -18,7 +18,7 @@ interface FoodScanItem {
     fats: number;
 }
 
-interface ScanResult {
+export interface ScanResult {
     mealName: string;
     items: FoodScanItem[];
     totalCalories: number;
@@ -28,13 +28,37 @@ interface ScanResult {
     confidence: 'high' | 'medium' | 'low';
 }
 
+const formatScannerError = (
+    rawMessage: unknown,
+    fallback: string,
+    retryAfterSeconds?: unknown,
+    retryAfterHeader?: string | null
+): string => {
+    const cleaned = typeof rawMessage === 'string'
+        ? rawMessage.replace(/^(?:[A-Za-z]*Error:\s*)+/i, '').trim()
+        : '';
+    const base = cleaned || fallback;
+    const rawRetry = retryAfterSeconds ?? retryAfterHeader;
+    const seconds = typeof rawRetry === 'number'
+        ? rawRetry
+        : typeof rawRetry === 'string' && rawRetry.trim()
+            ? Number(rawRetry)
+            : NaN;
+    if (Number.isFinite(seconds) && seconds > 0 && !/\b\d+\s*s(?:ec(?:ond)?s?)?\b/i.test(base)) {
+        const ceil = Math.ceil(seconds);
+        return /[.!?]$/.test(base) ? `${base} Try again in ${ceil}s.` : `${base} (Try again in ${ceil}s)`;
+    }
+    return base;
+};
+
 interface Props {
     isOpen: boolean;
     onClose: () => void;
     onScanComplete: (_result: ScanResult) => void;
+    embedded?: boolean;
 }
 
-export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
+export function FoodScannerModal({ isOpen, onClose, onScanComplete, embedded = false }: Props) {
     const { data: session } = useSession();
     const cameraInputRef = useRef<HTMLInputElement>(null);
     const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -50,7 +74,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
     }, [onClose]);
 
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen || embedded) return;
         window.history.pushState({ modal: 'FoodScanner' }, '');
         const handlePopState = () => onCloseRef.current();
         window.addEventListener('popstate', handlePopState);
@@ -60,7 +84,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                 window.history.back();
             }
         };
-    }, [isOpen]);
+    }, [isOpen, embedded]);
 
     const resetState = () => {
         setImagePreview(null);
@@ -136,28 +160,40 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
             });
 
             const text = await res.text();
-            let data: any = { error: 'Unknown error occurred' };
-            try {
-                data = JSON.parse(text);
-            } catch {
-                if (!res.ok) {
-                    throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+            let data: any = null;
+            if (text) {
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    if (!res.ok) {
+                        throw new Error(`Server error (${res.status}${res.statusText ? `: ${res.statusText}` : ''})`);
+                    }
+                    throw new Error('Failed to parse response from server');
                 }
-                throw new Error('Failed to parse response from server');
             }
 
             if (!res.ok) {
-                const cleaned = String(data.error || `Error ${res.status}`).replace(/^Error:\s*/i, '');
-                const retryAfter = typeof data.retryAfterSeconds === 'number' && data.retryAfterSeconds > 0
-                    ? ` (Try again in ${data.retryAfterSeconds}s)`
-                    : '';
-                throw new Error(`${cleaned}${retryAfter}`);
+                const message = formatScannerError(
+                    data?.error ?? data?.message,
+                    `Failed to analyze food (${res.status})`,
+                    data?.retryAfterSeconds ?? data?.retryAfter,
+                    res.headers?.get?.('retry-after')
+                );
+                throw new Error(message);
+            }
+
+            if (!data) {
+                throw new Error('Empty response from server');
             }
 
             onScanComplete(data);
             resetState();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to analyze food');
+            setError(
+                err instanceof Error
+                    ? formatScannerError(err.message, 'Failed to analyze food')
+                    : 'Failed to analyze food'
+            );
         } finally {
             setIsAnalyzing(false);
         }
@@ -165,19 +201,20 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center">
-            <div className="bg-background-secondary border border-line w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-md flex flex-col overflow-hidden animate-in slide-in-from-bottom">
-                {/* Header */}
+    const innerContent = (
+        <div className={embedded ? 'flex flex-col flex-1 min-h-0' : 'bg-background-secondary border border-line w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-md flex flex-col overflow-hidden animate-in slide-in-from-bottom'}>
+            {/* Header */}
+            {!embedded && (
                 <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-line shrink-0">
                     <div className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-workout-tempo" />
+                        <ScanLine className="w-5 h-5 text-workout-tempo" />
                         <h2 className="text-lg font-semibold text-foreground">AI Food Scanner</h2>
                     </div>
                     <button onClick={handleClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
+            )}
 
                 <div className="flex-1 flex flex-col p-4 overflow-y-auto">
                     {/* Image Capture Area */}
@@ -291,7 +328,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
 
                             {/* Error */}
                             {error && (
-                                <div className="bg-negative/10 border border-negative/20 rounded-md p-3 text-sm text-negative">
+                                <div role="alert" className="bg-negative/10 border border-negative/20 rounded-md p-3 text-sm text-negative">
                                     {error}
                                 </div>
                             )}
@@ -310,7 +347,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                                         </>
                                     ) : (
                                         <>
-                                            <Sparkles className="w-5 h-5" />
+                                            <ScanLine className="w-5 h-5" />
                                             {isTextOnly ? 'Analyze Text' : 'Analyze Food'}
                                         </>
                                     )}
@@ -319,7 +356,14 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                         </div>
                     )}
                 </div>
-            </div>
+        </div>
+    );
+
+    if (embedded) return innerContent;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center">
+            {innerContent}
         </div>
     );
 }

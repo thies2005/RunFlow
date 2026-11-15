@@ -116,7 +116,7 @@ export default function PlanVolumeSection({
                         <label className="text-xs text-foreground-muted flex items-center gap-1">
                             <Bike className="w-3 h-3" /> Rides / Week
                         </label>
-                        <span className="text-accent-cyan font-bold font-mono tabular-nums">{ridesPerWeek}</span>
+                        <span className="text-positive font-bold font-mono tabular-nums">{ridesPerWeek}</span>
                     </div>
                     <input
                         type="range"
@@ -128,7 +128,7 @@ export default function PlanVolumeSection({
                         aria-valuenow={ridesPerWeek}
                         aria-valuemin={0}
                         aria-valuemax={6}
-                        className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-accent-cyan"
+                        className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-positive"
                     />
                     <div className="flex justify-between text-xs text-foreground-muted mt-1">
                         <span>0</span>
@@ -271,7 +271,7 @@ export default function PlanVolumeSection({
                                 aria-valuenow={taperWeeks}
                                 aria-valuemin={0}
                                 aria-valuemax={4}
-                                className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-accent-cyan"
+                                className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-positive"
                             />
                         </div>
                         <div>
@@ -289,7 +289,7 @@ export default function PlanVolumeSection({
                                 aria-valuenow={peakWeeks}
                                 aria-valuemin={0}
                                 aria-valuemax={6}
-                                className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-accent-purple"
+                                className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-accent-orange"
                             />
                         </div>
                         <div>
@@ -383,7 +383,7 @@ export default function PlanVolumeSection({
                                 <select
                                     value={swimDay}
                                     onChange={e => setSwimDay(parseInt(e.target.value))}
-                                    className="w-full bg-surface border border-glass-border rounded-md p-2.5 text-foreground text-sm focus:ring-2 focus:ring-accent-cyan outline-hidden"
+                                    className="w-full bg-surface border border-glass-border rounded-md p-2.5 text-foreground text-sm focus:ring-2 focus:ring-positive outline-hidden"
                                 >
                                     <option value={0}>Sunday</option>
                                     <option value={1}>Monday</option>

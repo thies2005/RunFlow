@@ -613,7 +613,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                                     URL.revokeObjectURL(url);
                                     document.body.removeChild(a);
                                 }}
-                                className="w-full py-1.5 px-2.5 rounded border border-accent-cyan/40 bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 text-[11px] font-medium transition-colors"
+                                className="w-full py-1.5 px-2.5 rounded border border-positive/40 bg-positive/10 text-positive hover:bg-positive/20 text-[11px] font-medium transition-colors"
                             >
                                 Export Workout to MyWhoosh (.zwo)
                             </button>
@@ -736,7 +736,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                                     Linked Activity
                                 </span>
                                 {form.linkedActivity && (
-                                    <span className="text-[10px] text-accent-cyan truncate max-w-[180px]">
+                                    <span className="text-[10px] text-positive truncate max-w-[180px]">
                                         {getDisplayActivityTitle(form.linkedActivity)}
                                     </span>
                                 )}
@@ -794,7 +794,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                         className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border border-glass-border bg-background-tertiary text-foreground text-xs font-medium hover:bg-surface-hover transition-colors"
                         title="Download Garmin/Coros/Wahoo FIT workout file"
                     >
-                        <Download className="w-3.5 h-3.5 text-accent-cyan" />
+                        <Download className="w-3.5 h-3.5 text-positive" />
                         Export .FIT
                     </button>}
                     {(effectiveSport === 'BIKE' || CYCLING_WORKOUT_TYPES.has(form.workoutType)) && (

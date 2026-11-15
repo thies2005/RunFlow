@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { X, Sliders, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Workout } from './WorkoutDetailPanel';
 import { replacementStart, isReplaceableWorkout, lastProtectedDate } from '@/lib/plans/replacement-scope';
@@ -192,13 +192,13 @@ export function EngineGenerateModal({
     const affectedDates = affected.map((w) => new Date(w.scheduledDate).toISOString().slice(0, 10)).sort();
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="bg-background-secondary border border-glass-border rounded-lg max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+            <div className="bg-background-secondary border border-line rounded-md max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-glass-border shrink-0">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-line shrink-0">
                     <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-workout-tempo/15 flex items-center justify-center">
-                            <Sparkles className="w-4 h-4 text-workout-tempo" />
+                        <div className="w-8 h-8 rounded-md bg-workout-tempo/15 flex items-center justify-center">
+                            <Sliders className="w-4 h-4 text-workout-tempo" aria-hidden="true" />
                         </div>
                         <div>
                             <h2 className="text-sm font-semibold text-foreground">Generate / Adapt with Engine</h2>
@@ -258,7 +258,7 @@ export function EngineGenerateModal({
                                 onClick={() => handleSportChange('CYCLING')}
                                 className={`py-2 px-2.5 rounded-md border text-xs font-medium transition-all ${
                                     sport === 'CYCLING'
-                                        ? 'bg-accent-cyan/15 border-accent-cyan text-accent-cyan font-semibold'
+                                        ? 'bg-positive/15 border-positive text-positive font-semibold'
                                         : 'bg-background-tertiary border-glass-border text-foreground-secondary hover:text-foreground'
                                 }`}
                             >
@@ -459,7 +459,7 @@ export function EngineGenerateModal({
                     {/* Cycling .zwo Export & Import Info */}
                     {(sport === 'CYCLING' || sport === 'TRIATHLON' || ridesPerWeek > 0) && (
                         <div className="p-3 bg-background-tertiary/30 rounded-md border border-glass-border space-y-1">
-                            <span className="text-[11px] font-semibold text-accent-cyan uppercase tracking-wider block">
+                            <span className="text-[11px] font-semibold text-positive uppercase tracking-wider block">
                                 MyWhoosh .zwo Workout Export &amp; Plan Import
                             </span>
                             <p className="text-[10px] text-foreground-muted leading-relaxed">
@@ -493,7 +493,7 @@ export function EngineGenerateModal({
                             </>
                         ) : (
                             <>
-                                <Sparkles className="w-3.5 h-3.5" />
+                                <Sliders className="w-3.5 h-3.5" aria-hidden="true" />
                                 <span>{goalId ? (review ? 'Confirm replacement' : 'Review replacement') : 'Generate Plan'}</span>
                             </>
                         )}

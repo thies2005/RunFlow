@@ -75,7 +75,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                     <div className="flex items-center gap-2 text-foreground-muted text-sm">
                         <Calendar className="w-4 h-4" />
                         <span>{format(new Date(activity.startDate), 'PPP p')}</span>
-                        <span className="px-2 py-0.5 rounded-full bg-accent-purple/20 text-accent-purple text-xs border border-accent-purple/50">
+                        <span className="px-2 py-0.5 rounded-full bg-accent-blue/20 text-accent-blue text-xs border border-accent-blue/50">
                             {badgeLabel}
                         </span>
                     </div>
@@ -148,7 +148,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                     { name: 'Z4', label: 'Threshold', color: 'bg-orange-400', textColor: 'text-orange-400', time: activity.hrZone4Time || 0 },
                     { name: 'Z5', label: 'VO2max', color: 'bg-red-500', textColor: 'text-red-500', time: activity.hrZone5Time || 0 },
                     { name: 'Z6', label: 'Anaerobic', color: 'bg-indigo-500', textColor: 'text-indigo-500', time: activity.hrZone6Time || 0 },
-                    { name: 'Z7', label: 'Neuromuscular', color: 'bg-purple-600', textColor: 'text-purple-600', time: activity.hrZone7Time || 0 }
+                    { name: 'Z7', label: 'Neuromuscular', color: 'bg-zone-5', textColor: 'text-zone-5', time: activity.hrZone7Time || 0 }
                 ];
                 const total = zones.reduce((sum, z) => sum + z.time, 0);
                 const activeZones = zones.filter(z => z.time > 0);
@@ -326,7 +326,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                 {chartData.some((d: any) => d.cadence) && (
                     <div className="glass-card p-6">
                         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                            <Zap className="w-4 h-4 text-accent-purple" /> Cadence ({isRide ? 'rpm' : 'spm'})
+                            <Zap className="w-4 h-4 text-accent-blue" /> Cadence ({isRide ? 'rpm' : 'spm'})
                         </h3>
                         <div className="h-[200px] w-full">
                             <ResponsiveContainer width="100%" height="100%">

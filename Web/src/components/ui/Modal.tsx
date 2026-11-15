@@ -5,7 +5,6 @@ import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 const openDialogs: HTMLElement[] = [];
-let previousBodyOverflow = '';
 
 export interface ModalProps {
     isOpen: boolean;
@@ -38,7 +37,6 @@ export function Modal({
         const dialog = dialogRef.current;
         if (!dialog) return;
 
-        if (openDialogs.length === 0) previousBodyOverflow = document.body.style.overflow;
         openDialogs.push(dialog);
         previouslyFocused.current = document.activeElement;
 
@@ -73,28 +71,13 @@ export function Modal({
             if (e.key === 'Escape') {
                 e.preventDefault();
                 onCloseRef.current();
-            } else if (e.key === 'Tab' && dialogRef.current) {
-                const items = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
-                    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-                )).filter(el => el.getClientRects().length > 0);
-                if (!items.length) { e.preventDefault(); dialogRef.current.focus(); return; }
-                const first = items[0];
-                const last = items[items.length - 1];
-                if (e.shiftKey && (document.activeElement === first || !dialogRef.current.contains(document.activeElement))) {
-                    e.preventDefault();
-                    last.focus();
-                } else if (!e.shiftKey && (document.activeElement === last || !dialogRef.current.contains(document.activeElement))) {
-                    e.preventDefault();
-                    first.focus();
-                }
             }
         };
 
-        document.body.style.overflow = 'hidden';
         document.addEventListener('keydown', handleKeyDown);
 
         let isCancelled = false;
-        let backListener: any = null;
+        let backListener: { remove: () => void } | null = null;
         const setupCapacitor = async () => {
             try {
                 const { Capacitor } = await import('@capacitor/core');
@@ -120,7 +103,6 @@ export function Modal({
             isCancelled = true;
             const index = openDialogs.indexOf(dialog);
             if (index !== -1) openDialogs.splice(index, 1);
-            if (openDialogs.length === 0) document.body.style.overflow = previousBodyOverflow;
             document.removeEventListener('keydown', handleKeyDown);
             if (typeof dialog.close === 'function') {
                 if (dialog.open) dialog.close();
@@ -144,62 +126,74 @@ export function Modal({
         'lg': 'max-w-lg',
         'xl': 'max-w-xl',
         '2xl': 'max-w-2xl',
-        'full': 'max-w-full m-4',
+        'full': 'max-w-full',
     };
 
     const modalContent = (
         <dialog
             ref={dialogRef}
-            className="fixed inset-0 m-0 max-w-none max-h-none w-full h-full z-[210] flex items-center justify-center bg-black/[var(--modal-backdrop-opacity,0.55)] border-0 text-foreground animate-fade-in p-4 sm:p-4 pt-safe pb-safe overflow-y-auto"
-            aria-modal="true"
+            className={`w-[calc(100%-2rem)] ${maxWidthClasses[maxWidth]} m-auto p-6 relative animate-slide-in bg-background-secondary border border-line rounded-md text-foreground max-h-[90vh] overflow-y-auto`}
             tabIndex={-1}
             aria-labelledby={title ? titleId : undefined}
+            {...({ closedby: 'any' } as Record<string, string>)}
             onCancel={(e) => {
-                // Escape closing is orchestrated through the openDialogs stack.
                 e.preventDefault();
                 if (openDialogs[openDialogs.length - 1] === dialogRef.current) {
                     onCloseRef.current();
                 }
             }}
-            onClick={(e) => {
-                if (e.target === dialogRef.current && openDialogs[openDialogs.length - 1] === dialogRef.current) {
+            onClose={() => {
+                if (isOpen) {
                     onCloseRef.current();
                 }
             }}
+            onClick={(e) => {
+                if (
+                    typeof HTMLDialogElement !== 'undefined' &&
+                    !('closedBy' in HTMLDialogElement.prototype) &&
+                    e.target === dialogRef.current &&
+                    openDialogs[openDialogs.length - 1] === dialogRef.current
+                ) {
+                    const rect = dialogRef.current.getBoundingClientRect();
+                    const clickedOutside =
+                        e.clientX < rect.left ||
+                        e.clientX > rect.right ||
+                        e.clientY < rect.top ||
+                        e.clientY > rect.bottom;
+                    if (clickedOutside) {
+                        onCloseRef.current();
+                    }
+                }
+            }}
         >
-            <div
-                className={`w-full ${maxWidthClasses[maxWidth]} p-6 relative animate-slide-in my-auto mx-auto bg-background-secondary border border-line rounded-md shadow-lg max-h-[90vh] overflow-y-auto`}
-                onClick={e => e.stopPropagation()}
-            >
-                {!hideCloseButton && (
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="absolute top-4 right-4 text-foreground-muted hover:text-foreground transition-colors z-10 p-1 rounded"
-                        aria-label="Close modal"
-                    >
-                        <X className="w-5 h-5" aria-hidden="true" />
-                    </button>
-                )}
+            {!hideCloseButton && (
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-foreground-muted hover:text-foreground transition-colors z-10 p-1 rounded"
+                    aria-label="Close modal"
+                >
+                    <X className="w-5 h-5" aria-hidden="true" />
+                </button>
+            )}
 
-                {(title || icon) && (
-                    <div className="flex items-center gap-3 mb-6 pr-8">
-                        {icon && (
-                            <div className="w-10 h-10 rounded-full bg-accent-orange/20 flex items-center justify-center shrink-0">
-                                {icon}
-                            </div>
-                        )}
-                        {title && (
-                            <h2 id={titleId} className="text-xl font-bold text-foreground break-words">
-                                {title}
-                            </h2>
-                        )}
-                    </div>
-                )}
-
-                <div className="modal-content">
-                    {children}
+            {(title || icon) && (
+                <div className="flex items-center gap-3 mb-6 pr-8">
+                    {icon && (
+                        <div className="w-10 h-10 rounded-full bg-accent-orange/20 flex items-center justify-center shrink-0">
+                            {icon}
+                        </div>
+                    )}
+                    {title && (
+                        <h2 id={titleId} className="text-xl font-bold text-foreground break-words">
+                            {title}
+                        </h2>
+                    )}
                 </div>
+            )}
+
+            <div className="modal-content">
+                {children}
             </div>
         </dialog>
     );

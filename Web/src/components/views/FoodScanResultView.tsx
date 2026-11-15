@@ -215,7 +215,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                                 </div>
                                 <div>
                                     <p className="text-[10px] text-foreground-muted mb-1">Fats</p>
-                                    <p className="text-lg font-semibold font-mono tabular-nums text-accent-pink">{totals.fats}g</p>
+                                    <p className="text-lg font-semibold font-mono tabular-nums text-negative">{totals.fats}g</p>
                                 </div>
                             </div>
                         </div>
@@ -247,7 +247,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                                     <div className="flex items-center gap-3 text-[11px] text-foreground-muted mb-2 font-mono tabular-nums">
                                         <span>P: <span className="text-accent-blue font-medium">{item.protein}g</span></span>
                                         <span>C: <span className="text-positive font-medium">{item.carbs}g</span></span>
-                                        <span>F: <span className="text-accent-pink font-medium">{item.fats}g</span></span>
+                                        <span>F: <span className="text-negative font-medium">{item.fats}g</span></span>
                                     </div>
 
                                     {/* Quantity adjuster */}
@@ -304,12 +304,13 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                     <select
                         value={mealType}
                         onChange={e => setMealType(e.target.value)}
+                        aria-label="Meal type"
                         className="w-full bg-background-tertiary border border-line rounded-md px-3 py-2.5 text-foreground focus:outline-hidden appearance-none text-sm"
                     >
-                        <option value="BREAKFAST">🌅 Breakfast</option>
-                        <option value="LUNCH">☀️ Lunch</option>
-                        <option value="DINNER">🌙 Dinner</option>
-                        <option value="SNACK">🍿 Snack</option>
+                        <option value="BREAKFAST">Breakfast</option>
+                        <option value="LUNCH">Lunch</option>
+                        <option value="DINNER">Dinner</option>
+                        <option value="SNACK">Snack</option>
                     </select>
 
                     <div className="flex gap-2">

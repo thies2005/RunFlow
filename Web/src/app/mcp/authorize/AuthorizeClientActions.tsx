@@ -110,7 +110,7 @@ export function AuthorizeClientActions({
             {fallbackUrl && (
                 <a
                     href={fallbackUrl}
-                    className="block mt-3 text-xs text-accent-cyan underline text-center"
+                    className="block mt-3 text-xs text-positive underline text-center"
                 >
                     Click here if your app did not open automatically
                 </a>

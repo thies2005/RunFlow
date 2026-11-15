@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus, MessageSquare, Trash2, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 interface ChatSession {
     id: string;
@@ -23,6 +25,12 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
     const router = useRouter();
     const queryClient = useQueryClient();
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [confirmTarget, setConfirmTarget] = useState<
+        | { type: 'single'; id: string; title: string }
+        | { type: 'all' }
+        | null
+    >(null);
+    const [isDeletingAll, setIsDeletingAll] = useState(false);
 
     // Fetch sessions
     const { data: sessionsData, isLoading } = useQuery({
@@ -45,32 +53,45 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
         },
         onSuccess: (_, deletedId) => {
             queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
+            setConfirmTarget(null);
             if (sessionId === deletedId) {
                 router.push('/chat'); // Redirect to new chat if current deleted
             }
         },
+        onError: () => {
+            toast.error('Failed to delete chat');
+        },
         onSettled: () => setDeletingId(null),
     });
 
-    const handleDelete = (e: React.MouseEvent, id: string) => {
+    const handleDelete = (e: React.MouseEvent, session: ChatSession) => {
         e.preventDefault();
         e.stopPropagation();
-        if (confirm('Delete this chat?')) {
-            setDeletingId(id);
-            deleteSession.mutate(id);
-        }
+        setConfirmTarget({ type: 'single', id: session.id, title: session.title });
     };
 
-    const handleDeleteAll = async () => {
-        if (confirm('Are you sure you want to delete ALL chat history? This cannot be undone.')) {
-            try {
-                const res = await fetch('/api/ai/chat/sessions?all=true', { method: 'DELETE' });
-                if (!res.ok) throw new Error('Failed to delete history');
-                queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
-                router.push('/chat');
-            } catch {
-                alert('Failed to delete history');
-            }
+    const handleDeleteAll = () => {
+        setConfirmTarget({ type: 'all' });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmTarget) return;
+        if (confirmTarget.type === 'single') {
+            setDeletingId(confirmTarget.id);
+            deleteSession.mutate(confirmTarget.id);
+            return;
+        }
+        setIsDeletingAll(true);
+        try {
+            const res = await fetch('/api/ai/chat/sessions?all=true', { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete history');
+            queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
+            setConfirmTarget(null);
+            router.push('/chat');
+        } catch {
+            toast.error('Failed to delete history');
+        } finally {
+            setIsDeletingAll(false);
         }
     };
 
@@ -120,8 +141,10 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
                             </div>
 
                             <button
-                                onClick={(e) => handleDelete(e, session.id)}
-                                className={`opacity-0 group-hover:opacity-100 p-1.5 hover:bg-negative/10 hover:text-negative rounded-sm transition-colors ${deletingId === session.id ? 'opacity-100 text-negative' : ''
+                                type="button"
+                                aria-label={`Delete chat ${session.title}`}
+                                onClick={(e) => handleDelete(e, session)}
+                                className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 p-1.5 hover:bg-negative/10 hover:text-negative rounded-sm transition-colors ${deletingId === session.id ? 'opacity-100 text-negative' : ''
                                     }`}
                             >
                                 {deletingId === session.id ? (
@@ -137,6 +160,7 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
 
             <div className="p-4 border-t border-line">
                 <button
+                    type="button"
                     onClick={handleDeleteAll}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs text-negative hover:bg-negative/10 rounded-md transition-colors"
                 >
@@ -144,6 +168,26 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
                     <span>Delete All History</span>
                 </button>
             </div>
+
+            <ConfirmDialog
+                open={confirmTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open && !deleteSession.isPending && !isDeletingAll) {
+                        setConfirmTarget(null);
+                    }
+                }}
+                title={confirmTarget?.type === 'all' ? 'Delete all chat history?' : 'Delete this chat?'}
+                description={
+                    confirmTarget?.type === 'all'
+                        ? 'All chat sessions and messages will be permanently removed. This cannot be undone.'
+                        : confirmTarget?.title
+                            ? `"${confirmTarget.title}" will be permanently deleted.`
+                            : 'This chat will be permanently deleted.'
+                }
+                confirmLabel={confirmTarget?.type === 'all' ? 'Delete All' : 'Delete'}
+                busy={deleteSession.isPending || isDeletingAll}
+                onConfirm={handleConfirmDelete}
+            />
         </div>
     );
 }

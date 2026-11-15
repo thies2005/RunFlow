@@ -121,7 +121,7 @@ function PlanViewComponent({
                             <button
                                 onClick={() => setShowUnlinked(!showUnlinked)}
                                 className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${showUnlinked
-                                    ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30'
+                                    ? 'bg-positive/20 text-positive border border-positive/30'
                                     : 'bg-surface text-foreground-muted hover:text-foreground border border-glass-border'
                                     }`}
                             >
@@ -143,7 +143,7 @@ function PlanViewComponent({
                                 <button
                                     onClick={() => setShowUnlinked(!showUnlinked)}
                                     className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors ${showUnlinked
-                                    ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30'
+                                    ? 'bg-positive/20 text-positive border border-positive/30'
                                     : 'bg-surface text-foreground-muted hover:text-foreground border border-glass-border'
                                     }`}
                             >

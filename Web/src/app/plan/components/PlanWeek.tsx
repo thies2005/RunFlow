@@ -152,19 +152,19 @@ export const PlanWeek = memo(function PlanWeek({
                                     onClick={(e) => {
                                         handleActivityClick(activity, e);
                                     }}
-                                    className="group p-3 rounded-md flex items-center gap-3 transition-colors border border-dashed border-accent-cyan/40 bg-accent-cyan/5 cursor-pointer hover:bg-accent-cyan/10"
+                                    className="group p-3 rounded-md flex items-center gap-3 transition-colors border border-dashed border-positive/40 bg-positive/5 cursor-pointer hover:bg-positive/10"
                                 >
-                                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-accent-cyan/20 text-accent-cyan">
+                                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-positive/20 text-positive">
                                         <span className="text-xs font-bold">+</span>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h4 className="text-sm font-medium text-accent-cyan truncate">
+                                        <h4 className="text-sm font-medium text-positive truncate">
                                             {activity.name}
                                         </h4>
                                         <p className="text-xs text-foreground-muted font-mono tabular-nums">
                                             {(activity.distance / 1000).toFixed(1)}km •
                                             {Math.floor(activity.movingTime / 60)}min •
-                                            <span className="text-accent-cyan">Unlinked</span>
+                                            <span className="text-positive">Unlinked</span>
                                         </p>
                                     </div>
                                 </div>

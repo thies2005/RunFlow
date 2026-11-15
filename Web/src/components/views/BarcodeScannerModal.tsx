@@ -11,12 +11,13 @@ interface Props {
     onClose: () => void;
     onScan: (_barcode: string) => void;
     preAuthorizedStream?: MediaStream | null;
+    embedded?: boolean;
 }
 
 // Evaluate synchronously so the very first render knows which path to take
 const IS_NATIVE = Capacitor.isNativePlatform();
 
-export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStream }: Props) {
+export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStream, embedded = false }: Props) {
     const [error, setError] = useState<string | null>(null);
     const webScannerRef = useRef<Html5Qrcode | null>(null);
     const scanHandledRef = useRef(false);
@@ -150,6 +151,28 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStre
     }, [isOpen, onScan, stopNativeScanner, stopWebScanner, preAuthorizedStream]);
 
     if (!isOpen) return null;
+
+    if (embedded) {
+        return (
+            <div className="flex flex-col items-center justify-center p-4 gap-4 min-h-[260px]">
+                {error ? (
+                    <div className="flex flex-col items-center gap-3 p-4 max-w-xs text-center">
+                        <AlertTriangle className="w-10 h-10 text-workout-tempo" />
+                        <p className="text-foreground text-sm">{error}</p>
+                    </div>
+                ) : IS_NATIVE ? (
+                    <div className="w-56 h-56 border-2 border-positive bg-black/40 rounded-md" />
+                ) : (
+                    <div id="web-reader" className="w-full max-w-sm bg-white rounded-md overflow-hidden" />
+                )}
+                {!error && (
+                    <p className="text-xs text-foreground-muted text-center">
+                        Position the barcode inside the frame. It will scan automatically.
+                    </p>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className={`fixed inset-0 z-[100] flex flex-col pb-safe barcode-scanner-modal ${IS_NATIVE ? 'bg-transparent' : 'bg-black/90'}`}>

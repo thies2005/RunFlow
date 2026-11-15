@@ -1,6 +1,6 @@
 'use client';
 
-import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart, Zap, BarChart2, Tag, Edit2, Check, Bot, Loader2, Sparkles, ShieldCheck, Cpu } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart, Zap, BarChart2, Tag, Edit2, Check, MessageSquare, Loader2, RefreshCw, ShieldCheck, Cpu } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -223,6 +223,32 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
         }
     }, [activity, name, router]);
 
+    const formatFeedbackError = useCallback(
+        (
+            rawMessage: unknown,
+            fallback: string,
+            retryAfterSeconds?: unknown,
+            retryAfterHeader?: string | null
+        ): string => {
+            const cleaned = typeof rawMessage === 'string'
+                ? rawMessage.replace(/^(?:[A-Za-z]*Error:\s*)+/i, '').trim()
+                : '';
+            const base = cleaned || fallback;
+            const rawRetry = retryAfterSeconds ?? retryAfterHeader;
+            const seconds = typeof rawRetry === 'number'
+                ? rawRetry
+                : typeof rawRetry === 'string' && rawRetry.trim()
+                    ? Number(rawRetry)
+                    : NaN;
+            if (Number.isFinite(seconds) && seconds > 0 && !/\b\d+\s*s(?:ec(?:ond)?s?)?\b/i.test(base)) {
+                const ceil = Math.ceil(seconds);
+                return /[.!?]$/.test(base) ? `${base} Try again in ${ceil}s.` : `${base} (Try again in ${ceil}s)`;
+            }
+            return base;
+        },
+        []
+    );
+
     const handleGenerateFeedback = useCallback(async () => {
         if (!activity) return;
         setIsGeneratingFeedback(true);
@@ -238,23 +264,44 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                 if (data.feedback) {
                     setAiFeedback(data.feedback);
                 } else if (data.error) {
-                    setFeedbackError(data.error);
+                    setFeedbackError(formatFeedbackError(data.error, 'Failed to generate AI feedback'));
+                } else if (data.queued) {
+                    setFeedbackError(
+                        formatFeedbackError(
+                            data.message,
+                            'Your feedback has been queued and will appear shortly.'
+                        )
+                    );
                 }
             } else {
                 const errorData = await res.json().catch(() => null);
+                const retryHeader = res.headers?.get?.('retry-after');
                 if (res.status === 429) {
                     if (errorData?.queued) {
-                        setFeedbackError(errorData.message || 'Server rate limited. Your feedback is being prepared and will appear shortly.');
+                        setFeedbackError(
+                            formatFeedbackError(
+                                errorData.message || errorData.error,
+                                'Server rate limited. Your feedback is being prepared and will appear shortly.'
+                            )
+                        );
                     } else {
                         setFeedbackError(
-                            (errorData?.error ? String(errorData.error).replace(/^Error:\s*/i, '') : null) ||
-                            'Quota exhausted. Please upgrade your plan or contact admin.'
+                            formatFeedbackError(
+                                errorData?.error,
+                                'Quota exhausted. Please upgrade your plan or contact your administrator.',
+                                errorData?.retryAfterSeconds ?? errorData?.retryAfter,
+                                retryHeader
+                            )
                         );
                     }
                 } else {
                     setFeedbackError(
-                        (errorData?.error ? String(errorData.error).replace(/^Error:\s*/i, '') : null) ||
-                        'Failed to generate AI feedback'
+                        formatFeedbackError(
+                            errorData?.error,
+                            'Failed to generate AI feedback',
+                            errorData?.retryAfterSeconds ?? errorData?.retryAfter,
+                            retryHeader
+                        )
                     );
                 }
             }
@@ -264,7 +311,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
         } finally {
             setIsGeneratingFeedback(false);
         }
-    }, [activity]);
+    }, [activity, formatFeedbackError]);
 
     const isRide = Boolean(
         activity &&
@@ -365,7 +412,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
             { name: 'Z3', label: 'Tempo', color: 'bg-cyan-500', textColor: 'text-cyan-500', time: pz3 ?? 0, minW: cogganDefinitions[2]?.minWatts ?? 0, maxW: cogganDefinitions[2]?.maxWatts ?? null, pctRange: '76–90% FTP' },
             { name: 'Z4', label: 'Threshold', color: 'bg-amber-500', textColor: 'text-amber-500', time: pz4 ?? 0, minW: cogganDefinitions[3]?.minWatts ?? 0, maxW: cogganDefinitions[3]?.maxWatts ?? null, pctRange: '91–105% FTP' },
             { name: 'Z5', label: 'VO2max', color: 'bg-orange-500', textColor: 'text-orange-500', time: pz5 ?? 0, minW: cogganDefinitions[4]?.minWatts ?? 0, maxW: cogganDefinitions[4]?.maxWatts ?? null, pctRange: '106–120% FTP' },
-            { name: 'Z6', label: 'Anaerobic', color: 'bg-purple-500', textColor: 'text-purple-500', time: pz6 ?? 0, minW: cogganDefinitions[5]?.minWatts ?? 0, maxW: cogganDefinitions[5]?.maxWatts ?? null, pctRange: '121–150% FTP' },
+            { name: 'Z6', label: 'Anaerobic', color: 'bg-workout-long-run', textColor: 'text-workout-long-run', time: pz6 ?? 0, minW: cogganDefinitions[5]?.minWatts ?? 0, maxW: cogganDefinitions[5]?.maxWatts ?? null, pctRange: '121–150% FTP' },
             { name: 'Z7', label: 'Neuromuscular', color: 'bg-rose-500', textColor: 'text-rose-500', time: pz7 ?? 0, minW: cogganDefinitions[6]?.minWatts ?? 0, maxW: cogganDefinitions[6]?.maxWatts ?? null, pctRange: '>150% FTP' },
         ];
         const totalPowerZoneSec = cogganZones.reduce((sum, z) => sum + z.time, 0);
@@ -447,7 +494,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/[var(--modal-backdrop-opacity)] animate-fade-in">
-            <div className="relative w-full max-w-2xl bg-background border border-line rounded-md shadow-lg overflow-hidden animate-slide-in max-h-[90vh] flex flex-col" role="dialog" aria-modal="true" aria-labelledby="activity-title">
+            <div className="relative w-full max-w-2xl bg-background border border-line rounded-md overflow-hidden animate-slide-in max-h-[90vh] flex flex-col" role="dialog" aria-modal="true" aria-labelledby="activity-title">
                 {/* Header */}
                 <div className="relative p-6 border-b border-line bg-background-secondary shrink-0">
                     <button
@@ -459,10 +506,10 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                     </button>
 
                     <div className="flex items-start gap-4 pr-10">
-                        <div className={`w-12 h-12 rounded-md ${isRide ? 'bg-accent-orange/15' : 'bg-accent-purple/15'} flex items-center justify-center`}>
-                            {activity.type === 'RUN' ? <ActivityIcon className="w-6 h-6 text-accent-purple" /> :
+                        <div className={`w-12 h-12 rounded-md ${isRide ? 'bg-accent-orange/15' : 'bg-accent-orange/15'} flex items-center justify-center`}>
+                            {activity.type === 'RUN' ? <ActivityIcon className="w-6 h-6 text-accent-orange" /> :
                                 isRide ? <Zap className="w-6 h-6 text-accent-orange" /> :
-                                    <ActivityIcon className="w-6 h-6 text-accent-purple" />}
+                                    <ActivityIcon className="w-6 h-6 text-accent-orange" />}
                         </div>
                         <div>
                             {isEditingName ? (
@@ -471,7 +518,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                         type="text"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
-                                        className="text-xl font-bold text-foreground bg-background-secondary border border-line rounded-md px-2 py-1 focus:outline-hidden focus:border-accent-purple w-full"
+                                        className="text-xl font-bold text-foreground bg-background-secondary border border-line rounded-md px-2 py-1 focus:outline-hidden focus:border-accent-orange w-full"
                                         autoFocus
                                         aria-label="Activity name input"
                                         onKeyDown={(e) => {
@@ -506,7 +553,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                     <h2 id="activity-title" className="text-xl font-bold text-foreground">{name}</h2>
                                     <button
                                         onClick={() => setIsEditingName(true)}
-                                        className="p-1 text-foreground-muted opacity-0 group-hover:opacity-100 hover:text-foreground transition-all"
+                                        className="p-1 text-foreground-muted opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 hover:text-foreground transition-all"
                                         aria-label="Edit activity name"
                                     >
                                         <Edit2 className="w-4 h-4" />
@@ -671,14 +718,14 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 {/* Intensity Factor (IF) */}
                                 <div className="bg-background-secondary p-3 rounded-lg border border-line text-center whitespace-nowrap">
                                     <span className="text-[11px] text-foreground-muted block mb-0.5">Intensity Factor (IF)</span>
-                                    <span className="text-xl font-mono font-bold text-accent-purple tabular-nums">
+                                    <span className="text-xl font-mono font-bold text-accent-orange tabular-nums">
                                         {powerMetrics.intensityFactor ? powerMetrics.intensityFactor.toFixed(2) : '-'}
                                     </span>
                                 </div>
                                 {/* Variability Index (VI) */}
                                 <div className="bg-background-secondary p-3 rounded-lg border border-line text-center whitespace-nowrap">
                                     <span className="text-[11px] text-foreground-muted block mb-0.5">Variability Index (VI)</span>
-                                    <span className="text-xl font-mono font-bold text-accent-cyan tabular-nums">
+                                    <span className="text-xl font-mono font-bold text-positive tabular-nums">
                                         {powerMetrics.variabilityIndex ? powerMetrics.variabilityIndex.toFixed(2) : '-'}
                                     </span>
                                 </div>
@@ -710,7 +757,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 {/* Efficiency Factor (EF) */}
                                 <div className="bg-background-secondary p-3 rounded-lg border border-line text-center whitespace-nowrap">
                                     <span className="text-[11px] text-foreground-muted block mb-0.5">Efficiency Factor (EF)</span>
-                                    <span className="text-xl font-mono font-bold text-accent-pink tabular-nums">
+                                    <span className="text-xl font-mono font-bold text-negative tabular-nums">
                                         {powerMetrics.efficiencyFactor ? `${powerMetrics.efficiencyFactor.toFixed(2)}` : '-'}
                                     </span>
                                 </div>
@@ -813,7 +860,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                                         if (!active || !payload?.length) return null;
                                                         const d = payload[0]?.payload;
                                                         return (
-                                                            <div className="bg-background-secondary border border-line rounded-md p-2 shadow-lg text-xs">
+                                                            <div className="bg-background-secondary border border-line rounded-md p-2 text-xs">
                                                                 <div className="text-foreground-muted">{d.timeFormatted}</div>
                                                                 <div className="font-mono font-bold text-accent-orange">{d.watts} W</div>
                                                             </div>
@@ -864,12 +911,12 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                             {activity.type === 'RUN' ? (
                                 <div className="flex justify-between items-center border-t border-line pt-2 mt-2">
                                     <span className="text-foreground-muted">GAP</span>
-                                    <span className="text-accent-cyan font-medium font-mono tabular-nums">{formatPace(activity.gradeAdjustedSpeed)}</span>
+                                    <span className="text-positive font-medium font-mono tabular-nums">{formatPace(activity.gradeAdjustedSpeed)}</span>
                                 </div>
                             ) : isRide ? (
                                 <div className="flex justify-between items-center border-t border-line pt-2 mt-2">
                                     <span className="text-foreground-muted">Avg Speed</span>
-                                    <span className="text-accent-cyan font-medium font-mono tabular-nums">
+                                    <span className="text-positive font-medium font-mono tabular-nums">
                                         {activity.averageSpeed ? `${(activity.averageSpeed * 3.6).toFixed(1)} km/h` : '-'}
                                     </span>
                                 </div>
@@ -881,7 +928,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                             <h3 className="text-sm font-semibold text-foreground-muted border-b border-line pb-2">Training Load</h3>
                             <div className="flex justify-between items-center">
                                 <span className="text-foreground-muted">TRIMP</span>
-                                <span className="text-accent-cyan font-medium font-mono tabular-nums">{activity.trimp ? activity.trimp.toFixed(0) : '-'}</span>
+                                <span className="text-positive font-medium font-mono tabular-nums">{activity.trimp ? activity.trimp.toFixed(0) : '-'}</span>
                             </div>
                             {isRide ? (
                                 <div className="flex justify-between items-center">
@@ -907,7 +954,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                             {activity.type === 'RUN' ? (
                                 <div className="flex justify-between items-center border-t border-line pt-2 mt-2">
                                     <span className="text-foreground-muted">Aerobic Fitness (VO2max)</span>
-                                    <span className="text-accent-purple font-medium font-mono tabular-nums">{activity.estimatedVdot ? (activity.estimatedVdot * vdotCorrectionFactor).toFixed(1) : '-'}</span>
+                                    <span className="text-accent-orange font-medium font-mono tabular-nums">{activity.estimatedVdot ? (activity.estimatedVdot * vdotCorrectionFactor).toFixed(1) : '-'}</span>
                                 </div>
                             ) : isRide ? (
                                 <>
@@ -919,7 +966,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-foreground-muted">Cycling VO2max</span>
-                                        <span className="text-accent-purple font-medium font-mono tabular-nums">
+                                        <span className="text-accent-orange font-medium font-mono tabular-nums">
                                             {powerMetrics?.cyclingVo2max ? `${powerMetrics.cyclingVo2max.toFixed(1)} mL/kg/min` : '-'}
                                         </span>
                                     </div>
@@ -1046,23 +1093,23 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                         <div className="mb-8">
                             <div className="flex items-center justify-between border-b border-line pb-2 mb-4">
                                 <h3 className="text-sm font-semibold text-foreground-muted flex items-center gap-2">
-                                    <Bot className="w-4 h-4 text-accent-purple" />
+                                    <MessageSquare className="w-4 h-4 text-accent-orange" />
                                     AI Coach Feedback
                                 </h3>
                                 <button
                                     onClick={handleGenerateFeedback}
                                     disabled={isGeneratingFeedback}
-                                    className="text-xs text-accent-purple hover:text-accent-orange flex items-center gap-1 transition-colors disabled:opacity-50"
+                                    className="text-xs text-accent-orange hover:text-accent-orange flex items-center gap-1 transition-colors disabled:opacity-50"
                                 >
-                                    {isGeneratingFeedback ? <Loader2 className="w-3 h-3 animate-spin"/> : <Sparkles className="w-3 h-3"/>}
+                                    {isGeneratingFeedback ? <Loader2 className="w-3 h-3 animate-spin"/> : <RefreshCw className="w-3 h-3"/>}
                                     {isGeneratingFeedback ? 'Regenerating...' : 'Regenerate'}
                                 </button>
                             </div>
 
                             {feedbackError && (
-                                <div className="mb-4 p-3 bg-accent-pink/10 border border-accent-pink/20 text-accent-pink text-sm rounded-md flex items-center justify-between">
+                                <div className="mb-4 p-3 bg-negative/10 border border-negative/20 text-negative text-sm rounded-md flex items-center justify-between">
                                     <span>{feedbackError}</span>
-                                    <button onClick={() => setFeedbackError(null)} className="hover:bg-accent-pink/20 p-1 rounded-md transition-colors"><X className="w-4 h-4"/></button>
+                                    <button onClick={() => setFeedbackError(null)} className="hover:bg-negative/20 p-1 rounded-md transition-colors"><X className="w-4 h-4"/></button>
                                 </div>
                             )}
 
@@ -1070,10 +1117,10 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 {(aiFeedback.plannedComparison || (!aiFeedback.progressAnalysis && !aiFeedback.goalTrajectory)) && (
                                     <div className="bg-background-tertiary p-4 rounded-md border border-line">
                                         <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-2">
-                                            <Calendar className="w-3 h-3 text-accent-cyan" />
+                                            <Calendar className="w-3 h-3 text-positive" />
                                             {aiFeedback.plannedComparison ? 'Vs Planned Workout' : 'Coach Analysis'}
                                         </h4>
-                                        <div className="text-sm text-foreground-muted prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [\[&_details]:bg-foreground/10_details]:bg-foreground/10 [&_details]:p-3 [&_details]:rounded-md [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-orange">
+                                        <div className="text-sm text-foreground-muted prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-positive hover:prose-a:text-accent-orange [\[&_details]:bg-foreground/10_details]:bg-foreground/10 [&_details]:p-3 [&_details]:rounded-md [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-orange">
                                             <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>
                                                 {DOMPurify.sanitize(aiFeedback.plannedComparison || aiFeedback.progressAnalysis || aiFeedback.goalTrajectory || 'No detailed analysis available.')}
                                             </ReactMarkdown>
@@ -1084,10 +1131,10 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 {aiFeedback.progressAnalysis && (aiFeedback.plannedComparison || aiFeedback.goalTrajectory) && (
                                     <div className="bg-background-tertiary p-4 rounded-md border border-line">
                                         <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-2">
-                                            <TrendingUp className="w-3 h-3 text-accent-cyan" />
+                                            <TrendingUp className="w-3 h-3 text-positive" />
                                             Progress & Execution
                                         </h4>
-                                        <div className="text-sm text-foreground-muted prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [\[&_details]:bg-foreground/10_details]:bg-foreground/10 [&_details]:p-3 [&_details]:rounded-md [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-orange">
+                                        <div className="text-sm text-foreground-muted prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-positive hover:prose-a:text-accent-orange [\[&_details]:bg-foreground/10_details]:bg-foreground/10 [&_details]:p-3 [&_details]:rounded-md [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-orange">
                                             <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>
                                                 {DOMPurify.sanitize(aiFeedback.progressAnalysis)}
                                             </ReactMarkdown>
@@ -1098,10 +1145,10 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 {aiFeedback.goalTrajectory && (
                                     <div className={`bg-background-tertiary p-4 rounded-md border border-line ${(aiFeedback.plannedComparison || aiFeedback.progressAnalysis) ? 'md:col-span-1' : 'md:col-span-2'}`}>
                                         <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-2">
-                                            <Heart className="w-3 h-3 text-accent-purple" />
+                                            <Heart className="w-3 h-3 text-accent-orange" />
                                             Goal Trajectory
                                         </h4>
-                                        <div className="text-sm text-foreground-muted prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [\[&_details]:bg-foreground/10_details]:bg-foreground/10 [&_details]:p-3 [&_details]:rounded-md [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-orange">
+                                        <div className="text-sm text-foreground-muted prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-positive hover:prose-a:text-accent-orange [\[&_details]:bg-foreground/10_details]:bg-foreground/10 [&_details]:p-3 [&_details]:rounded-md [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-orange">
                                             <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>
                                                 {DOMPurify.sanitize(aiFeedback.goalTrajectory)}
                                             </ReactMarkdown>
@@ -1113,33 +1160,33 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                     ) : (
                         <div className="mb-8">
                             <h3 className="text-sm font-semibold text-foreground-muted flex items-center gap-2 border-b border-line pb-2 mb-4">
-                                <Bot className="w-4 h-4 text-accent-purple" />
+                                <MessageSquare className="w-4 h-4 text-accent-orange" />
                                 AI Coach Feedback
                             </h3>
 
                             {feedbackError ? (
-                                <div className="bg-accent-pink/10 border border-accent-pink/20 rounded-md p-6 flex flex-col items-center justify-center text-center">
-                                    <div className="text-accent-pink mb-3"><X className="w-10 h-10 opacity-70" /></div>
+                                <div className="bg-negative/10 border border-negative/20 rounded-md p-6 flex flex-col items-center justify-center text-center">
+                                    <div className="text-negative mb-3"><X className="w-10 h-10 opacity-70" /></div>
                                     <p className="text-sm text-foreground mb-4 font-medium">{feedbackError}</p>
                                     <button
                                         onClick={handleGenerateFeedback}
                                         disabled={isGeneratingFeedback || isLoadingFeedback}
                                         className="px-4 py-2 bg-background border border-line hover:bg-surface-hover rounded-md text-sm text-foreground font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
                                     >
-                                        {isGeneratingFeedback ? <Loader2 className="w-4 h-4 animate-spin"/> : <Sparkles className="w-4 h-4 text-accent-purple"/>}
+                                        {isGeneratingFeedback ? <Loader2 className="w-4 h-4 animate-spin"/> : <RefreshCw className="w-4 h-4 text-accent-orange"/>}
                                         {isGeneratingFeedback ? 'Trying again...' : 'Try Again'}
                                     </button>
                                 </div>
                             ) : (
                                 <div className="bg-background-tertiary border border-line rounded-md p-6 flex flex-col items-center justify-center text-center">
-                                    <Bot className="w-10 h-10 text-foreground-muted mb-3 opacity-50" />
+                                    <MessageSquare className="w-10 h-10 text-foreground-muted mb-3 opacity-50" />
                                     <p className="text-sm text-foreground mb-4">Get personalized analysis comparing this run to your planned workout and goals.</p>
                                     <button
                                         onClick={handleGenerateFeedback}
                                         disabled={isGeneratingFeedback || isLoadingFeedback}
                                         className="px-4 py-2 bg-background-secondary hover:bg-surface-hover border border-line rounded-md text-sm text-foreground font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
                                     >
-                                        {isGeneratingFeedback ? <Loader2 className="w-4 h-4 animate-spin"/> : <Sparkles className="w-4 h-4 text-accent-purple"/>}
+                                        {isGeneratingFeedback ? <Loader2 className="w-4 h-4 animate-spin"/> : <ActivityIcon className="w-4 h-4 text-accent-orange"/>}
                                         {isGeneratingFeedback ? 'Generating Analysis...' : isLoadingFeedback ? 'Checking...' : 'Generate AI Analysis'}
                                     </button>
                                 </div>

@@ -154,7 +154,7 @@ function getCyclingClassificationBadge(activity: ActivityListItem): { label: str
     ) {
         return { label: 'Recovery Spin', className: 'bg-workout-recovery/15 text-workout-recovery border-workout-recovery/30' };
     }
-    return { label: 'Cycling', className: 'bg-accent-cyan/15 text-accent-cyan border-accent-cyan/30' };
+    return { label: 'Cycling', className: 'bg-positive/15 text-positive border-positive/30' };
 }
 
 const getWorkoutTypeStyle = (type: WorkoutType) => {
@@ -193,7 +193,7 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
             <div className="flex items-start gap-4">
                 {/* Activity type icon */}
                 <div className={`w-12 h-12 rounded-md flex items-center justify-center shrink-0 ${crossTraining
-                    ? 'bg-accent-cyan/15 text-accent-cyan'
+                    ? 'bg-positive/15 text-positive'
                     : 'bg-accent-orange/15 text-accent-orange'
                     }`}>
                     {activityIcons[activity.type]}
@@ -225,7 +225,7 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                                     {format(d, 'EEE, MMM d')}
                                 </>
                             ) : (
-                                <span className="text-accent-pink">Invalid Date</span>
+                                <span className="text-negative">Invalid Date</span>
                             );
                         })()}
                     </p>
@@ -291,7 +291,7 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                         {/* Heart rate */}
                         {activity.hasHeartrate && activity.averageHr && (
                             <div className="flex items-center gap-1">
-                                <Heart className="w-4 h-4 text-accent-pink" />
+                                <Heart className="w-4 h-4 text-negative" />
                                 <span className="text-foreground-muted font-mono tabular-nums">{Math.round(activity.averageHr)} bpm</span>
                             </div>
                         )}
@@ -310,7 +310,7 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                         <div className="flex items-center gap-4 mt-2">
                             {activity.trimp && (
                                 <span className="text-xs text-foreground-muted">
-                                    TRIMP: <span className="text-accent-cyan font-mono tabular-nums">{activity.trimp.toFixed(0)}</span>
+                                    TRIMP: <span className="text-positive font-mono tabular-nums">{activity.trimp.toFixed(0)}</span>
                                 </span>
                             )}
                             {!crossTraining && activity.runningTss && (

@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { Pencil, Check, MessageSquare, ArrowLeft, Sparkles } from 'lucide-react';
+import { Pencil, Check, MessageSquare, ArrowLeft, Sliders } from 'lucide-react';
 import { UndoRedoButtons } from '@/app/plan-advanced/[goalId]/components/Toolbar/UndoRedoButtons';
 import { ViewModeToggle } from '@/app/plan-advanced/[goalId]/components/Toolbar/ViewModeToggle';
 import { ModeToggle } from '@/app/plan-advanced/[goalId]/components/Toolbar/ModeToggle';
@@ -124,7 +124,7 @@ export function Toolbar({
 
     return (
         <>
-            <div className="min-h-14 border-b border-glass-border flex flex-wrap items-center px-3 py-2 gap-2 shrink-0 bg-background-secondary/50 backdrop-blur-sm">
+            <div className="min-h-14 border-b border-line flex flex-wrap items-center px-3 py-2 gap-2 shrink-0 bg-background-secondary">
                 <button
                     type="button"
                     onClick={() => router.push('/')}
@@ -190,10 +190,10 @@ export function Toolbar({
                     type="button"
                     onClick={() => setIsEngineModalOpen(true)}
                     aria-label="Engine Generator"
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-workout-tempo/15 hover:bg-workout-tempo/25 text-workout-tempo border border-workout-tempo/30 transition-colors shadow-sm"
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-workout-tempo/15 hover:bg-workout-tempo/25 text-workout-tempo border border-workout-tempo/30 transition-colors"
                     title="Generate / Adapt with Engine"
                 >
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Sliders className="w-3.5 h-3.5" aria-hidden="true" />
                     <span className="hidden md:inline">Engine Generator</span>
                 </button>
 
@@ -203,11 +203,11 @@ export function Toolbar({
                         onClick={onToggleChat}
                         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
                             chatOpen
-                                ? 'bg-workout-long-run/15 text-workout-long-run border-workout-long-run/30'
-                                : 'bg-workout-long-run/10 text-workout-long-run hover:bg-workout-long-run/15 border-workout-long-run/30'
+                                ? 'bg-accent-orange/15 text-accent-orange border-accent-orange/30'
+                                : 'bg-background-tertiary text-foreground-secondary hover:text-foreground border-line'
                         }`}
                     >
-                        <MessageSquare className="w-3.5 h-3.5" />
+                        <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
                         <span className="hidden sm:inline">AI Chat</span>
                     </button>
                 )}

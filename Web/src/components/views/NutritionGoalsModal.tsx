@@ -221,7 +221,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 pt-safe border-b border-line shrink-0">
                     <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                        <Target className="w-5 h-5 text-accent-pink" />
+                        <Target className="w-5 h-5 text-negative" />
                         Nutrition Targets
                     </h2>
                     <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground">
@@ -232,7 +232,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
                     {isLoading ? (
                         <div className="flex justify-center p-8">
-                            <Loader2 className="w-8 h-8 flex animate-spin text-accent-pink" />
+                            <Loader2 className="w-8 h-8 flex animate-spin text-negative" />
                         </div>
                     ) : (
                         <>
@@ -249,7 +249,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                 <div className="h-px bg-line my-2"></div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm font-medium text-foreground-muted">Est. TDEE (Maintenance)</span>
-                                    <span className="text-accent-pink font-semibold font-mono tabular-nums">{Math.round(tdee)} kcal</span>
+                                    <span className="text-negative font-semibold font-mono tabular-nums">{Math.round(tdee)} kcal</span>
                                 </div>
                                 <p className="text-xs text-foreground-muted mt-3 flex gap-1">
                                     <Info className="w-3.5 h-3.5 shrink-0" />
@@ -261,7 +261,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                             <div>
                                 <div className="flex justify-between items-end mb-2">
                                     <label className="text-sm font-semibold text-foreground">Daily Calorie Target</label>
-                                    <span className="text-2xl font-semibold font-mono tabular-nums text-accent-pink">{Math.round(targetCalories)} <span className="text-xs font-normal text-foreground-muted">kcal</span></span>
+                                    <span className="text-2xl font-semibold font-mono tabular-nums text-negative">{Math.round(targetCalories)} <span className="text-xs font-normal text-foreground-muted">kcal</span></span>
                                 </div>
 
                                 <input
@@ -271,11 +271,11 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                     step="50"
                                     value={targetCalories}
                                     onChange={(e) => handleCalorieChange(parseFloat(e.target.value))}
-                                    className="w-full accent-accent-pink h-2 bg-background-tertiary rounded-md appearance-none cursor-pointer"
+                                    className="w-full accent-negative h-2 bg-background-tertiary rounded-md appearance-none cursor-pointer"
                                 />
                                 <div className="flex justify-between text-xs text-foreground-muted mt-1">
                                     <span>Extreme Diet (800)</span>
-                                    <span className="text-accent-pink/80 cursor-pointer" onClick={() => handleCalorieChange(tdee)}>Set Maintenance</span>
+                                    <span className="text-negative/80 cursor-pointer" onClick={() => handleCalorieChange(tdee)}>Set Maintenance</span>
                                     <span>Extreme Bulk (5000)</span>
                                 </div>
                             </div>
@@ -395,7 +395,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                 <div className="mb-6">
                                     <div className="flex justify-between items-end mb-2">
                                         <label className="text-sm font-semibold text-foreground">Exercise Calorie Factor</label>
-                                        <span className="text-lg font-semibold font-mono tabular-nums text-accent-pink">{exerciseCalorieFactor.toFixed(2)}x</span>
+                                        <span className="text-lg font-semibold font-mono tabular-nums text-negative">{exerciseCalorieFactor.toFixed(2)}x</span>
                                     </div>
                                     <p className="text-xs text-foreground-muted mb-3">
                                         How heavily should tracked exercise calories impact your remaining budget? (0 = ignore exercise, 1 = full credit).
@@ -407,7 +407,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                         step="0.05"
                                         value={exerciseCalorieFactor}
                                         onChange={(e) => setExerciseCalorieFactor(parseFloat(e.target.value))}
-                                        className="w-full accent-accent-pink h-2 bg-background-tertiary rounded-md appearance-none cursor-pointer"
+                                        className="w-full accent-negative h-2 bg-background-tertiary rounded-md appearance-none cursor-pointer"
                                     />
                                     <div className="flex justify-between text-xs text-foreground-muted mt-1">
                                         <span>Ignore (0x)</span>

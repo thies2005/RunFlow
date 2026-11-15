@@ -102,7 +102,7 @@ services:
     build: .
     container_name: runflow-migrator
     working_dir: /app
-    command: sh -c "npx prisma migrate deploy"
+    command: sh -c "node node_modules/prisma/build/index.js migrate deploy"
     restart: "no"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@db:5432/${POSTGRES_DB:-runflow}?schema=public
@@ -233,12 +233,13 @@ services:
   reminder-cron:
     image: alpine:3.22
     container_name: runflow-reminder-cron
+    stop_grace_period: 1s
     restart: unless-stopped
     entrypoint: /bin/sh
     command: >
-      -c "while true; do
+      -c "trap 'exit 0' TERM INT; while true; do
         wget -q -O- --header=\"Authorization: Bearer $$CRON_SECRET\" http://app:3000/api/cron/reminders || true;
-        sleep 300;
+        sleep 300 & wait $$!;
       done"
     environment:
       - CRON_SECRET=${CRON_SECRET}
@@ -256,13 +257,14 @@ services:
   feedback-queue-cron:
     image: alpine:3.22
     container_name: runflow-feedback-queue-cron
+    stop_grace_period: 1s
     restart: unless-stopped
     entrypoint: /bin/sh
     command: >
-      -c "while true; do
+      -c "trap 'exit 0' TERM INT; while true; do
         wget -q -O- --header=\"x-internal-secret:$$CRON_SECRET\" --post-data='{}' http://app:3000/api/internal/process-feedback-queue || true;
         wget -q -O- --header=\"Authorization: Bearer $$CRON_SECRET\" --post-data='{}' http://app:3000/api/cron/strava-webhooks || true;
-        sleep 60;
+        sleep 60 & wait $$!;
       done"
     environment:
       - CRON_SECRET=${CRON_SECRET}

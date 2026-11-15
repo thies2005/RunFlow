@@ -28,3 +28,9 @@ playwright*
 
 # Documentation
 *.md
+
+# Generated Prisma client and local build/test artifacts
+src/generated
+coverage/
+.vercel/
+*.tsbuildinfo

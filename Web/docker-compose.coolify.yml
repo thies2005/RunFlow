@@ -16,6 +16,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
+    command:
+      - sh
+      - -c
+      - |
+          PGPASSWORD="${POSTGRES_PASSWORD}" psql -h db -U ${POSTGRES_USER:-runflow} -d ${POSTGRES_DB:-runflow} -c "DELETE FROM public._prisma_migrations WHERE migration_name IN ('00000000000000_init', '20250212120000_optimize_activity_indexes', '20260513120000_add_advanced_plan_features');" 2>/dev/null || true
+          node node_modules/prisma/build/index.js migrate deploy
+          exec node server.js
     # Coolify reads SERVICE_FQDN_APP to route external traffic here
     # Note: The healthcheck with a 300s start_period serves as a readiness check
     # Coolify's Traefik proxy will only route traffic once the healthcheck passes
@@ -60,10 +69,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      migrator:
-        condition: service_completed_successfully
-      permissions-fixer:
-        condition: service_completed_successfully
     networks:
       - coolify
     volumes:
@@ -77,7 +82,7 @@ services:
       interval: 15s
       timeout: 10s
       start_period: 120s
-      start_interval: 5s
+      start_interval: 2s
       retries: 5
     restart: unless-stopped
     deploy:
@@ -94,47 +99,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  permissions-fixer:
-    image: alpine:3.22
-    exclude_from_hc: true
-    command: sh -c "mkdir -p /backups && chown -R 1001:1001 /backups && chmod -R 775 /backups"
-    restart: "no"
-    volumes:
-      - backups:/backups
-    networks:
-      - coolify
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  migrator:
-    exclude_from_hc: true
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: builder
-    command:
-      - sh
-      - -c
-      - |
-          apk add --no-cache postgresql-client 2>/dev/null || true
-          PGPASSWORD="${POSTGRES_PASSWORD}" psql -h db -U ${POSTGRES_USER:-runflow} -d ${POSTGRES_DB:-runflow} -c "DELETE FROM public._prisma_migrations WHERE migration_name IN ('00000000000000_init', '20250212120000_optimize_activity_indexes', '20260513120000_add_advanced_plan_features');" 2>/dev/null || true
-          npx prisma migrate deploy
-    restart: "no"
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@db:5432/${POSTGRES_DB:-runflow}?schema=public
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - coolify
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   db:
     image: postgres:16-alpine
@@ -175,9 +139,9 @@ services:
     command: >
       sh -c '
         if [ -n "$$REDIS_PASSWORD" ]; then
-          redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --requirepass "$$REDIS_PASSWORD"
+          exec redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --requirepass "$$REDIS_PASSWORD"
         else
-          redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+          exec redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
         fi
       '
     environment:
@@ -210,6 +174,7 @@ services:
 
   backup:
     image: prodrigestivill/postgres-backup-local:16
+    exclude_from_hc: true
     restart: unless-stopped
     environment:
       - POSTGRES_HOST=db
@@ -242,19 +207,21 @@ services:
 
   reminder-cron:
     image: alpine:3.22
+    exclude_from_hc: true
+    stop_grace_period: 1s
     restart: unless-stopped
     entrypoint: /bin/sh
     command: >
-      -c "while true; do
+      -c "trap 'exit 0' TERM INT; while true; do
         wget -q -O- --header=\"Authorization: Bearer $${CRON_SECRET}\" $${APP_BASE_URL}/api/cron/reminders || true;
-        sleep 300;
+        sleep 300 & wait $$!;
       done"
     environment:
       - CRON_SECRET=${CRON_SECRET}
       - APP_BASE_URL=${APP_BASE_URL:-http://app:3000}
     depends_on:
       app:
-        condition: service_healthy
+        condition: service_started
     networks:
       - coolify
     healthcheck:
@@ -272,20 +239,22 @@ services:
 
   feedback-queue-cron:
     image: alpine:3.22
+    exclude_from_hc: true
+    stop_grace_period: 1s
     restart: unless-stopped
     entrypoint: /bin/sh
     command: >
-      -c "while true; do
+      -c "trap 'exit 0' TERM INT; while true; do
         wget -q -O- --header=\"x-internal-secret:$$CRON_SECRET\" --post-data='{}' $${APP_BASE_URL}/api/internal/process-feedback-queue || true;
         wget -q -O- --header=\"Authorization: Bearer $${CRON_SECRET}\" --post-data='{}' $${APP_BASE_URL}/api/cron/strava-webhooks || true;
-        sleep 60;
+        sleep 60 & wait $$!;
       done"
     environment:
       - CRON_SECRET=${CRON_SECRET}
       - APP_BASE_URL=${APP_BASE_URL:-http://app:3000}
     depends_on:
       app:
-        condition: service_healthy
+        condition: service_started
     networks:
       - coolify
     healthcheck:

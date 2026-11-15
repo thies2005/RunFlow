@@ -173,11 +173,22 @@ const withPWAConfig = withPWA({
     },
 });
 
+const skipBuildChecks = process.env.NEXT_SKIP_TYPECHECK === "1";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: "standalone",
     compress: true,
+    eslint: {
+        ignoreDuringBuilds: skipBuildChecks,
+    },
+    typescript: {
+        ignoreBuildErrors: skipBuildChecks,
+    },
     experimental: {
+        webpackBuildWorker: true,
+        parallelServerBuildTraces: true,
+        cpus: 4,
         optimizePackageImports: [
             "lucide-react",
             "date-fns",

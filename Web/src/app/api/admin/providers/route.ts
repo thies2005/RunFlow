@@ -215,13 +215,15 @@ export async function DELETE(request: NextRequest) {
     }
 
     try {
-        // Check if it's the active provider
+        // Clear active/fallback references if deleting a referenced provider
         const globalSettings = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
-        if (globalSettings?.activeProviderId === id) {
-            // Reset active provider before deleting
+        if (globalSettings && (globalSettings.activeProviderId === id || globalSettings.fallbackProviderId === id)) {
+            const clearData: { activeProviderId?: null; fallbackProviderId?: null } = {};
+            if (globalSettings.activeProviderId === id) clearData.activeProviderId = null;
+            if (globalSettings.fallbackProviderId === id) clearData.fallbackProviderId = null;
             await prisma.globalAiSettings.update({
                 where: { id: 'singleton' },
-                data: { activeProviderId: null }
+                data: clearData,
             });
         }
 

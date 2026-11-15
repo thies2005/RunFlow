@@ -19,11 +19,15 @@ jest.mock('@/lib/logging/logger', () => ({
 }));
 
 describe('logAdminAction', () => {
+    const originalEnv = process.env;
     let mockReq: NextRequest;
     let mockHeaders: Map<string, string>;
 
     beforeEach(() => {
         jest.clearAllMocks();
+        process.env = { ...originalEnv };
+        delete process.env.TRUSTED_PROXY_COUNT;
+        delete process.env.TRUSTED_CLIENT_IP_HEADER;
 
         // Setup mock headers map
         mockHeaders = new Map();
@@ -36,8 +40,11 @@ describe('logAdminAction', () => {
         } as unknown as NextRequest;
     });
 
-    it('should successfully log an action with full details', async () => {
-        // Arrange
+    afterAll(() => {
+        process.env = originalEnv;
+    });
+
+    it('should ignore spoofed x-forwarded-for when TRUSTED_PROXY_COUNT is unset', async () => {
         mockHeaders.set('x-forwarded-for', '192.168.1.1, 10.0.0.1');
         mockHeaders.set('user-agent', 'Mozilla/5.0');
 
@@ -45,10 +52,8 @@ describe('logAdminAction', () => {
         const target = { type: 'USER' as const, id: 'user-123' };
         const details = { reason: 'audit' };
 
-        // Act
         await logAdminAction(mockReq, action, target, details);
 
-        // Assert
         expect(prisma.adminAuditLog.create).toHaveBeenCalledTimes(1);
         expect(prisma.adminAuditLog.create).toHaveBeenCalledWith({
             data: {
@@ -57,15 +62,31 @@ describe('logAdminAction', () => {
                 targetType: 'USER',
                 targetId: 'user-123',
                 details: JSON.stringify({ reason: 'audit' }),
-                ipAddress: '192.168.1.1', // extracted first IP and trimmed
+                ipAddress: 'unknown',
                 userAgent: 'Mozilla/5.0',
             },
         });
         expect(logger.error).not.toHaveBeenCalled();
     });
 
-    it('should fallback to x-real-ip if x-forwarded-for is missing', async () => {
+    it('should extract right-aligned client IP when TRUSTED_PROXY_COUNT=1', async () => {
+        process.env.TRUSTED_PROXY_COUNT = '1';
+        mockHeaders.set('x-forwarded-for', '1.2.3.4, 203.0.113.5');
+        mockHeaders.set('user-agent', 'Mozilla/5.0');
+
+        await logAdminAction(mockReq, 'VIEW_USERS');
+
+        expect(prisma.adminAuditLog.create).toHaveBeenCalledWith({
+            data: expect.objectContaining({
+                ipAddress: '203.0.113.5',
+                userAgent: 'Mozilla/5.0',
+            }),
+        });
+    });
+
+    it('should fallback to x-real-ip when TRUSTED_PROXY_COUNT=1 and x-forwarded-for is missing', async () => {
         // Arrange
+        process.env.TRUSTED_PROXY_COUNT = '1';
         mockHeaders.set('x-real-ip', '10.0.0.2');
         mockHeaders.set('user-agent', 'TestAgent');
 

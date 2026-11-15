@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Activity, Mail, Trash2 } from 'lucide-react';
+import { Activity, Mail, Trash2, Search } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 import useConfirmAction from '@/hooks/useConfirmAction';
 import SignupAccessControl from '@/components/admin/SignupAccessControl';
@@ -14,6 +14,13 @@ interface UsersTabProps {
     setProcessing: (_val: boolean) => void;
     setActionMessage: (_msg: { type: 'success' | 'error', text: string } | null) => void;
     fetchAllData: () => void;
+    userPage: number;
+    usersTotal: number;
+    usersTotalPages: number;
+    userSearch: string;
+    usersLoading?: boolean;
+    onPageChange: (_page: number) => void;
+    onSearchSubmit: (_search: string) => void;
 }
 
 export default function UsersTab({
@@ -23,9 +30,21 @@ export default function UsersTab({
     processing,
     setProcessing,
     setActionMessage,
-    fetchAllData
+    fetchAllData,
+    userPage,
+    usersTotal,
+    usersTotalPages,
+    userSearch,
+    usersLoading = false,
+    onPageChange,
+    onSearchSubmit,
 }: UsersTabProps) {
     const { confirm, ConfirmDialog } = useConfirmAction();
+    const [searchDraft, setSearchDraft] = useState(userSearch);
+
+    useEffect(() => {
+        setSearchDraft(userSearch);
+    }, [userSearch]);
 
     const handleResetPassword = async (userId: string, userEmail: string | null) => {
         const isConfirmed = await confirm({
@@ -115,9 +134,15 @@ export default function UsersTab({
 
     const handleToggleAi = async (userId: string, tier: string) => {
         setProcessing(true);
+        const allowAccess = tier !== 'none';
         setUsers(users.map((u: AdminUser) =>
             u.id === userId
-                ? { ...u, aiSettings: u.aiSettings ? { ...u.aiSettings, usageTier: tier } : { usageTier: tier, adminAllowed: false, aiEnabled: false } }
+                ? {
+                    ...u,
+                    aiSettings: u.aiSettings
+                        ? { ...u.aiSettings, usageTier: tier, adminAllowed: allowAccess }
+                        : { usageTier: tier, adminAllowed: allowAccess, aiEnabled: false }
+                }
                 : u
         ));
 
@@ -153,33 +178,78 @@ export default function UsersTab({
                 onUpdated={() => fetchAllData()}
             />
 
-            <div className="flex justify-end">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                <div role="search" aria-label="Search users" className="flex-1 max-w-md">
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            onSearchSubmit(searchDraft);
+                        }}
+                        className="flex items-center gap-2"
+                    >
+                        <div className="relative flex-1">
+                            <Search className="w-4 h-4 text-foreground-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+                            <input
+                                id="admin-user-search"
+                                type="search"
+                                value={searchDraft}
+                                onChange={(e) => setSearchDraft(e.target.value)}
+                                placeholder="Search by name or email..."
+                                aria-label="Search users by name or email"
+                                className="w-full pl-9 pr-3 py-2 bg-background border border-line rounded-md text-sm text-foreground placeholder-foreground-muted focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={usersLoading}
+                            className="px-3 py-2 bg-background-tertiary border border-line text-foreground text-sm font-medium rounded-md hover:bg-surface-hover transition disabled:opacity-50"
+                        >
+                            Search
+                        </button>
+                        {userSearch && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSearchDraft('');
+                                    onSearchSubmit('');
+                                }}
+                                disabled={usersLoading}
+                                className="px-3 py-2 border border-line text-foreground-muted hover:text-foreground text-sm rounded-md transition disabled:opacity-50"
+                            >
+                                Clear
+                            </button>
+                        )}
+                    </form>
+                </div>
+
                 <button
+                    type="button"
                     onClick={() => handleRecalculateFitness()}
                     disabled={processing}
-                    className="flex items-center gap-2 px-3 py-2 bg-background-tertiary text-accent-blue hover:bg-surface-hover transition text-sm font-medium disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 px-3 py-2 bg-background-tertiary border border-line rounded-md text-accent-blue hover:bg-surface-hover transition text-sm font-medium disabled:opacity-50"
                 >
-                    <Activity className="w-4 h-4" />
+                    <Activity className="w-4 h-4" aria-hidden="true" />
                     Recalculate All Fitness
                 </button>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto border border-line rounded bg-background-secondary" role="region" tabIndex={0} aria-label="Users table">
                 <table className="w-full text-left">
-                    <thead>
-                        <tr className="border-b border-line">
-                            <th className="pb-3 font-semibold text-foreground-secondary text-sm">User</th>
-                            <th className="pb-3 font-semibold text-foreground-secondary text-sm">Joined</th>
-                            <th className="pb-3 font-semibold text-foreground-secondary text-sm">Last Sync</th>
-                            <th className="pb-3 font-semibold text-foreground-secondary text-sm">Activities</th>
-                            <th className="pb-3 font-semibold text-foreground-secondary text-sm text-center">AI Access</th>
-                            <th className="pb-3 font-semibold text-foreground-secondary text-sm">AI Tier</th>
-                            <th className="pb-3 font-semibold text-foreground-secondary text-sm text-right">Actions</th>
+                    <caption className="sr-only">Registered users and AI access settings</caption>
+                    <thead className="border-b border-line bg-background">
+                        <tr>
+                            <th scope="col" className="px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-foreground-muted">User</th>
+                            <th scope="col" className="px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-foreground-muted">Joined</th>
+                            <th scope="col" className="px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-foreground-muted">Last Sync</th>
+                            <th scope="col" className="px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-foreground-muted text-right">Activities</th>
+                            <th scope="col" className="px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-foreground-muted text-center">AI Access</th>
+                            <th scope="col" className="px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-foreground-muted">AI Tier</th>
+                            <th scope="col" className="px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-foreground-muted text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-line">
                         {users.map((user: AdminUser) => (
-                            <tr key={user.id} className="group hover:bg-background-secondary transition">
-                                <td className="py-4">
+                            <tr key={user.id} className="group hover:bg-background transition">
+                                <td className="px-4 py-3.5">
                                     <div className="flex items-center">
                                         <div className="w-8 h-8 rounded-full bg-foreground/15 flex-shrink-0 overflow-hidden">
                                             {user.image ? (
@@ -196,16 +266,16 @@ export default function UsersTab({
                                         </div>
                                     </div>
                                 </td>
-                                <td className="py-4 text-sm font-mono tabular-nums text-foreground-muted">
+                                <td className="px-4 py-3.5 text-sm font-mono tabular-nums text-foreground-muted">
                                     {new Date(user.createdAt).toLocaleDateString()}
                                 </td>
-                                <td className="py-4 text-sm font-mono tabular-nums text-foreground-muted">
+                                <td className="px-4 py-3.5 text-sm font-mono tabular-nums text-foreground-muted">
                                     {user.lastSyncAt ? new Date(user.lastSyncAt).toLocaleString() : 'Never'}
                                 </td>
-                                <td className="py-4 text-sm font-mono tabular-nums text-foreground-muted">
+                                <td className="px-4 py-3.5 text-sm font-mono tabular-nums text-foreground-muted text-right">
                                     {user.activityCount}
                                 </td>
-                                <td className="py-4">
+                                <td className="px-4 py-3.5">
                                     <div className="flex flex-col items-center gap-1">
                                         <div className="flex gap-2">
                                             <span
@@ -223,12 +293,13 @@ export default function UsersTab({
                                         </div>
                                     </div>
                                 </td>
-                                <td className="py-4 text-sm font-mono tabular-nums text-foreground-muted">
+                                <td className="px-4 py-3.5 text-sm font-mono tabular-nums text-foreground-muted">
                                     <select
+                                        aria-label={`AI tier for ${user.name || user.email || user.id}`}
                                         value={user.aiSettings?.usageTier || 'none'}
                                         onChange={(e) => handleToggleAi(user.id, e.target.value)}
                                         disabled={processing}
-                                        className="bg-background-secondary border border-line text-foreground-secondary text-sm rounded-md focus:ring-accent-orange focus:border-accent-orange block w-full p-2"
+                                        className="bg-background border border-line text-foreground-secondary text-sm rounded focus:ring-accent-orange focus:border-accent-orange block w-full p-2"
                                     >
                                         <option value="none">No Access</option>
                                         <option value="tier1">{aiSettings?.settings?.tier1Name || 'Tier 1'}</option>
@@ -236,31 +307,37 @@ export default function UsersTab({
                                         <option value="tier3">{aiSettings?.settings?.tier3Name || 'Tier 3'}</option>
                                     </select>
                                 </td>
-                                <td className="py-4 text-right">
-                                    <div className="flex justify-end space-x-2">
+                                <td className="px-4 py-3.5 text-right">
+                                    <div className="flex justify-end space-x-1">
                                         <button
+                                            type="button"
                                             onClick={() => handleRecalculateFitness(user.id, user.name || user.email)}
                                             disabled={processing}
-                                            className="text-foreground-muted hover:text-accent-blue transition p-2 hover:bg-accent-blue/10 rounded-md"
+                                            className="text-foreground-muted hover:text-accent-blue transition p-2 hover:bg-accent-blue/10 rounded"
+                                            aria-label={`Recalculate fitness for ${user.name || user.email || user.id}`}
                                             title="Recalculate Fitness"
                                         >
-                                            <Activity className="w-4 h-4" />
+                                            <Activity className="w-4 h-4" aria-hidden="true" />
                                         </button>
                                         <button
+                                            type="button"
                                             onClick={() => handleResetPassword(user.id, user.email)}
                                             disabled={processing}
-                                            className="text-foreground-muted hover:text-positive transition p-2 hover:bg-positive/10 rounded-md"
+                                            className="text-foreground-muted hover:text-positive transition p-2 hover:bg-positive/10 rounded"
+                                            aria-label={`Send password reset email to ${user.email || user.name || user.id}`}
                                             title="Send Reset Password Email"
                                         >
-                                            <Mail className="w-4 h-4" />
+                                            <Mail className="w-4 h-4" aria-hidden="true" />
                                         </button>
                                         <button
+                                            type="button"
                                             onClick={() => handleDeleteUser(user.id)}
                                             disabled={processing}
-                                            className="text-foreground-muted hover:text-negative transition p-2 hover:bg-negative/10 rounded-md"
+                                            className="text-foreground-muted hover:text-negative transition p-2 hover:bg-negative/10 rounded"
+                                            aria-label={`Delete user ${user.name || user.email || user.id}`}
                                             title="Delete User"
                                         >
-                                            <Trash2 className="w-4 h-4" />
+                                            <Trash2 className="w-4 h-4" aria-hidden="true" />
                                         </button>
                                     </div>
                                 </td>
@@ -276,6 +353,33 @@ export default function UsersTab({
                     </tbody>
                 </table>
             </div>
+            {usersTotal > 0 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-line">
+                    <div className="text-xs font-mono tabular-nums text-foreground-muted">
+                        Showing page {userPage} of {usersTotalPages} ({usersTotal} total users)
+                    </div>
+                    {usersTotalPages > 1 && (
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => onPageChange(Math.max(1, userPage - 1))}
+                                disabled={userPage <= 1 || usersLoading}
+                                className="px-3 py-1.5 border border-line rounded-md text-xs font-medium text-foreground-secondary hover:bg-background-tertiary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onPageChange(Math.min(usersTotalPages, userPage + 1))}
+                                disabled={userPage >= usersTotalPages || usersLoading}
+                                className="px-3 py-1.5 border border-line rounded-md text-xs font-medium text-foreground-secondary hover:bg-background-tertiary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
             <ConfirmDialog />
         </div>
     );

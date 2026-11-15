@@ -82,10 +82,69 @@ export async function GET(request: NextRequest) {
             }
         }
 
+        // Get operational telemetry when models exist (guarded for test mocks)
+        const prismaAny = prisma as unknown as {
+            feedbackJob?: {
+                groupBy: (_args: unknown) => Promise<Array<{ status: string; _count: { _all: number } }>>;
+                count: (_args: unknown) => Promise<number>;
+            };
+            aiDailyTokenUsage?: {
+                aggregate: (_args: unknown) => Promise<{ _sum: { inputTokens: number | null; outputTokens: number | null } }>;
+            };
+            errorLog?: {
+                count: (_args: unknown) => Promise<number>;
+            };
+        };
+
+        const todayStart = new Date(now);
+        todayStart.setUTCHours(0, 0, 0, 0);
+
+        const [
+            newUsersLast7d,
+            feedbackGroups,
+            feedbackDoneToday,
+            aiUsageToday,
+            aiUsage7d,
+            unresolvedErrors,
+            errorsLast24h,
+        ] = await Promise.all([
+            prisma.user.count({ where: { createdAt: { gte: last7d } } }),
+            typeof prismaAny.feedbackJob?.groupBy === 'function'
+                ? prismaAny.feedbackJob.groupBy({ by: ['status'], _count: { _all: true } })
+                : Promise.resolve([]),
+            typeof prismaAny.feedbackJob?.count === 'function'
+                ? prismaAny.feedbackJob.count({ where: { status: 'DONE', completedAt: { gte: todayStart } } })
+                : Promise.resolve(0),
+            typeof prismaAny.aiDailyTokenUsage?.aggregate === 'function'
+                ? prismaAny.aiDailyTokenUsage.aggregate({
+                      where: { date: { gte: todayStart } },
+                      _sum: { inputTokens: true, outputTokens: true },
+                  })
+                : Promise.resolve({ _sum: { inputTokens: 0, outputTokens: 0 } }),
+            typeof prismaAny.aiDailyTokenUsage?.aggregate === 'function'
+                ? prismaAny.aiDailyTokenUsage.aggregate({
+                      where: { date: { gte: last7d } },
+                      _sum: { inputTokens: true, outputTokens: true },
+                  })
+                : Promise.resolve({ _sum: { inputTokens: 0, outputTokens: 0 } }),
+            typeof prismaAny.errorLog?.count === 'function'
+                ? prismaAny.errorLog.count({ where: { resolved: false } })
+                : Promise.resolve(0),
+            typeof prismaAny.errorLog?.count === 'function'
+                ? prismaAny.errorLog.count({ where: { timestamp: { gte: last24h } } })
+                : Promise.resolve(0),
+        ]);
+
+        const queueByStatus = feedbackGroups.reduce<Record<string, number>>((acc, row) => {
+            acc[row.status] = row._count._all;
+            return acc;
+        }, {});
+
         const response = NextResponse.json({
             users: {
                 total: totalUsers,
                 newToday: newUsersToday,
+                newLast7Days: newUsersLast7d,
             },
             activities: {
                 total: totalActivities,
@@ -101,6 +160,20 @@ export async function GET(request: NextRequest) {
             backups: {
                 count: backupCount,
                 lastBackupAt,
+            },
+            feedbackQueue: {
+                pending: queueByStatus['PENDING'] || 0,
+                processing: queueByStatus['PROCESSING'] || 0,
+                failed: queueByStatus['FAILED'] || 0,
+                doneToday: feedbackDoneToday,
+            },
+            aiUsage: {
+                todayTokens: (aiUsageToday._sum.inputTokens || 0) + (aiUsageToday._sum.outputTokens || 0),
+                last7dTokens: (aiUsage7d._sum.inputTokens || 0) + (aiUsage7d._sum.outputTokens || 0),
+            },
+            monitoring: {
+                unresolvedErrors,
+                errorsLast24h,
             },
             timestamp: now.toISOString(),
         });

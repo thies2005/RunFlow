@@ -25,13 +25,23 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { COOKIE_NAME } from '@/lib/admin/auth';
+import { COOKIE_NAME, verifyAdminToken } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logAdminAction } from '@/lib/admin/auditLog';
 
 export async function POST(request: NextRequest) {
     if (!validateCsrfToken(request)) {
         return csrfValidationErrorResponse();
     }
+
+    const rateLimit = await adminRateLimit(request, 'write');
+    if (!rateLimit.success) {
+        return rateLimit.error!;
+    }
+
+    const token = request.cookies.get(COOKIE_NAME)?.value;
+    const admin = token && typeof verifyAdminToken === 'function' ? await verifyAdminToken(token).catch(() => null) : null;
 
     const response = NextResponse.json({
         success: true,
@@ -48,5 +58,7 @@ export async function POST(request: NextRequest) {
         path: '/',
     });
 
-    return response;
+    await logAdminAction(request, 'LOGOUT', { type: 'SYSTEM' }, {}, admin?.username);
+
+    return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
 }

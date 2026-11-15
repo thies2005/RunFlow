@@ -10,9 +10,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminCredentials, signAdminToken, COOKIE_NAME } from '@/lib/admin/auth';
 import { setCsrfCookie } from '@/lib/security/csrf';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logAdminAction } from '@/lib/admin/auditLog';
 import { logger } from '@/lib/logging/logger';
 import { handleError } from '@/lib/errors/handler';
 import { readBodyWithLimit } from '@/lib/api/bodyLimit';
+
+const ADMIN_SESSION_MAX_AGE_SECONDS = 2 * 60 * 60; // 2 hours, matches ADMIN_TOKEN_EXPIRY
 
 export async function POST(request: NextRequest) {
     try {
@@ -41,6 +44,7 @@ export async function POST(request: NextRequest) {
         // Verify credentials
         if (!(await verifyAdminCredentials(username, password))) {
             logger.warn('Admin login credential mismatch', { username });
+            await logAdminAction(request, 'LOGIN_FAILED', { type: 'SYSTEM' }, { username: String(username) }, String(username));
             // Add slight delay to prevent brute force timing attacks
             await new Promise(resolve => setTimeout(resolve, 500));
             return NextResponse.json(
@@ -52,11 +56,10 @@ export async function POST(request: NextRequest) {
         // Generate token
         const token = await signAdminToken(username);
 
-        // Create response with cookie
+        // Create response without exposing the HttpOnly JWT in JSON body
         const response = NextResponse.json({
             success: true,
-            token,
-            expiresIn: 86400, // 24 hours in seconds
+            expiresIn: ADMIN_SESSION_MAX_AGE_SECONDS,
         });
 
         // Set HTTP-only cookie for web access
@@ -64,12 +67,14 @@ export async function POST(request: NextRequest) {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 86400, // 24 hours
+            maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
             path: '/',
         });
 
         // Set CSRF cookie for admin frontend
         setCsrfCookie(response);
+
+        await logAdminAction(request, 'LOGIN_SUCCESS', { type: 'SYSTEM' }, { username: String(username) }, String(username));
 
         return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
 

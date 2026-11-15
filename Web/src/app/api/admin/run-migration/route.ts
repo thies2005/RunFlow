@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
-import { adminRateLimit } from '@/lib/rateLimitAdmin';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logAdminAction } from '@/lib/admin/auditLog';
 import fs from 'fs';
 import path from 'path';
 
@@ -40,16 +41,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       await prisma.$executeRawUnsafe(statement);
     }
 
-    const result = { success: true, message: 'Monitoring tables created successfully!' };
-    
-    return NextResponse.json(result);
+    await logAdminAction(
+      request,
+      'RUN_MIGRATION',
+      { type: 'SYSTEM' },
+      { statementsExecuted: statements.length },
+      authResult.admin.username
+    );
+
+    const response = NextResponse.json({
+      success: true,
+      message: 'Monitoring tables created successfully!',
+      statementsExecuted: statements.length,
+    });
+
+    return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
   } catch (error) {
     console.error('Migration error:', error);
-    
+
     return NextResponse.json(
       {
         error: 'Failed to create monitoring tables',
-        details: error instanceof Error ? error.message : 'Unknown error',
       },
       {
         status: 500,

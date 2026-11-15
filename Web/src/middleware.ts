@@ -227,6 +227,18 @@ export async function middleware(request: NextRequest) {
         return NextResponse.rewrite(rewriteUrl);
     }
 
+    // Server-side gate on /admin pages (except /admin/login): prevent rendering the
+    // admin shell HTML when the HttpOnly admin session cookie is absent.
+    if (
+        (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) &&
+        url.pathname !== '/admin/login'
+    ) {
+        const adminCookie = request.cookies.get('runflow_admin_token')?.value;
+        if (!adminCookie) {
+            return NextResponse.redirect(new URL('/admin/login', request.url));
+        }
+    }
+
     // Generate request ID and start timing
     const requestId = generateRequestId();
     const startTime = Date.now();

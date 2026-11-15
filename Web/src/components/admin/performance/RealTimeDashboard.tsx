@@ -22,7 +22,7 @@ interface RealTimeDashboardProps {
 
 const MAX_HISTORY = 60;
 
-export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDashboardProps) {
+export default function RealTimeDashboard({ refreshInterval = 10000 }: RealTimeDashboardProps) {
   const [metrics, setMetrics] = useState<RealTimeMetrics | null>(null);
   const [previousMetrics, setPreviousMetrics] = useState<RealTimeMetrics | null>(null);
   const [history, setHistory] = useState<{
@@ -38,6 +38,9 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
   });
 
   const fetchMetrics = useCallback(async () => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+      return;
+    }
     try {
       const res = await fetch('/api/admin/performance-metrics');
       if (res.ok) {
@@ -57,7 +60,16 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
   useEffect(() => {
     fetchMetrics();
     const interval = setInterval(fetchMetrics, refreshInterval);
-    return () => clearInterval(interval);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchMetrics();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [fetchMetrics, refreshInterval]);
 
   useEffect(() => {
@@ -106,7 +118,7 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
           title="Requests/sec"
           value={metrics.requestsPerSecond.toFixed(2)}
           icon={Zap}
-          color="bg-accent-blue"
+          accent="text-foreground-secondary"
           change={getChange(metrics.requestsPerSecond, previousMetrics?.requestsPerSecond)}
           inverse={true}
         />
@@ -114,7 +126,7 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
           title="Errors/sec"
           value={metrics.errorsPerSecond.toFixed(2)}
           icon={AlertTriangle}
-          color="bg-negative"
+          accent={metrics.errorsPerSecond > 0 ? 'text-negative' : 'text-foreground-secondary'}
           change={getChange(metrics.errorsPerSecond, previousMetrics?.errorsPerSecond)}
           inverse={true}
         />
@@ -122,7 +134,7 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
           title="Avg Response"
           value={`${metrics.avgResponseTime.toFixed(0)}ms`}
           icon={Clock}
-          color="bg-workout-long-run"
+          accent="text-foreground-secondary"
           change={getChange(metrics.avgResponseTime, previousMetrics?.avgResponseTime)}
           inverse={true}
         />
@@ -130,7 +142,7 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
           title="Error Rate"
           value={`${metrics.errorRate.toFixed(2)}%`}
           icon={AlertTriangle}
-          color={metrics.errorRate > 1 ? 'bg-negative' : 'bg-positive'}
+          accent={metrics.errorRate > 1 ? 'text-negative' : 'text-positive'}
           change={getChange(metrics.errorRate, previousMetrics?.errorRate)}
           inverse={true}
         />
@@ -138,7 +150,7 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
           title="CPU Usage"
           value={`${metrics.cpuUsage.toFixed(1)}%`}
           icon={Cpu}
-          color={metrics.cpuUsage > 80 ? 'bg-negative' : metrics.cpuUsage > 60 ? 'bg-workout-tempo' : 'bg-positive'}
+          accent={metrics.cpuUsage > 80 ? 'text-negative' : metrics.cpuUsage > 60 ? 'text-workout-tempo' : 'text-positive'}
           change={getChange(metrics.cpuUsage, previousMetrics?.cpuUsage)}
           inverse={true}
         />
@@ -146,7 +158,7 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
           title="Memory Usage"
           value={`${metrics.memoryUsage.toFixed(0)}MB`}
           icon={HardDrive}
-          color={metrics.memoryUsage > 1024 ? 'bg-negative' : metrics.memoryUsage > 512 ? 'bg-workout-tempo' : 'bg-positive'}
+          accent={metrics.memoryUsage > 1024 ? 'text-negative' : metrics.memoryUsage > 512 ? 'text-workout-tempo' : 'text-positive'}
           change={getChange(metrics.memoryUsage, previousMetrics?.memoryUsage)}
           inverse={true}
         />
@@ -189,31 +201,29 @@ interface MetricCardProps {
   title: string;
   value: string;
   icon: React.ElementType;
-  color: string;
+  accent: string;
   change?: { value: string; positive: boolean } | null;
   inverse?: boolean;
 }
 
-function MetricCard({ title, value, icon: Icon, color, change, inverse = false }: MetricCardProps) {
+function MetricCard({ title, value, icon: Icon, accent, change, inverse = false }: MetricCardProps) {
   return (
-    <div className="bg-background-secondary p-6 rounded-md  border border-line">
-      <div className="flex items-start justify-between">
-        <div className="flex items-start space-x-4">
-          <div className={`p-3 rounded-md ${color}`}>
-            <Icon className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <p className="text-foreground-muted text-sm font-medium">{title}</p>
-            <h3 className="text-2xl font-bold font-mono tabular-nums text-foreground mt-1">{value}</h3>
-            {change && (
-              <div className={`flex items-center text-xs mt-1 ${
-                (change.positive && !inverse) || (!change.positive && inverse) ? 'text-negative' : 'text-positive'
-              }`}>
-                <span className="mr-1">{change.positive ? '\u2191' : '\u2193'}</span>
-                {change.value}%
-              </div>
-            )}
-          </div>
+    <div className="bg-background-secondary p-5 rounded border border-line">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-mono text-[11px] uppercase tracking-wider text-foreground-muted">{title}</p>
+          <h3 className="text-2xl font-bold font-mono tabular-nums text-foreground mt-1">{value}</h3>
+          {change && (
+            <div className={`flex items-center text-xs font-mono tabular-nums mt-1 ${
+              (change.positive && !inverse) || (!change.positive && inverse) ? 'text-negative' : 'text-positive'
+            }`}>
+              <span className="mr-1" aria-hidden="true">{change.positive ? '\u2191' : '\u2193'}</span>
+              {change.value}%
+            </div>
+          )}
+        </div>
+        <div className={`p-2 rounded bg-background-tertiary border border-line shrink-0 ${accent}`}>
+          <Icon className="w-4 h-4" aria-hidden="true" />
         </div>
       </div>
     </div>

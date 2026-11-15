@@ -2,6 +2,7 @@ export interface AdminStats {
     users: {
         total: number;
         newToday: number;
+        newLast7Days?: number;
     };
     activities: {
         total: number;
@@ -17,6 +18,20 @@ export interface AdminStats {
     backups: {
         count: number;
         lastBackupAt: string | null;
+    };
+    feedbackQueue?: {
+        pending: number;
+        processing: number;
+        failed: number;
+        doneToday: number;
+    };
+    aiUsage?: {
+        todayTokens: number;
+        last7dTokens: number;
+    };
+    monitoring?: {
+        unresolvedErrors: number;
+        errorsLast24h: number;
     };
     timestamp: string;
 }

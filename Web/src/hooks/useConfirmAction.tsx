@@ -36,30 +36,32 @@ export function useConfirmAction() {
         if (!isOpen || !options) return null;
 
         return (
-            <Modal isOpen= { isOpen } onClose = { handleCancel } title = { options.title } maxWidth = "sm" >
-                <div className="space-y-4" >
-                    <p className="text-gray-300" > { options.message } </p>
-                        < div className = "flex justify-end gap-3 pt-4" >
-                            <button
-                            onClick={ handleCancel }
-        className = "px-4 py-2 text-gray-300 hover:bg-white/10 rounded-lg font-medium transition"
-            >
-            { options.cancelText || 'Cancel' }
-            </button>
-            < button
-        onClick = { handleConfirm }
-        className = {`px-4 py-2 text-white rounded-lg font-medium transition ${options.isDestructive
-                ? 'bg-red-500 hover:bg-red-600'
-                : 'bg-purple-600 hover:bg-purple-700'
-            }`
-    }
+            <Modal isOpen={isOpen} onClose={handleCancel} title={options.title} maxWidth="sm">
+                <div className="space-y-4">
+                    <p className="text-sm text-foreground-secondary">{options.message}</p>
+                    <div className="flex justify-end gap-3 pt-4">
+                        <button
+                            type="button"
+                            autoFocus
+                            onClick={handleCancel}
+                            className="px-4 py-2 border border-line text-foreground hover:bg-background-tertiary rounded font-medium text-sm transition-colors"
                         >
-        { options.confirmText || 'Confirm' }
-        </button>
-        </div>
-        </div>
-        </Modal>
-    );
+                            {options.cancelText || 'Cancel'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleConfirm}
+                            className={`px-4 py-2 text-white rounded font-medium text-sm transition-colors ${options.isDestructive
+                                ? 'bg-negative hover:bg-negative/90'
+                                : 'bg-accent-orange hover:bg-accent-orange/90'
+                            }`}
+                        >
+                            {options.confirmText || 'Confirm'}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+        );
 }, [isOpen, options, handleCancel, handleConfirm]);
 
 return { confirm, ConfirmDialog };

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { prisma } from '@/lib/db';
 import { getRedisClient } from '@/lib/redis';
 import { getRouteStatistics, getTopRoutesByMetric, type TimeRange } from '@/lib/monitoring/performance-aggregator';
@@ -180,6 +181,11 @@ function getRoutesFromMemory() {
 }
 
 export async function GET(request: NextRequest) {
+  const rateLimit = await adminRateLimit(request, 'read');
+  if (!rateLimit.success) {
+    return rateLimit.error!;
+  }
+
   const authResult = await requireAdmin(request);
 
   if ('error' in authResult) {
@@ -196,7 +202,7 @@ export async function GET(request: NextRequest) {
 
     if (route && method) {
       const stats = await getRouteStatistics(route, method, timeRange);
-      return NextResponse.json(stats);
+      return applyRateLimitHeaders(NextResponse.json(stats), 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
     }
 
     if (topBy) {
@@ -205,7 +211,7 @@ export async function GET(request: NextRequest) {
         timeRange,
         topLimit
       );
-      return NextResponse.json(topRoutes);
+      return applyRateLimitHeaders(NextResponse.json(topRoutes), 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
     }
 
     let summaries = await prisma.performanceSummary.findMany({
@@ -236,7 +242,7 @@ export async function GET(request: NextRequest) {
     const realTime = await getRealTimeMetrics();
     const requestMetrics = getRecentMetrics();
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       timeRange,
       routes: summaries,
       realTime,
@@ -254,12 +260,12 @@ export async function GET(request: NextRequest) {
         uptime: requestMetrics.uptime,
       },
     });
+    return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
   } catch (error) {
     console.error('Failed to fetch performance metrics:', error);
     return NextResponse.json(
       {
         error: 'Failed to fetch performance metrics',
-        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

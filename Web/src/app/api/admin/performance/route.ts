@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getHealthStatus, getRecentMetrics, type HealthCheckResult } from '@/lib/monitoring/health';
 import { getAllMetrics } from '@/lib/monitoring/metrics';
 import { requireAdmin } from '@/lib/admin/auth';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { prisma } from '@/lib/db';
 import * as os from 'os';
 import * as fs from 'fs';
@@ -158,6 +159,11 @@ async function getDatabaseMetrics() {
 }
 
 export async function GET(request: NextRequest) {
+    const rateLimit = await adminRateLimit(request, 'read');
+    if (!rateLimit.success) {
+        return rateLimit.error!;
+    }
+
     const authResult = await requireAdmin(request);
 
     if ('error' in authResult) {
@@ -189,15 +195,16 @@ export async function GET(request: NextRequest) {
             database: dbMetrics,
         };
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             timestamp: new Date().toISOString(),
             data,
         });
+        return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
+        console.error('Failed to fetch performance data:', error);
         return NextResponse.json(
             {
                 error: 'Failed to fetch performance data',
-                details: error instanceof Error ? error.message : 'Unknown error',
             },
             { status: 500 }
         );

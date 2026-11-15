@@ -5,6 +5,14 @@ jest.mock('@/lib/admin/auth', () => ({
     requireAdmin: jest.fn(),
 }));
 
+jest.mock('@/lib/rateLimitAdmin', () => ({
+    adminRateLimit: jest.fn().mockResolvedValue({
+        success: true,
+        result: { remaining: 59, reset: Date.now() + 60000 },
+    }),
+    applyRateLimitHeaders: jest.fn((res) => res),
+}));
+
 jest.mock('@/lib/monitoring/health', () => ({
     getHealthStatus: jest.fn(),
     getRecentMetrics: jest.fn(),

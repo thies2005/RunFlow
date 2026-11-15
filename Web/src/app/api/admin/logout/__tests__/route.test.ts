@@ -8,6 +8,19 @@ import { generateCsrfToken } from '@/lib/security/csrf';
 
 jest.mock('@/lib/admin/auth', () => ({
     COOKIE_NAME: 'runflow_admin_token',
+    verifyAdminToken: jest.fn().mockResolvedValue({ username: 'admin', type: 'admin' }),
+}));
+
+jest.mock('@/lib/rateLimitAdmin', () => ({
+    adminRateLimit: jest.fn().mockResolvedValue({
+        success: true,
+        result: { remaining: 9, reset: Date.now() + 60000 },
+    }),
+    applyRateLimitHeaders: jest.fn((res) => res),
+}));
+
+jest.mock('@/lib/admin/auditLog', () => ({
+    logAdminAction: jest.fn(),
 }));
 
 import { COOKIE_NAME } from '@/lib/admin/auth';

@@ -26,29 +26,42 @@ export function Modal({
     icon,
     hideCloseButton = false
 }: ModalProps) {
-    const dialogRef = useRef<HTMLDivElement>(null);
+    const dialogRef = useRef<HTMLDialogElement>(null);
     const previouslyFocused = useRef<Element | null>(null);
     const titleId = useId();
     const onCloseRef = useRef(onClose);
     onCloseRef.current = onClose;
 
-    // Focus trap and escape key handler
     useEffect(() => {
         if (!isOpen) return;
 
         const dialog = dialogRef.current;
         if (!dialog) return;
+
         if (openDialogs.length === 0) previousBodyOverflow = document.body.style.overflow;
         openDialogs.push(dialog);
-
-        // Save the element that had focus before opening
         previouslyFocused.current = document.activeElement;
 
-        // Move focus into the modal so keyboard users land inside
+        if (typeof dialog.showModal === 'function') {
+            if (!dialog.open) {
+                try {
+                    dialog.showModal();
+                } catch {
+                    dialog.setAttribute('open', '');
+                }
+            }
+        } else {
+            dialog.setAttribute('open', '');
+        }
+
         const focusTimer = setTimeout(() => {
             const node = dialogRef.current;
             if (!node || openDialogs[openDialogs.length - 1] !== node) return;
-            // Prefer the first focusable element, otherwise focus the container
+            const autoFocusEl = node.querySelector<HTMLElement>('[autofocus]');
+            if (autoFocusEl && autoFocusEl.getClientRects().length > 0) {
+                autoFocusEl.focus();
+                return;
+            }
             const focusable = Array.from(node.querySelectorAll<HTMLElement>(
                 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
             )).find(el => el.getClientRects().length > 0);
@@ -61,19 +74,25 @@ export function Modal({
                 e.preventDefault();
                 onCloseRef.current();
             } else if (e.key === 'Tab' && dialogRef.current) {
-                const items = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')).filter(el => el.getClientRects().length > 0);
+                const items = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                )).filter(el => el.getClientRects().length > 0);
                 if (!items.length) { e.preventDefault(); dialogRef.current.focus(); return; }
-                const first = items[0], last = items[items.length - 1];
-                if (e.shiftKey && (document.activeElement === first || !dialogRef.current.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
-                else if (!e.shiftKey && (document.activeElement === last || !dialogRef.current.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+                const first = items[0];
+                const last = items[items.length - 1];
+                if (e.shiftKey && (document.activeElement === first || !dialogRef.current.contains(document.activeElement))) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && (document.activeElement === last || !dialogRef.current.contains(document.activeElement))) {
+                    e.preventDefault();
+                    first.focus();
+                }
             }
         };
 
-        // Prevent body scrolling
         document.body.style.overflow = 'hidden';
         document.addEventListener('keydown', handleKeyDown);
 
-        // Capacitor back button handler
         let isCancelled = false;
         let backListener: any = null;
         const setupCapacitor = async () => {
@@ -103,7 +122,11 @@ export function Modal({
             if (index !== -1) openDialogs.splice(index, 1);
             if (openDialogs.length === 0) document.body.style.overflow = previousBodyOverflow;
             document.removeEventListener('keydown', handleKeyDown);
-            // Restore focus to the element that opened the modal
+            if (typeof dialog.close === 'function') {
+                if (dialog.open) dialog.close();
+            } else {
+                dialog.removeAttribute('open');
+            }
             if (index === openDialogs.length && previouslyFocused.current instanceof HTMLElement && typeof previouslyFocused.current.focus === 'function') {
                 previouslyFocused.current.focus();
             }
@@ -125,22 +148,37 @@ export function Modal({
     };
 
     const modalContent = (
-        <div
+        <dialog
             ref={dialogRef}
-            className="fixed inset-0 z-[210] flex items-center justify-center bg-black/[var(--modal-backdrop-opacity,0.55)] animate-fade-in p-4 sm:p-4 pt-safe pb-safe overflow-y-auto"
-            role="dialog"
+            className="fixed inset-0 m-0 max-w-none max-h-none w-full h-full z-[210] flex items-center justify-center bg-black/[var(--modal-backdrop-opacity,0.55)] border-0 text-foreground animate-fade-in p-4 sm:p-4 pt-safe pb-safe overflow-y-auto"
             aria-modal="true"
             tabIndex={-1}
             aria-labelledby={title ? titleId : undefined}
+            onCancel={(e) => {
+                // Escape closing is orchestrated through the openDialogs stack.
+                e.preventDefault();
+                if (openDialogs[openDialogs.length - 1] === dialogRef.current) {
+                    onCloseRef.current();
+                }
+            }}
+            onClick={(e) => {
+                if (e.target === dialogRef.current && openDialogs[openDialogs.length - 1] === dialogRef.current) {
+                    onCloseRef.current();
+                }
+            }}
         >
-            <div className={`w-full ${maxWidthClasses[maxWidth]} p-6 relative animate-slide-in my-auto mx-auto bg-background-secondary border border-line rounded-md shadow-lg`} onClick={e => e.stopPropagation()}>
+            <div
+                className={`w-full ${maxWidthClasses[maxWidth]} p-6 relative animate-slide-in my-auto mx-auto bg-background-secondary border border-line rounded-md shadow-lg max-h-[90vh] overflow-y-auto`}
+                onClick={e => e.stopPropagation()}
+            >
                 {!hideCloseButton && (
                     <button
+                        type="button"
                         onClick={onClose}
-                        className="absolute top-4 right-4 text-foreground-muted hover:text-foreground transition-colors z-10"
+                        className="absolute top-4 right-4 text-foreground-muted hover:text-foreground transition-colors z-10 p-1 rounded"
                         aria-label="Close modal"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-5 h-5" aria-hidden="true" />
                     </button>
                 )}
 
@@ -163,10 +201,9 @@ export function Modal({
                     {children}
                 </div>
             </div>
-        </div>
+        </dialog>
     );
 
-    // Render in portal if we are in the browser
     if (typeof document !== 'undefined') {
         return createPortal(modalContent, document.body);
     }

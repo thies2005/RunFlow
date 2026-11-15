@@ -137,25 +137,28 @@ export default function FeedbackQueueTab() {
                         Clear Completed
                     </button>
                     <button
+                        type="button"
                         onClick={fetchData}
-                        className="p-2.5 bg-background-tertiary hover:bg-surface-hover text-foreground-secondary rounded-md transition"
+                        aria-label="Refresh feedback queue"
+                        className="p-2.5 bg-background-tertiary hover:bg-surface-hover text-foreground-secondary border border-line rounded transition"
                     >
-                        {loading && !actionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
+                        {loading && !actionLoading ? <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" /> : <RefreshCw className="w-5 h-5" aria-hidden="true" />}
                     </button>
                 </div>
             </div>
 
             {/* Jobs Table */}
-            <div className="bg-background-secondary rounded-md border border-line overflow-hidden ">
-                <div className="overflow-x-auto">
+            <div className="bg-background-secondary rounded border border-line overflow-hidden">
+                <div className="overflow-x-auto" role="region" tabIndex={0} aria-label="Feedback queue jobs">
                     <table className="w-full text-left">
-                        <thead className="bg-background-secondary border-b border-line">
+                        <caption className="sr-only">Activity feedback queue jobs</caption>
+                        <thead className="bg-background border-b border-line">
                             <tr>
-                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted">Status</th>
-                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted">User</th>
-                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted">Activity</th>
-                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted">Updated</th>
-                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted">Details</th>
+                                <th scope="col" className="px-6 py-3.5 font-mono text-[11px] uppercase tracking-wider text-foreground-muted">Status</th>
+                                <th scope="col" className="px-6 py-3.5 font-mono text-[11px] uppercase tracking-wider text-foreground-muted">User</th>
+                                <th scope="col" className="px-6 py-3.5 font-mono text-[11px] uppercase tracking-wider text-foreground-muted">Activity</th>
+                                <th scope="col" className="px-6 py-3.5 font-mono text-[11px] uppercase tracking-wider text-foreground-muted">Updated</th>
+                                <th scope="col" className="px-6 py-3.5 font-mono text-[11px] uppercase tracking-wider text-foreground-muted">Details</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-line">

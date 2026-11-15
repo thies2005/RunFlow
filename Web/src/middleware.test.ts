@@ -118,3 +118,26 @@ describe('Pre-auth request body size gate (p4: missing-preauth-body-size-gate)',
     expect(response.status).not.toBe(413);
   });
 });
+
+describe('Admin route cookie gate', () => {
+  it('redirects unauthenticated /admin requests to /admin/login', async () => {
+    const request = new NextRequest(new URL('http://localhost:3000/admin'));
+    const response = await middleware(request);
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe('http://localhost:3000/admin/login');
+  });
+
+  it('allows unauthenticated requests to /admin/login', async () => {
+    const request = new NextRequest(new URL('http://localhost:3000/admin/login'));
+    const response = await middleware(request);
+    expect(response.status).toBe(200);
+  });
+
+  it('allows /admin requests with runflow_admin_token cookie present', async () => {
+    const request = new NextRequest(new URL('http://localhost:3000/admin'), {
+      headers: { cookie: 'runflow_admin_token=some-jwt' },
+    });
+    const response = await middleware(request);
+    expect(response.status).toBe(200);
+  });
+});

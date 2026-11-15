@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  const rateLimit = await adminRateLimit(request, 'read');
+  if (!rateLimit.success) {
+    return rateLimit.error!;
+  }
+
   const authResult = await requireAdmin(request);
 
   if ('error' in authResult) {
@@ -52,12 +58,13 @@ export async function GET(request: NextRequest) {
 
     const errorGroups = groupErrorsByFingerprint(errors);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       errors,
       total,
       hasMore: offset + limit < total,
       errorGroups,
     });
+    return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
   } catch (error) {
     console.error('Failed to fetch error logs:', error);
     return NextResponse.json(
@@ -71,13 +78,16 @@ function groupErrorsByFingerprint(errors: any[]) {
   const groups = new Map<string, any>();
 
   for (const error of errors) {
-    if (!groups.has(error.fingerprint)) {
-      groups.set(error.fingerprint, {
-        fingerprint: error.fingerprint,
+    const key = error.fingerprint || `${error.method}:${error.routePath}:${error.errorMessage}`;
+    const occurrencesToAdd = typeof error.count === 'number' && error.count > 0 ? error.count : 1;
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        fingerprint: key,
         errorMessage: error.errorMessage,
         routePath: error.routePath,
         method: error.method,
-        count: error.count,
+        count: 0,
         resolved: error.resolved,
         firstSeen: error.timestamp,
         lastSeen: error.timestamp,
@@ -85,8 +95,9 @@ function groupErrorsByFingerprint(errors: any[]) {
       });
     }
 
-    const group = groups.get(error.fingerprint);
-    group.count += error.count - 1;
+    const group = groups.get(key);
+    group.count += occurrencesToAdd;
+    group.resolved = group.resolved && error.resolved;
     group.occurrences.push(error);
 
     if (new Date(error.timestamp) < new Date(group.firstSeen)) {

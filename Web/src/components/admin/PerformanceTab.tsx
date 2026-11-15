@@ -26,6 +26,7 @@ type TimeRange = '1h' | '6h' | '24h' | '7d' | '30d';
 export default function PerformanceTab() {
   const [activeTab, setActiveTab] = useState<TabType>('realtime');
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
+  const [routeErrorFilter, setRouteErrorFilter] = useState<string>('');
 
   const tabs = [
     { id: 'realtime' as TabType, label: 'Real-Time', icon: Activity },
@@ -66,11 +67,14 @@ export default function PerformanceTab() {
         <h2 className="text-xl font-bold text-foreground">System Performance</h2>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-foreground-muted" />
+            <Filter className="w-4 h-4 text-foreground-muted" aria-hidden="true" />
+            <label htmlFor="perf-time-range" className="sr-only">Time range</label>
             <select
+              id="perf-time-range"
+              aria-label="Time range"
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-              className="text-sm border border-line rounded-md px-3 py-2 focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
+              className="text-sm border border-line bg-background rounded px-3 py-1.5 focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
             >
               {timeRanges.map((range) => (
                 <option key={range.value} value={range.value}>
@@ -79,43 +83,82 @@ export default function PerformanceTab() {
               ))}
             </select>
           </div>
-          <Button onClick={handleExport} variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
+          <Button type="button" onClick={handleExport} variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" aria-hidden="true" />
             Export
           </Button>
         </div>
       </div>
 
       <div className="border-b border-line">
-        <nav className="flex gap-4">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
-                activeTab === tab.id
-                  ? 'border-accent-blue text-accent-blue'
-                  : 'border-transparent text-foreground-muted hover:text-foreground-secondary'
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+        <div
+          role="tablist"
+          aria-label="Performance telemetry views"
+          className="flex gap-2 overflow-x-auto"
+          onKeyDown={(e) => {
+            const idx = tabs.findIndex((t) => t.id === activeTab);
+            if (idx === -1) return;
+            if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              const next = tabs[(idx + 1) % tabs.length];
+              setActiveTab(next.id);
+              document.getElementById(`perf-tab-${next.id}`)?.focus();
+            } else if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              const prev = tabs[(idx - 1 + tabs.length) % tabs.length];
+              setActiveTab(prev.id);
+              document.getElementById(`perf-tab-${prev.id}`)?.focus();
+            }
+          }}
+        >
+          {tabs.map((tab) => {
+            const selected = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                id={`perf-tab-${tab.id}`}
+                aria-selected={selected}
+                aria-controls={`perf-panel-${tab.id}`}
+                tabIndex={selected ? 0 : -1}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-3 text-sm border-b-2 transition-colors whitespace-nowrap ${
+                  selected
+                    ? 'border-accent-orange text-foreground font-semibold'
+                    : 'border-transparent text-foreground-muted hover:text-foreground'
+                }`}
+              >
+                <tab.icon className={`w-4 h-4 ${selected ? 'text-accent-orange' : ''}`} aria-hidden="true" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="min-h-[600px]">
+      <div
+        role="tabpanel"
+        id={`perf-panel-${activeTab}`}
+        aria-labelledby={`perf-tab-${activeTab}`}
+        className="min-h-[600px]"
+      >
         {activeTab === 'realtime' && (
-          <RealTimeDashboard refreshInterval={1000} />
+          <RealTimeDashboard refreshInterval={10000} />
         )}
 
         {activeTab === 'routes' && (
-          <ApiRoutesTab timeRange={timeRange} />
+          <ApiRoutesTab
+            timeRange={timeRange}
+            onInspectRouteErrors={(routePath) => {
+              setRouteErrorFilter(routePath);
+              setActiveTab('errors');
+            }}
+          />
         )}
 
         {activeTab === 'errors' && (
-          <ErrorAnalytics />
+          <ErrorAnalytics initialRouteFilter={routeErrorFilter} />
         )}
 
         {activeTab === 'releases' && (
@@ -128,12 +171,34 @@ export default function PerformanceTab() {
 
 interface ApiRoutesTabProps {
   timeRange: TimeRange;
+  onInspectRouteErrors?: (_routePath: string) => void;
 }
 
-function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
+type SortableRouteColumn =
+  | 'routePath'
+  | 'method'
+  | 'requestCount'
+  | 'avgResponseTime'
+  | 'p95ResponseTime'
+  | 'p99ResponseTime'
+  | 'errorCount'
+  | 'avgCpuUsage'
+  | 'avgMemoryUsage';
+
+const TIME_RANGE_LABELS: Record<TimeRange, string> = {
+  '1h': '1 hour',
+  '6h': '6 hours',
+  '24h': '24 hours',
+  '7d': '7 days',
+  '30d': '30 days',
+};
+
+function ApiRoutesTab({ timeRange, onInspectRouteErrors }: ApiRoutesTabProps) {
   const [routes, setRoutes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dataSource, setDataSource] = useState<string>('');
+  const [sortBy, setSortBy] = useState<SortableRouteColumn>('requestCount');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const fetchRoutes = async () => {
     try {
@@ -155,6 +220,29 @@ function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
     fetchRoutes();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange]);
+
+  const handleSort = (column: string) => {
+    const col = column as SortableRouteColumn;
+    if (sortBy === col) {
+      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(col);
+      setSortOrder(col === 'routePath' || col === 'method' ? 'asc' : 'desc');
+    }
+  };
+
+  const sortedRoutes = React.useMemo(() => {
+    return [...routes].sort((a, b) => {
+      const aVal = a[sortBy] ?? '';
+      const bVal = b[sortBy] ?? '';
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        const cmp = aVal.localeCompare(bVal);
+        return sortOrder === 'asc' ? cmp : -cmp;
+      }
+      const numDiff = (Number(aVal) || 0) - (Number(bVal) || 0);
+      return sortOrder === 'asc' ? numDiff : -numDiff;
+    });
+  }, [routes, sortBy, sortOrder]);
 
   const getDataSourceBadge = () => {
     switch (dataSource) {
@@ -192,7 +280,7 @@ function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
             </div>
             <div className="flex items-center gap-2 text-sm text-foreground-muted">
               <Clock className="w-4 h-4" />
-              Last {timeRange === '1h' ? 'hour' : timeRange === '24h' ? '24 hours' : timeRange + ' days'}
+              Last {TIME_RANGE_LABELS[timeRange]}
             </div>
             <Button onClick={fetchRoutes} variant="outline" size="sm">
               Refresh
@@ -200,8 +288,11 @@ function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
           </div>
         </div>
         <ApiRoutesTable
-          routes={routes}
-          onRouteClick={(_route) => {}}
+          routes={sortedRoutes}
+          _sortBy={sortBy}
+          _sortOrder={sortOrder}
+          onSort={handleSort}
+          onRouteClick={(route) => onInspectRouteErrors?.(route.routePath)}
         />
       </div>
     </div>

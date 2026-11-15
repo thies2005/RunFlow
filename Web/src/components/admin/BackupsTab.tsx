@@ -1,5 +1,5 @@
 import React from 'react';
-import { Upload, Plus, Database, Download } from 'lucide-react';
+import { Upload, Plus, Database, Download, Trash2 } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 import useConfirmAction from '@/hooks/useConfirmAction';
 import { AdminBackup } from '@/app/admin/types';
@@ -47,12 +47,22 @@ export default function BackupsTab({
         }
     };
 
-    const handleBackupAction = async (action: 'create' | 'restore', backupName?: string) => {
+    const handleBackupAction = async (action: 'create' | 'restore' | 'cleanup', backupName?: string) => {
         if (action === 'restore') {
             const isConfirmed = await confirm({
                 title: 'Restore Database',
                 message: `WARNING: This will overwrite the current database with ${backupName}. This action is destructive. Are you sure?`,
                 confirmText: 'Restore',
+                isDestructive: true
+            });
+            if (!isConfirmed) return;
+        }
+
+        if (action === 'cleanup') {
+            const isConfirmed = await confirm({
+                title: 'Cleanup Old Backups',
+                message: 'Remove backups older than the retention policy (30 days)? Recent backups will be kept.',
+                confirmText: 'Cleanup',
                 isDestructive: true
             });
             if (!isConfirmed) return;
@@ -76,7 +86,9 @@ export default function BackupsTab({
                 type: 'success',
                 text: action === 'create'
                     ? `Backup created: ${data.backup.name}`
-                    : 'Database restored successfully'
+                    : action === 'cleanup'
+                        ? `Backup cleanup complete (${data.cleanup?.deleted ?? 0} removed)`
+                        : 'Database restored successfully'
             });
 
             fetchAllData();
@@ -109,19 +121,30 @@ export default function BackupsTab({
                         }}
                     />
                     <button
+                        type="button"
+                        onClick={() => handleBackupAction('cleanup')}
+                        disabled={processing}
+                        className="border border-line text-foreground-secondary hover:bg-background-tertiary px-3 py-2 rounded-md text-sm font-medium transition flex items-center disabled:opacity-50"
+                    >
+                        <Trash2 className="w-4 h-4 mr-2" aria-hidden="true" />
+                        Cleanup Old
+                    </button>
+                    <button
+                        type="button"
                         onClick={() => document.getElementById('backup-upload')?.click()}
                         disabled={processing}
                         className="bg-accent-orange hover:bg-accent-orange/90 text-white px-4 py-2 rounded-md text-sm font-medium transition flex items-center disabled:opacity-50"
                     >
-                        <Upload className="w-4 h-4 mr-2" />
+                        <Upload className="w-4 h-4 mr-2" aria-hidden="true" />
                         Upload
                     </button>
                     <button
+                        type="button"
                         onClick={() => handleBackupAction('create')}
                         disabled={processing}
                         className="bg-positive hover:bg-positive/90 text-white px-4 py-2 rounded-md text-sm font-medium transition flex items-center disabled:opacity-50"
                     >
-                        <Plus className="w-4 h-4 mr-2" />
+                        <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
                         Create
                     </button>
                 </div>
@@ -146,10 +169,10 @@ export default function BackupsTab({
                             <div className="flex items-center space-x-2">
                                 <a
                                     href={`/api/admin/backups/${backup.name}`}
-                                    className="px-3 py-1.5 text-xs font-medium text-foreground-secondary hover:bg-background-secondary border border-line rounded-md transition flex items-center"
+                                    className="no-underline px-3 py-1.5 text-xs font-medium text-foreground-secondary hover:bg-background-tertiary border border-line rounded transition flex items-center"
                                     title="Download Backup"
                                 >
-                                    <Download className="w-3 h-3 mr-1" />
+                                    <Download className="w-3 h-3 mr-1" aria-hidden="true" />
                                     Download
                                 </a>
                                 <button

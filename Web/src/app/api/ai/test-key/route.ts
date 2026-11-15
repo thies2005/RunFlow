@@ -8,7 +8,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
-import { testAiConfig, AiConfig, validateBaseUrl } from '@/lib/ai/providers';
+import { requireAdmin, COOKIE_NAME } from '@/lib/admin/auth';
+import { testAiConfig, tryDecryptAiKey, AiConfig, validateBaseUrl } from '@/lib/ai/providers';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS } from '@/lib/rateLimit';
 
 export async function POST(request: NextRequest) {
@@ -16,26 +17,71 @@ export async function POST(request: NextRequest) {
     const rl = await checkRateLimitAsync(clientId, RATE_LIMITS.settings);
     if (!rl.allowed) return NextResponse.json({ valid: false, error: 'Too many requests' }, { status: 429 });
 
-    const session = await auth();
-    if (!session?.user?.id) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     try {
         const body = await request.json();
-        const { apiKey, baseUrl, model, provider } = body;
+        const { apiKey, baseUrl, model, provider, providerId } = body;
 
-        if (!apiKey) {
-            return NextResponse.json({ error: 'API key is required' }, { status: 400 });
+        const hasAdminCredential = Boolean(
+            request.cookies.get(COOKIE_NAME)?.value ||
+            request.headers.get('authorization')?.startsWith('Bearer ')
+        );
+
+        let isAdmin = false;
+        let userId: string | null = null;
+
+        const requiresStrictAdmin = Boolean(providerId) || Boolean(request.headers.get('x-csrf-token'));
+
+        if (requiresStrictAdmin && hasAdminCredential) {
+            const adminResult = await requireAdmin(request);
+            if ('admin' in adminResult) {
+                isAdmin = true;
+            } else {
+                return adminResult.error;
+            }
+        } else {
+            const session = await auth();
+            if (session?.user?.id) {
+                userId = session.user.id;
+                isAdmin = Boolean((session.user as { isAdmin?: boolean })?.isAdmin);
+                if (!isAdmin) {
+                    const user = await prisma.user.findUnique({
+                        where: { id: userId },
+                        select: { isAdmin: true },
+                    });
+                    isAdmin = Boolean(user?.isAdmin);
+                }
+            } else if (hasAdminCredential) {
+                const adminResult = await requireAdmin(request);
+                if ('admin' in adminResult) {
+                    isAdmin = true;
+                } else {
+                    return adminResult.error;
+                }
+            } else {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
         }
 
-        let isAdmin = Boolean((session.user as { isAdmin?: boolean })?.isAdmin);
-        if (!isAdmin) {
-            const user = await prisma.user.findUnique({
-                where: { id: session.user.id },
-                select: { isAdmin: true },
+        let resolvedApiKey = typeof apiKey === 'string' && apiKey.trim() ? apiKey.trim() : null;
+        if (!resolvedApiKey && providerId) {
+            if (!isAdmin) {
+                return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+            }
+            if (typeof providerId !== 'string') {
+                return NextResponse.json({ error: 'Invalid provider ID' }, { status: 400 });
+            }
+            const storedProvider = await prisma.aiProvider.findUnique({
+                where: { id: providerId },
+                select: { apiKey: true },
             });
-            isAdmin = Boolean(user?.isAdmin);
+            if (!storedProvider?.apiKey) {
+                return NextResponse.json({ error: 'Stored API key not found for provider' }, { status: 404 });
+            }
+            resolvedApiKey = tryDecryptAiKey(storedProvider.apiKey, 'test-key-provider', providerId);
+        }
+
+        if (!resolvedApiKey) {
+            return NextResponse.json({ error: 'API key is required' }, { status: 400 });
         }
 
         const effectiveBaseUrl = baseUrl || (provider === 'google' ? 'https://generativelanguage.googleapis.com' : 'https://api.openai.com/v1');
@@ -54,8 +100,8 @@ export async function POST(request: NextRequest) {
 
         const config: AiConfig = {
             provider: provider || 'openai',
-            apiKey,
-            apiKeys: [apiKey],
+            apiKey: resolvedApiKey,
+            apiKeys: [resolvedApiKey],
             baseUrl: effectiveBaseUrl,
             model: effectiveModel,
         };

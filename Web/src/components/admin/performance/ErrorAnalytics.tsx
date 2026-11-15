@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle, Clock, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Modal } from '@/components/ui/Modal';
+import { csrfHeaders } from '@/lib/admin/csrfHelper';
 
 interface ErrorLog {
   id: string;
@@ -30,17 +32,24 @@ interface ErrorGroup {
 
 interface ErrorAnalyticsProps {
   onResolveError?: (_errorId: string) => void;
+  initialRouteFilter?: string;
 }
 
-export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) {
+export default function ErrorAnalytics({ onResolveError, initialRouteFilter = '' }: ErrorAnalyticsProps) {
   const [errors, setErrors] = useState<ErrorLog[]>([]);
   const [errorGroups, setErrorGroups] = useState<ErrorGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedError, setSelectedError] = useState<ErrorLog | null>(null);
   const [filters, setFilters] = useState({
     resolved: '' as '' | 'true' | 'false',
-    route: '',
+    route: initialRouteFilter,
   });
+
+  useEffect(() => {
+    if (initialRouteFilter) {
+      setFilters((prev) => ({ ...prev, route: initialRouteFilter }));
+    }
+  }, [initialRouteFilter]);
 
   const fetchErrors = async () => {
     try {
@@ -71,7 +80,7 @@ export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) 
     try {
       const res = await fetch(`/api/admin/error-logs/${errorId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: csrfHeaders(),
         body: JSON.stringify({ resolved: true }),
       });
 
@@ -114,27 +123,33 @@ export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) 
         </div>
       </div>
 
-      <div className="bg-background-secondary p-4 rounded-md">
-        <div className="flex gap-4">
+      <div className="bg-background-secondary border border-line p-4 rounded">
+        <div role="search" aria-label="Filter errors" className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground-muted w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-muted w-4 h-4 pointer-events-none" aria-hidden="true" />
+            <label htmlFor="error-route-search" className="sr-only">Search errors by route</label>
             <input
-              type="text"
+              id="error-route-search"
+              type="search"
               placeholder="Search by route..."
               value={filters.route}
               onChange={(e) => setFilters({ ...filters, route: e.target.value })}
-              className="w-full pl-10 pr-4 py-2 border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
+              className="w-full pl-9 pr-4 py-2 bg-background border border-line rounded focus:ring-2 focus:ring-accent-orange focus:border-accent-orange text-sm"
             />
           </div>
-          <select
-            value={filters.resolved}
-            onChange={(e) => setFilters({ ...filters, resolved: e.target.value as '' | 'true' | 'false' })}
-            className="px-4 py-2 border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
-          >
-            <option value="">All Errors</option>
-            <option value="false">Unresolved</option>
-            <option value="true">Resolved</option>
-          </select>
+          <div>
+            <label htmlFor="error-resolved-filter" className="sr-only">Filter errors by status</label>
+            <select
+              id="error-resolved-filter"
+              value={filters.resolved}
+              onChange={(e) => setFilters({ ...filters, resolved: e.target.value as '' | 'true' | 'false' })}
+              className="w-full sm:w-auto px-3 py-2 bg-background border border-line rounded focus:ring-2 focus:ring-accent-orange focus:border-accent-orange text-sm"
+            >
+              <option value="">All Errors</option>
+              <option value="false">Unresolved</option>
+              <option value="true">Resolved</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -238,60 +253,54 @@ interface ErrorDetailModalProps {
 
 function ErrorDetailModal({ error, onClose, onResolve }: ErrorDetailModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/[var(--modal-backdrop-opacity,0.55)] flex items-center justify-center z-50 p-4">
-      <div className="bg-background-secondary rounded-md shadow-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
-        <div className="p-6 border-b border-line flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-foreground">Error Details</h3>
-          <button
-            onClick={onClose}
-            className="text-foreground-muted hover:text-foreground-secondary"
-          >
-            ×
-          </button>
-        </div>
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          <div className="space-y-4">
+    <Modal isOpen={true} onClose={onClose} title="Error Details" maxWidth="2xl">
+      <div className="space-y-4">
+        <dl className="space-y-4">
+          <div>
+            <dt className="font-mono text-xs uppercase tracking-wider text-foreground-muted">Message</dt>
+            <dd className="mt-1 text-foreground text-sm">{error.errorMessage}</dd>
+          </div>
+          <div>
+            <dt className="font-mono text-xs uppercase tracking-wider text-foreground-muted">Route</dt>
+            <dd className="mt-1 font-mono text-sm bg-background border border-line p-2 rounded">{error.routePath}</dd>
+          </div>
+          <div>
+            <dt className="font-mono text-xs uppercase tracking-wider text-foreground-muted">Method</dt>
+            <dd className="mt-1"><Badge>{error.method}</Badge></dd>
+          </div>
+          <div>
+            <dt className="font-mono text-xs uppercase tracking-wider text-foreground-muted">Timestamp</dt>
+            <dd className="mt-1 text-sm font-mono tabular-nums text-foreground-secondary">{new Date(error.timestamp).toLocaleString()}</dd>
+          </div>
+          {error.stackTrace && (
             <div>
-              <label className="text-sm font-medium text-foreground-secondary">Message</label>
-              <p className="mt-1 text-foreground">{error.errorMessage}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground-secondary">Route</label>
-              <p className="mt-1 font-mono text-sm bg-background-secondary p-2 rounded">{error.routePath}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground-secondary">Method</label>
-              <Badge className="mt-1">{error.method}</Badge>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground-secondary">Timestamp</label>
-              <p className="mt-1 text-sm text-foreground-secondary">{new Date(error.timestamp).toLocaleString()}</p>
-            </div>
-            {error.stackTrace && (
-              <div>
-                <label className="text-sm font-medium text-foreground-secondary">Stack Trace</label>
-                <pre className="mt-1 text-xs bg-background-secondary p-2 rounded overflow-x-auto">
+              <dt className="font-mono text-xs uppercase tracking-wider text-foreground-muted">Stack Trace</dt>
+              <dd>
+                <pre className="mt-1 text-xs bg-background border border-line p-3 rounded overflow-x-auto font-mono">
                   {error.stackTrace}
                 </pre>
-              </div>
-            )}
-            {error.userId && (
-              <div>
-                <label className="text-sm font-medium text-foreground-secondary">User ID</label>
-                <p className="mt-1 text-sm">{error.userId}</p>
-              </div>
-            )}
-            <div className="flex gap-2">
-              {!error.resolved && (
-                <Button onClick={onResolve}>
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Resolve Error
-                </Button>
-              )}
+              </dd>
             </div>
-          </div>
+          )}
+          {error.userId && (
+            <div>
+              <dt className="font-mono text-xs uppercase tracking-wider text-foreground-muted">User ID</dt>
+              <dd className="mt-1 text-sm font-mono">{error.userId}</dd>
+            </div>
+          )}
+        </dl>
+        <div className="flex justify-end gap-2 pt-3 border-t border-line">
+          {!error.resolved && (
+            <Button type="button" onClick={onResolve}>
+              <CheckCircle className="w-4 h-4 mr-2" aria-hidden="true" />
+              Resolve Error
+            </Button>
+          )}
+          <Button type="button" variant="outline" onClick={onClose}>
+            Close
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

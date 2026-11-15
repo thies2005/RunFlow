@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logAdminAction } from '@/lib/admin/auditLog';
 import { getReleaseComparison, trackRelease, detectPerformanceRegression } from '@/lib/monitoring/release-tracker';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  const rateLimit = await adminRateLimit(request, 'read');
+  if (!rateLimit.success) {
+    return rateLimit.error!;
+  }
+
   const authResult = await requireAdmin(request);
 
   if ('error' in authResult) {
@@ -30,7 +37,7 @@ export async function GET(request: NextRequest) {
       }
 
       const comparison = await getReleaseComparison(version1, version2, timeRange);
-      return NextResponse.json(comparison);
+      return applyRateLimitHeaders(NextResponse.json(comparison), 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
     }
 
     if (regression) {
@@ -45,7 +52,7 @@ export async function GET(request: NextRequest) {
       }
 
       const hasRegression = await detectPerformanceRegression(version1, version2, threshold);
-      return NextResponse.json({ hasRegression, threshold });
+      return applyRateLimitHeaders(NextResponse.json({ hasRegression, threshold }), 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
     }
 
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -60,11 +67,16 @@ export async function GET(request: NextRequest) {
       prisma.release.count(),
     ]);
 
-    return NextResponse.json({
-      releases,
-      total,
-      hasMore: offset + limit < total,
-    });
+    return applyRateLimitHeaders(
+      NextResponse.json({
+        releases,
+        total,
+        hasMore: offset + limit < total,
+      }),
+      'read',
+      rateLimit.result!.remaining,
+      rateLimit.result!.reset
+    );
   } catch (error) {
     console.error('Failed to fetch releases:', error);
     return NextResponse.json(
@@ -80,6 +92,11 @@ export async function POST(request: NextRequest) {
     return csrfValidationErrorResponse();
   }
 
+  const rateLimit = await adminRateLimit(request, 'write');
+  if (!rateLimit.success) {
+    return rateLimit.error!;
+  }
+
   const authResult = await requireAdmin(request);
 
   if ('error' in authResult) {
@@ -91,7 +108,15 @@ export async function POST(request: NextRequest) {
 
     await trackRelease(notes);
 
-    return NextResponse.json({ success: true });
+    await logAdminAction(
+      request,
+      'MODIFY_RELEASES',
+      { type: 'RELEASE' },
+      { action: 'TRACK', notes },
+      authResult.admin.username
+    );
+
+    return applyRateLimitHeaders(NextResponse.json({ success: true }), 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
   } catch (error) {
     console.error('Failed to track release:', error);
     return NextResponse.json(
@@ -105,6 +130,11 @@ export async function DELETE(request: NextRequest) {
   const isBearer = request.headers.get('authorization')?.startsWith('Bearer ');
   if (!isBearer && !validateCsrfToken(request)) {
     return csrfValidationErrorResponse();
+  }
+
+  const rateLimit = await adminRateLimit(request, 'write');
+  if (!rateLimit.success) {
+    return rateLimit.error!;
   }
 
   const authResult = await requireAdmin(request);
@@ -133,7 +163,15 @@ export async function DELETE(request: NextRequest) {
       where: { id },
     });
 
-    return NextResponse.json({ success: true });
+    await logAdminAction(
+      request,
+      'MODIFY_RELEASES',
+      { type: 'RELEASE', id },
+      { action: 'DELETE' },
+      authResult.admin.username
+    );
+
+    return applyRateLimitHeaders(NextResponse.json({ success: true }), 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
   } catch (error) {
     console.error('Failed to delete release:', error);
     return NextResponse.json(

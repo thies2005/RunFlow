@@ -1,8 +1,12 @@
 import { prisma } from '@/lib/db';
 import { NextRequest } from 'next/server';
 import { logger } from '@/lib/logging/logger';
+import { getClientIP } from '@/lib/rateLimitAdmin';
 
-type AdminAction =
+export type AdminAction =
+    | 'LOGIN_SUCCESS'
+    | 'LOGIN_FAILED'
+    | 'LOGOUT'
     | 'VIEW_USERS'
     | 'VIEW_USER_DETAILS'
     | 'DELETE_USER'
@@ -18,11 +22,15 @@ type AdminAction =
     | 'RECALCULATE_FITNESS'
     | 'VIEW_SYSTEM_STATS'
     | 'VIEW_ANALYTICS'
+    | 'MODIFY_ERROR_LOGS'
+    | 'MODIFY_RELEASES'
+    | 'MODIFY_FEEDBACK_QUEUE'
+    | 'RUN_MIGRATION'
     | 'EXPORT_MIGRATION_BUNDLE'
     | 'IMPORT_MIGRATION_BUNDLE';
 
 interface AuditLogTarget {
-    type: 'USER' | 'BACKUP' | 'SETTINGS' | 'SYSTEM' | 'PROVIDER' | 'WORKOUT_TEMPLATE';
+    type: 'USER' | 'BACKUP' | 'SETTINGS' | 'SYSTEM' | 'PROVIDER' | 'WORKOUT_TEMPLATE' | 'ERROR_LOG' | 'RELEASE' | 'FEEDBACK_QUEUE';
     id?: string;
 }
 
@@ -40,10 +48,8 @@ export async function logAdminAction(
     try {
         const resolvedAdminUser = adminUser || 'SYSTEM_ADMIN';
 
-        // Safely extract client IP from headers
-        const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
-            || req.headers.get('x-real-ip')
-            || 'unknown';
+        // Extract client IP using trusted proxy configuration
+        const ipAddress = typeof getClientIP === 'function' ? getClientIP(req) : 'unknown';
 
         const userAgent = req.headers.get('user-agent') || 'unknown';
 

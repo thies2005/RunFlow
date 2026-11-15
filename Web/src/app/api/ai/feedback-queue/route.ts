@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logAdminAction } from '@/lib/admin/auditLog';
 import { prisma } from '@/lib/db';
 import { processPendingFeedbackJobs } from '@/lib/ai/feedbackQueue';
 
@@ -13,6 +16,11 @@ const NO_STORE_HEADERS = {
 
 export async function GET(request: NextRequest) {
     try {
+        const rateLimit = await adminRateLimit(request, 'read');
+        if (!rateLimit.success) {
+            return rateLimit.error!;
+        }
+
         const authResult = await requireAdmin(request);
         if ('error' in authResult) {
             const errorResponse = authResult.error;
@@ -37,7 +45,8 @@ export async function GET(request: NextRequest) {
             })
         ]);
 
-        return NextResponse.json({ stats, recentJobs }, { headers: NO_STORE_HEADERS });
+        const response = NextResponse.json({ stats, recentJobs }, { headers: NO_STORE_HEADERS });
+        return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
         console.error('Queue status error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500, headers: NO_STORE_HEADERS });
@@ -46,6 +55,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
+        const isBearer = request.headers.get('authorization')?.startsWith('Bearer ');
+        if (!isBearer && !validateCsrfToken(request)) {
+            return csrfValidationErrorResponse();
+        }
+
+        const rateLimit = await adminRateLimit(request, 'write');
+        if (!rateLimit.success) {
+            return rateLimit.error!;
+        }
+
         const authResult = await requireAdmin(request);
         if ('error' in authResult) {
             const errorResponse = authResult.error;
@@ -67,19 +86,25 @@ export async function POST(request: NextRequest) {
                     nextRunAt: new Date()
                 }
             });
-            return NextResponse.json({ message: 'Retrying all failed jobs' }, { headers: NO_STORE_HEADERS });
+            await logAdminAction(request, 'MODIFY_FEEDBACK_QUEUE', { type: 'FEEDBACK_QUEUE' }, { action }, authResult.admin.username);
+            const response = NextResponse.json({ message: 'Retrying all failed jobs' }, { headers: NO_STORE_HEADERS });
+            return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
         }
 
         if (action === 'process-now') {
             const result = await processPendingFeedbackJobs();
-            return NextResponse.json(result, { headers: NO_STORE_HEADERS });
+            await logAdminAction(request, 'MODIFY_FEEDBACK_QUEUE', { type: 'FEEDBACK_QUEUE' }, { action }, authResult.admin.username);
+            const response = NextResponse.json(result, { headers: NO_STORE_HEADERS });
+            return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
         }
 
         if (action === 'clear-done') {
             await prisma.feedbackJob.deleteMany({
                 where: { status: 'DONE' }
             });
-            return NextResponse.json({ message: 'Cleared completed jobs' }, { headers: NO_STORE_HEADERS });
+            await logAdminAction(request, 'MODIFY_FEEDBACK_QUEUE', { type: 'FEEDBACK_QUEUE' }, { action }, authResult.admin.username);
+            const response = NextResponse.json({ message: 'Cleared completed jobs' }, { headers: NO_STORE_HEADERS });
+            return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
         }
 
         return NextResponse.json({ error: 'Invalid action' }, { status: 400, headers: NO_STORE_HEADERS });

@@ -138,6 +138,7 @@ export async function PUT(request: NextRequest) {
             defaultApiKey,
             defaultModel,
             activeProviderId,
+            fallbackProviderId,
             // Tier fields
             tier1Name, tier1DailyLimit, tier1MonthlyLimit,
             tier1DailyTokenLimit, tier1MonthlyTokenLimit,
@@ -182,7 +183,8 @@ export async function PUT(request: NextRequest) {
         const updateData: Record<string, unknown> = {};
 
         if (defaultBaseUrl !== undefined) updateData.defaultBaseUrl = defaultBaseUrl;
-        if (activeProviderId !== undefined) updateData.activeProviderId = activeProviderId;
+        if (activeProviderId !== undefined) updateData.activeProviderId = activeProviderId || null;
+        if (fallbackProviderId !== undefined) updateData.fallbackProviderId = fallbackProviderId || null;
 
         // Encrypt API key if provided
         if (defaultApiKey !== undefined) {

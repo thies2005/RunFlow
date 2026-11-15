@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Plus, Bot, Eye, Trash2, Save, Loader2, Zap, AlertTriangle, CheckCircle, Sparkles } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 import TierInputGroup from '@/components/admin/TierInputGroup';
-import SignupAccessControl from '@/components/admin/SignupAccessControl';
+import { Modal } from '@/components/ui/Modal';
 import useConfirmAction from '@/hooks/useConfirmAction';
 import { AdminAiSettingsData } from '@/app/admin/types';
 
@@ -131,6 +131,34 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
         }
     };
 
+    const handleProviderSlotChange = async (nextActiveId: string | null, nextFallbackId: string | null) => {
+        const prevActive = activeProviderId;
+        const prevFallback = fallbackProviderId;
+        setActiveProviderId(nextActiveId);
+        setFallbackProviderId(nextFallbackId);
+        setProcessing(true);
+        try {
+            const res = await fetch('/api/admin/ai-settings', {
+                method: 'PUT',
+                headers: csrfHeaders(),
+                body: JSON.stringify({
+                    ...formData,
+                    activeProviderId: nextActiveId,
+                    fallbackProviderId: nextFallbackId,
+                }),
+            });
+            if (!res.ok) throw new Error('Failed to update provider routing');
+            setActionMessage({ type: 'success', text: 'Provider routing updated' });
+            onRefresh();
+        } catch (error: any) {
+            setActiveProviderId(prevActive);
+            setFallbackProviderId(prevFallback);
+            setActionMessage({ type: 'error', text: error.message });
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     const handleSaveGlobal = async () => {
         setProcessing(true);
         try {
@@ -178,17 +206,6 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
 
     return (
         <div className="space-y-8">
-            {/* System Access & Registration */}
-            <SignupAccessControl
-                title="System Access & Registration"
-                allowSignups={settings?.allowSignups}
-                envAllowSignups={settings?.envAllowSignups}
-                processing={processing}
-                setProcessing={setProcessing}
-                setActionMessage={setActionMessage}
-                onUpdated={() => onRefresh()}
-            />
-
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-background-secondary p-4 rounded-md border border-line">
@@ -242,31 +259,39 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                                 <div className="flex items-center gap-2">
                                     {activeProviderId !== provider.id && (
                                         <button
-                                            onClick={() => setActiveProviderId(provider.id)}
-                                            className="px-3 py-1 text-xs font-medium text-accent-orange hover:bg-accent-orange/10 rounded-sm border border-accent-orange/30"
+                                            type="button"
+                                            disabled={processing}
+                                            onClick={() => handleProviderSlotChange(provider.id, fallbackProviderId === provider.id ? null : fallbackProviderId)}
+                                            className="px-3 py-1 text-xs font-medium text-accent-orange hover:bg-accent-orange/10 rounded border border-accent-orange/30 disabled:opacity-50"
                                         >
                                             Set Active
                                         </button>
                                     )}
                                     {fallbackProviderId !== provider.id && activeProviderId !== provider.id && (
                                         <button
-                                            onClick={() => setFallbackProviderId(provider.id)}
-                                            className="px-3 py-1 text-xs font-medium text-workout-tempo hover:bg-workout-tempo/10 rounded-sm border border-workout-tempo/30"
+                                            type="button"
+                                            disabled={processing}
+                                            onClick={() => handleProviderSlotChange(activeProviderId, provider.id)}
+                                            className="px-3 py-1 text-xs font-medium text-workout-tempo hover:bg-workout-tempo/10 rounded border border-workout-tempo/30 disabled:opacity-50"
                                         >
                                             Set Fallback
                                         </button>
                                     )}
                                     <button
+                                        type="button"
+                                        aria-label={`Edit provider ${provider.name}`}
                                         onClick={() => { setEditingProvider(provider); setShowProviderForm(true); }}
-                                        className="p-2 text-foreground-muted hover:text-foreground-secondary"
+                                        className="p-2 text-foreground-muted hover:text-foreground-secondary rounded"
                                     >
-                                        <Eye className="w-4 h-4" />
+                                        <Eye className="w-4 h-4" aria-hidden="true" />
                                     </button>
                                     <button
+                                        type="button"
+                                        aria-label={`Delete provider ${provider.name}`}
                                         onClick={() => handleDeleteProvider(provider.id)}
-                                        className="p-2 text-foreground-muted hover:text-negative"
+                                        className="p-2 text-foreground-muted hover:text-negative rounded"
                                     >
-                                        <Trash2 className="w-4 h-4" />
+                                        <Trash2 className="w-4 h-4" aria-hidden="true" />
                                     </button>
                                 </div>
                             </div>
@@ -287,12 +312,13 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                 </div>
 
                 <div className="pt-4 border-t border-line">
-                    <label className="block text-sm font-medium text-foreground-secondary mb-1">CalorieSnap (AI Food Scanner) Model ID</label>
+                    <label htmlFor="ai-calorie-snap-model" className="block text-sm font-medium text-foreground-secondary mb-1">CalorieSnap (AI Food Scanner) Model ID</label>
                     <input
+                        id="ai-calorie-snap-model"
                         type="text"
                         value={formData.calorieSnapModel}
                         onChange={(e) => setFormData({ ...formData, calorieSnapModel: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
                         placeholder="e.g. gemini-1.5-flash"
                     />
                     <p className="text-xs text-foreground-muted mt-1">
@@ -301,12 +327,13 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                 </div>
 
                 <div className="pt-4 border-t border-line">
-                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Meal Suggestions Model ID</label>
+                    <label htmlFor="ai-meal-suggest-model" className="block text-sm font-medium text-foreground-secondary mb-1">Meal Suggestions Model ID</label>
                     <input
+                        id="ai-meal-suggest-model"
                         type="text"
                         value={formData.mealSuggestModel}
                         onChange={(e) => setFormData({ ...formData, mealSuggestModel: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
                         placeholder="e.g. gemini-1.5-flash"
                     />
                     <p className="text-xs text-foreground-muted mt-1">
@@ -315,12 +342,13 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                 </div>
 
                 <div className="pt-4 border-t border-line">
-                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Activity Feedback Model ID</label>
+                    <label htmlFor="ai-activity-feedback-model" className="block text-sm font-medium text-foreground-secondary mb-1">Activity Feedback Model ID</label>
                     <input
+                        id="ai-activity-feedback-model"
                         type="text"
                         value={formData.activityFeedbackModel}
                         onChange={(e) => setFormData({ ...formData, activityFeedbackModel: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
                         placeholder="e.g. gemini-1.5-flash"
                     />
                     <p className="text-xs text-foreground-muted mt-1">
@@ -329,30 +357,20 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                 </div>
 
                 <div className="pt-4 border-t border-line">
-                    <label className="block text-sm font-medium text-foreground-secondary mb-1">System Prompt</label>
+                    <label htmlFor="ai-system-prompt" className="block text-sm font-medium text-foreground-secondary mb-1">System Prompt</label>
                     <textarea
+                        id="ai-system-prompt"
                         value={formData.systemPrompt}
                         onChange={(e) => setFormData({ ...formData, systemPrompt: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange h-32"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded focus:ring-2 focus:ring-accent-orange focus:border-accent-orange h-32"
                     />
-                </div>
-
-                <div className="flex justify-end pt-2">
-                    <button
-                        onClick={handleSaveGlobal}
-                        disabled={processing}
-                        className="px-6 py-2 bg-accent-orange hover:bg-accent-orange/90 text-white rounded-md font-medium transition flex items-center gap-2 disabled:opacity-50"
-                    >
-                        <Save className="w-4 h-4" />
-                        {processing ? 'Saving...' : 'Save All Settings'}
-                    </button>
                 </div>
             </div>
 
             {/* Plan Builder AI Settings */}
-            <div className="bg-background-secondary p-6 rounded-md border border-line space-y-4">
+            <div className="bg-background-secondary p-6 rounded border border-line space-y-4">
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-accent-blue" />
+                    <Sparkles className="w-5 h-5 text-accent-orange" aria-hidden="true" />
                     Plan Builder AI
                 </h3>
                 <p className="text-xs text-foreground-muted">
@@ -360,12 +378,13 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                 </p>
 
                 <div>
-                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Plan Builder Model</label>
+                    <label htmlFor="ai-plan-builder-model" className="block text-sm font-medium text-foreground-secondary mb-1">Plan Builder Model</label>
                     <input
+                        id="ai-plan-builder-model"
                         type="text"
                         value={formData.planBuilderModel}
                         onChange={(e) => setFormData({ ...formData, planBuilderModel: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
                         placeholder="e.g. gpt-4o"
                     />
                     <p className="text-xs text-foreground-muted mt-1">
@@ -374,12 +393,13 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Max Tokens Per Analysis</label>
+                    <label htmlFor="ai-plan-max-tokens" className="block text-sm font-medium text-foreground-secondary mb-1">Max Tokens Per Analysis</label>
                     <input
+                        id="ai-plan-max-tokens"
                         type="number"
                         value={formData.planMaxTokensPerAnalysis}
                         onChange={(e) => setFormData({ ...formData, planMaxTokensPerAnalysis: parseInt(e.target.value, 10) || 8000 })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded font-mono tabular-nums focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
                         min={1000}
                         max={16000}
                     />
@@ -389,19 +409,32 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                 </div>
             </div>
 
+            {/* Sticky Bottom Action Bar */}
+            <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur-sm border-t border-line py-3 px-4 flex justify-end">
+                <button
+                    type="button"
+                    onClick={handleSaveGlobal}
+                    disabled={processing}
+                    className="px-6 py-2 bg-accent-orange hover:bg-accent-orange/90 text-white rounded font-medium text-sm transition flex items-center gap-2 disabled:opacity-50"
+                >
+                    <Save className="w-4 h-4" aria-hidden="true" />
+                    {processing ? 'Saving...' : 'Save All Settings'}
+                </button>
+            </div>
+
             {/* Provider Modal/Form Overlay */}
-            {showProviderForm && (
-                <div className="fixed inset-0 bg-black/[var(--modal-backdrop-opacity)] flex items-center justify-center z-50 p-4">
-                    <div className="bg-background-secondary rounded-md border border-line shadow-lg max-w-lg w-full p-6 space-y-4">
-                        <h3 className="text-lg font-bold text-foreground">{editingProvider ? 'Edit Provider' : 'Add New Provider'}</h3>
-                        <ProviderForm
-                            initialData={editingProvider}
-                            onClose={() => setShowProviderForm(false)}
-                            onSuccess={() => { setShowProviderForm(false); fetchProviders(); }}
-                        />
-                    </div>
-                </div>
-            )}
+            <Modal
+                isOpen={showProviderForm}
+                onClose={() => setShowProviderForm(false)}
+                title={editingProvider ? 'Edit Provider' : 'Add New Provider'}
+                maxWidth="lg"
+            >
+                <ProviderForm
+                    initialData={editingProvider}
+                    onClose={() => setShowProviderForm(false)}
+                    onSuccess={() => { setShowProviderForm(false); fetchProviders(); }}
+                />
+            </Modal>
             <ConfirmDialog />
         </div>
     );
@@ -480,9 +513,10 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
             const modelsList = formData.models.split(',').map((s: string) => s.trim()).filter(Boolean);
             const res = await fetch('/api/ai/test-key', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: csrfHeaders(),
                 body: JSON.stringify({
                     provider: formData.type,
+                    providerId: initialData?.id,
                     apiKey: formData.apiKey || null,
                     baseUrl: formData.baseUrl,
                     model: modelsList[0] || 'gpt-4o-mini',
@@ -505,22 +539,24 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
         <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Name</label>
+                    <label htmlFor="provider-name" className="block text-sm font-medium text-foreground-secondary mb-1">Name</label>
                     <input
+                        id="provider-name"
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
+                        className="w-full px-3 py-2 bg-background text-foreground border border-line rounded focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
                         placeholder="e.g. OpenAI"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Slug</label>
+                    <label htmlFor="provider-slug" className="block text-sm font-medium text-foreground-secondary mb-1">Slug</label>
                     <input
+                        id="provider-slug"
                         type="text"
                         value={formData.slug}
                         onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
+                        className="w-full px-3 py-2 bg-background text-foreground border border-line rounded focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted font-mono text-sm"
                         placeholder="openai"
                     />
                 </div>
@@ -528,11 +564,12 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Type</label>
+                    <label htmlFor="provider-type" className="block text-sm font-medium text-foreground-secondary mb-1">Type</label>
                     <select
+                        id="provider-type"
                         value={formData.type}
                         onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
+                        className="w-full px-3 py-2 bg-background text-foreground border border-line rounded focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
                     >
                         <option value="openai">OpenAI Compatible</option>
                         <option value="anthropic">Anthropic</option>
@@ -542,29 +579,31 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Monthly Token Limit</label>
+                    <label htmlFor="provider-token-limit" className="block text-sm font-medium text-foreground-secondary mb-1">Monthly Token Limit</label>
                     <input
+                        id="provider-token-limit"
                         type="number"
                         value={formData.monthlyTokenLimit}
                         onChange={(e) => setFormData({ ...formData, monthlyTokenLimit: e.target.value })}
                         placeholder="Optional (e.g. 1000000)"
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
+                        className="w-full px-3 py-2 bg-background text-foreground border border-line rounded font-mono tabular-nums focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
                     />
                 </div>
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-foreground-secondary mb-1">Base URL</label>
+                <label htmlFor="provider-base-url" className="block text-sm font-medium text-foreground-secondary mb-1">Base URL</label>
                 <input
+                    id="provider-base-url"
                     type="text"
                     value={formData.baseUrl}
                     onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-                    className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
+                    className="w-full px-3 py-2 bg-background text-foreground border border-line rounded font-mono text-sm focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
                 />
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-foreground-secondary mb-1">
+                <label htmlFor="provider-api-key" className="block text-sm font-medium text-foreground-secondary mb-1">
                     API Key(s) {initialData && '(Leave blank to keep current)'}
                 </label>
                 <p className="text-xs text-foreground-muted mb-2">
@@ -572,54 +611,59 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                 </p>
                 <div className="flex gap-2 items-start">
                     <textarea
+                        id="provider-api-key"
                         value={formData.apiKey}
                         onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-                        className="flex-1 px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted min-h-[80px] font-mono text-sm leading-relaxed"
+                        className="flex-1 px-3 py-2 bg-background text-foreground border border-line rounded focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted min-h-[80px] font-mono text-sm leading-relaxed"
                         placeholder="sk-key1,&#10;sk-key2..."
                     />
                     <button
+                        type="button"
                         onClick={handleTest}
                         disabled={testing || (!formData.apiKey && !initialData)}
-                        className="px-3 py-2 bg-background-tertiary text-foreground-secondary rounded-md hover:bg-surface-hover text-sm font-medium flex items-center gap-1 mt-1 shrink-0"
+                        className="px-3 py-2 bg-background-tertiary border border-line text-foreground-secondary rounded hover:bg-surface-hover text-sm font-medium flex items-center gap-1 mt-1 shrink-0 disabled:opacity-50"
                     >
-                        {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                        {testing ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Zap className="w-4 h-4" aria-hidden="true" />}
                         Test
                     </button>
                 </div>
                 {testResult && (
-                    <p className={`text-xs mt-2 ${testResult.success ? 'text-positive' : 'text-negative'}`}>
-                        {testResult.success ? <CheckCircle className="w-3 h-3 inline mr-1" /> : <AlertTriangle className="w-3 h-3 inline mr-1" />}
+                    <p role="status" className={`text-xs mt-2 ${testResult.success ? 'text-positive' : 'text-negative'}`}>
+                        {testResult.success ? <CheckCircle className="w-3 h-3 inline mr-1" aria-hidden="true" /> : <AlertTriangle className="w-3 h-3 inline mr-1" aria-hidden="true" />}
                         {testResult.message}
                     </p>
                 )}
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-foreground-secondary mb-1">Models (comma separated)</label>
+                <label htmlFor="provider-models" className="block text-sm font-medium text-foreground-secondary mb-1">Models (comma separated)</label>
                 <input
+                    id="provider-models"
                     type="text"
                     value={formData.models}
                     onChange={(e) => setFormData({ ...formData, models: e.target.value })}
-                    className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
+                    className="w-full px-3 py-2 bg-background text-foreground border border-line rounded font-mono text-sm focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
                     placeholder="gpt-4, gpt-4o-mini"
                 />
             </div>
 
-            {error && <p className="text-negative text-sm">{error}</p>}
+            {error && <p role="alert" className="text-negative text-sm">{error}</p>}
 
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex justify-end gap-3 pt-4 border-t border-line">
                 <button
+                    type="button"
                     onClick={onClose}
-                    className="px-4 py-2 text-foreground-secondary hover:bg-background-tertiary rounded-md font-medium transition"
+                    className="px-4 py-2 border border-line text-foreground-secondary hover:bg-background-tertiary rounded font-medium text-sm transition"
                 >
                     Cancel
                 </button>
                 <button
+                    type="button"
                     onClick={handleSave}
                     disabled={loading}
-                    className="px-6 py-2 bg-accent-orange hover:bg-accent-orange/90 text-white rounded-md font-medium transition flex items-center gap-2"
+                    className="px-6 py-2 bg-accent-orange hover:bg-accent-orange/90 text-white rounded font-medium text-sm transition flex items-center gap-2 disabled:opacity-50"
                 >
-                    {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {loading && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
                     {initialData ? 'Update Provider' : 'Add Provider'}
                 </button>
             </div>

@@ -53,22 +53,23 @@ export default function AnalyticsTab() {
             {/* Top Users Table */}
             <div className="bg-background-secondary rounded-md  border border-line overflow-hidden">
                 <div className="p-6 border-b border-line">
-                    <h3 className="text-lg font-bold text-foreground">Top Users (This Month)</h3>
+                    <h3 id="top-users-heading" className="text-lg font-bold text-foreground">Top Users (This Month)</h3>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto" role="region" tabIndex={0} aria-labelledby="top-users-heading">
                     <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-foreground-muted bg-background-secondary border-b border-line">
+                        <caption className="sr-only">Top AI users this month</caption>
+                        <thead className="font-mono text-[11px] uppercase tracking-wider text-foreground-muted bg-background border-b border-line">
                             <tr>
-                                <th className="px-6 py-3">User</th>
-                                <th className="px-6 py-3">Tier</th>
-                                <th className="px-6 py-3">Messages</th>
-                                <th className="px-6 py-3">Input / Output Tokens</th>
-                                <th className="px-6 py-3">Total Tokens</th>
+                                <th scope="col" className="px-6 py-3">User</th>
+                                <th scope="col" className="px-6 py-3">Tier</th>
+                                <th scope="col" className="px-6 py-3 text-right">Messages</th>
+                                <th scope="col" className="px-6 py-3 text-right">Input / Output Tokens</th>
+                                <th scope="col" className="px-6 py-3 text-right">Total Tokens</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-line">
                             {data.topUsers.map((user: any) => (
-                                <tr key={user.id} className="hover:bg-background-secondary/50">
+                                <tr key={user.id} className="hover:bg-background/50">
                                     <td className="px-6 py-4 font-medium text-foreground">
                                         <div>{user.name}</div>
                                         <div className="text-xs text-foreground-muted">{user.email}</div>
@@ -82,11 +83,11 @@ export default function AnalyticsTab() {
                                             {user.tier === 'tier3' ? 'Premium' : user.tier === 'tier2' ? 'Standard' : user.tier === 'tier1' ? 'Basic' : user.tier}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 font-mono tabular-nums text-foreground-secondary">{user.messages.toLocaleString()}</td>
-                                    <td className="px-6 py-4 font-mono tabular-nums text-foreground-secondary">
+                                    <td className="px-6 py-4 text-right font-mono tabular-nums text-foreground-secondary">{user.messages.toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-right font-mono tabular-nums text-foreground-secondary">
                                         {user.inputTokens.toLocaleString()} <span className="text-foreground-muted">/</span> {user.outputTokens.toLocaleString()}
                                     </td>
-                                    <td className="px-6 py-4 font-medium font-mono tabular-nums text-foreground">{user.totalTokens.toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-right font-medium font-mono tabular-nums text-foreground">{user.totalTokens.toLocaleString()}</td>
                                 </tr>
                             ))}
                             {data.topUsers.length === 0 && (

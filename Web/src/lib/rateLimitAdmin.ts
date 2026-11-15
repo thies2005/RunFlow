@@ -86,7 +86,7 @@ function getTrustedProxyCount(): number {
     return parsed;
 }
 
-function getClientIP(request: Request): string {
+export function getClientIP(request: Request): string {
     // 1. Explicitly trusted platform/proxy header (e.g. Cf-Connecting-Ip set
     //    by Cloudflare/cloudflared). Only configure this when the app is not
     //    reachable except through that proxy.

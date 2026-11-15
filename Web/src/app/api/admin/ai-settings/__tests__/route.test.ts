@@ -132,12 +132,13 @@ describe('/api/admin/ai-settings', () => {
     });
 
     describe('PUT', () => {
-        it('should update settings successfully', async () => {
+        it('should update settings and fallbackProviderId successfully', async () => {
             (prisma.globalAiSettings.upsert as jest.Mock).mockResolvedValue({
                 id: 'singleton',
                 defaultBaseUrl: 'https://api.anthropic.com',
                 defaultApiKey: 'encrypted_key',
                 defaultModel: 'claude-2',
+                fallbackProviderId: 'prov_fallback_1',
             });
 
             const request = new NextRequest('http://localhost:3000/api/admin/ai-settings', {
@@ -145,6 +146,7 @@ describe('/api/admin/ai-settings', () => {
                 body: JSON.stringify({
                     defaultBaseUrl: 'https://api.anthropic.com',
                     defaultModel: 'claude-2',
+                    fallbackProviderId: 'prov_fallback_1',
                 }),
             });
 
@@ -153,7 +155,14 @@ describe('/api/admin/ai-settings', () => {
 
             expect(response!.status).toBe(200);
             expect(data.success).toBe(true);
-            expect(prisma.globalAiSettings.upsert).toHaveBeenCalled();
+            expect(data.settings.fallbackProviderId).toBe('prov_fallback_1');
+            expect(prisma.globalAiSettings.upsert).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    update: expect.objectContaining({
+                        fallbackProviderId: 'prov_fallback_1',
+                    }),
+                })
+            );
         });
 
         it('should update allowSignups when ALLOW_SIGNUPS is enabled', async () => {

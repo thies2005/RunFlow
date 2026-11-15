@@ -9,8 +9,9 @@
 import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Shield, LayoutDashboard, Database, LogOut, Menu, X, Users, Bot, BarChart3, ClipboardList, ArrowRightLeft, Cpu, Activity } from 'lucide-react';
+import { Shield, LayoutDashboard, Database, LogOut, Menu, X, Users, Bot, BarChart3, ClipboardList, ArrowRightLeft, Cpu, Activity, ListChecks } from 'lucide-react';
 import { csrfHeaders } from '@/lib/admin/csrfHelper';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 function AdminLayoutContent({
     children,
@@ -33,6 +34,7 @@ function AdminLayoutContent({
         { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, tab: null },
         { href: '/admin?tab=users', label: 'Users', icon: Users, tab: 'users' },
         { href: '/admin?tab=analytics', label: 'Analytics', icon: BarChart3, tab: 'analytics' },
+        { href: '/admin?tab=templates', label: 'Workout Templates', icon: ListChecks, tab: 'templates' },
         { href: '/admin?tab=ai', label: 'AI Settings', icon: Bot, tab: 'ai' },
         { href: '/admin?tab=feedback-queue', label: 'Feedback Queue', icon: Activity, tab: 'feedback-queue' },
         { href: '/admin?tab=performance', label: 'Performance', icon: Cpu, tab: 'performance' },
@@ -48,27 +50,28 @@ function AdminLayoutContent({
     }
 
     return (
-        <div className="h-screen w-full flex overflow-hidden bg-background-secondary text-foreground">
+        <div className="h-screen w-full flex overflow-hidden bg-background text-foreground">
             {mobileMenuOpen && (
                 <div
                     className="fixed inset-0 bg-black/50 z-40 md:hidden"
                     onClick={closeMobileMenu}
+                    aria-hidden="true"
                 />
             )}
 
             <aside className={`
                 fixed inset-y-0 left-0 z-50
-                w-64 bg-background-tertiary text-foreground-secondary flex flex-col
+                w-64 bg-background-secondary text-foreground-secondary border-r border-line flex flex-col
                 transition-transform duration-300 ease-in-out
                 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
                 md:translate-x-0 md:static md:z-0
             `}>
-                <div className="p-6 flex items-center space-x-2 border-b border-line">
-                    <Shield className="w-8 h-8 text-foreground" />
-                    <span className="text-xl font-bold text-foreground">Admin</span>
+                <div className="h-14 px-5 flex items-center space-x-2.5 border-b border-line shrink-0">
+                    <Shield className="w-5 h-5 text-accent-orange" aria-hidden="true" />
+                    <span className="text-base font-bold tracking-tight text-foreground">RunFlow Admin</span>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                <nav className="flex-1 p-3 space-y-1 overflow-y-auto" aria-label="Admin sections">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = getActiveState(item.href, currentTab);
@@ -77,23 +80,25 @@ function AdminLayoutContent({
                                 key={item.href}
                                 href={item.href}
                                 onClick={closeMobileMenu}
+                                aria-current={isActive ? 'page' : undefined}
                                 className={`
-                                    flex items-center space-x-3 px-4 py-3 rounded-md transition-colors
+                                    no-underline flex items-center space-x-3 px-3 py-2.5 rounded text-sm transition-colors border-l-2
                                     ${isActive
-                                        ? 'bg-background-secondary text-accent-orange'
-                                        : 'text-foreground-secondary hover:bg-surface-hover'
+                                        ? 'bg-background text-foreground font-medium border-l-accent-orange border-y border-r border-line'
+                                        : 'border-l-transparent text-foreground-secondary hover:bg-surface-hover hover:text-foreground'
                                     }
                                 `}
                             >
-                                <Icon className="w-5 h-5" />
+                                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-accent-orange' : ''}`} aria-hidden="true" />
                                 <span className="text-sm font-medium">{item.label}</span>
                             </Link>
                         );
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-line">
+                <div className="p-3 border-t border-line">
                     <button
+                        type="button"
                         onClick={() => {
                             // Server-side logout: the runflow_admin_token cookie
                             // is httpOnly, so a document.cookie write can never
@@ -114,40 +119,45 @@ function AdminLayoutContent({
                                 router.push('/admin/login');
                             })();
                         }}
-                        className="flex items-center space-x-3 px-4 py-3 w-full text-foreground-secondary hover:bg-surface-hover rounded-md transition-colors"
+                        className="flex items-center space-x-3 px-3 py-2.5 w-full text-sm text-foreground-secondary hover:bg-surface-hover hover:text-foreground rounded transition-colors"
                     >
-                        <LogOut className="w-5 h-5" />
+                        <LogOut className="w-4 h-4 shrink-0" aria-hidden="true" />
                         <span>Logout</span>
                     </button>
-                    <div className="mt-4 px-4 text-xs text-foreground-muted">
+                    <div className="mt-3 px-3 font-mono text-[11px] uppercase tracking-wider text-foreground-muted">
                         RunFlow Admin v1.0
                     </div>
                 </div>
             </aside>
 
             <div className="flex-1 flex flex-col min-w-0">
-                <header className="topbar h-16 sticky top-0 z-50 flex items-center justify-between px-4 md:px-6 shrink-0">
-                    <div className="flex items-center space-x-4">
+                <header className="topbar h-14 sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 shrink-0 border-b border-line bg-background-secondary/95 backdrop-blur-sm">
+                    <div className="flex items-center space-x-3">
                         <button
+                            type="button"
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="topbar-btn md:hidden p-2"
-                            aria-label="Toggle menu"
+                            className="topbar-btn md:hidden p-2 rounded"
+                            aria-label="Toggle navigation menu"
+                            aria-expanded={mobileMenuOpen}
                         >
                             {mobileMenuOpen ? (
-                                <X className="w-6 h-6" />
+                                <X className="w-5 h-5" aria-hidden="true" />
                             ) : (
-                                <Menu className="w-6 h-6" />
+                                <Menu className="w-5 h-5" aria-hidden="true" />
                             )}
                         </button>
-                        <h1 className="text-lg font-semibold text-foreground">
-                            Admin Dashboard
-                        </h1>
+                        <span className="font-mono text-xs uppercase tracking-widest text-foreground-secondary font-semibold">
+                            RunFlow // Admin
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <ThemeToggle />
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto p-4 md:p-6">
+                <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-background">
                     {children}
-                </main>
+                </div>
             </div>
         </div>
     );

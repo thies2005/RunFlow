@@ -20,6 +20,10 @@ jest.mock('@/lib/rateLimitAdmin', () => ({
     applyRateLimitHeaders: jest.fn(),
 }));
 
+jest.mock('@/lib/admin/auditLog', () => ({
+    logAdminAction: jest.fn(),
+}));
+
 jest.mock('@/lib/errors/handler', () => ({
     handleError: jest.fn(),
 }));
@@ -58,8 +62,8 @@ describe('POST /api/admin/login', () => {
 
         expect(response.status).toBe(200);
         expect(data).toHaveProperty('success', true);
-        expect(data).toHaveProperty('token');
-        expect(data).toHaveProperty('expiresIn', 86400);
+        expect(data).not.toHaveProperty('token');
+        expect(data).toHaveProperty('expiresIn', 7200);
         expect(response.cookies.get(COOKIE_NAME)).toBeDefined();
     });
 

@@ -20,14 +20,21 @@ export default function AuditLogsTab() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [page, setPage] = useState(1);
+    const [actionFilter, setActionFilter] = useState('');
     const [totalPages, setTotalPages] = useState(1);
     const [totalLogs, setTotalLogs] = useState(0);
 
-    const fetchLogs = async (pageNum: number) => {
+    const fetchLogs = async (pageNum: number, action: string) => {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`/api/admin/audit-logs?page=${pageNum}&limit=50`);
+            const params = new URLSearchParams({
+                page: String(pageNum),
+                limit: '50',
+            });
+            if (action) params.set('action', action);
+
+            const res = await fetch(`/api/admin/audit-logs?${params.toString()}`);
             const data = await res.json();
 
             if (res.ok) {
@@ -46,8 +53,8 @@ export default function AuditLogsTab() {
     };
 
     useEffect(() => {
-        fetchLogs(page);
-    }, [page]);
+        fetchLogs(page, actionFilter);
+    }, [page, actionFilter]);
 
     const getActionIcon = (action: string) => {
         if (action.includes('USER')) return <UserSquare2 className="w-4 h-4" />;
@@ -86,14 +93,48 @@ export default function AuditLogsTab() {
                     <h2 className="text-xl font-bold text-foreground">System Audit Trail</h2>
                     <p className="text-foreground-muted text-sm mt-1">Immutable log of administrative actions (GDPR Art. 5)</p>
                 </div>
-                <button
-                    onClick={() => fetchLogs(page)}
-                    className="flex items-center px-3 py-2 bg-background-secondary border border-line rounded-md text-sm text-foreground-secondary hover:bg-background-secondary transition"
-                    disabled={loading}
-                >
-                    <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                    Refresh
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                    <select
+                        aria-label="Filter audit logs by action"
+                        value={actionFilter}
+                        onChange={(e) => {
+                            setActionFilter(e.target.value);
+                            setPage(1);
+                        }}
+                        className="px-3 py-2 bg-background border border-line rounded-md text-sm text-foreground focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
+                    >
+                        <option value="">All Actions</option>
+                        <option value="LOGIN_SUCCESS">Login Success</option>
+                        <option value="LOGIN_FAILED">Login Failed</option>
+                        <option value="LOGOUT">Logout</option>
+                        <option value="VIEW_USERS">View Users</option>
+                        <option value="DELETE_USER">Delete User</option>
+                        <option value="RESET_PASSWORD">Reset Password</option>
+                        <option value="TOGGLE_AI_ACCESS">Toggle AI Access</option>
+                        <option value="MODIFY_AI_SETTINGS">Modify AI Settings</option>
+                        <option value="MODIFY_PROVIDERS">Modify Providers</option>
+                        <option value="MODIFY_WORKOUT_TEMPLATES">Modify Workout Templates</option>
+                        <option value="UPLOAD_BACKUP">Upload / Create Backup</option>
+                        <option value="DOWNLOAD_BACKUP">Download Backup</option>
+                        <option value="DELETE_BACKUP">Cleanup / Delete Backup</option>
+                        <option value="MODIFY_ERROR_LOGS">Modify Error Logs</option>
+                        <option value="MODIFY_RELEASES">Modify Releases</option>
+                        <option value="MODIFY_FEEDBACK_QUEUE">Modify Feedback Queue</option>
+                        <option value="RECALCULATE_FITNESS">Recalculate Fitness</option>
+                        <option value="RUN_MIGRATION">Run Migration</option>
+                        <option value="EXPORT_MIGRATION_BUNDLE">Export Migration Bundle</option>
+                        <option value="IMPORT_MIGRATION_BUNDLE">Import Migration Bundle</option>
+                    </select>
+                    <button
+                        type="button"
+                        onClick={() => fetchLogs(page, actionFilter)}
+                        className="flex items-center px-3 py-2 bg-background-secondary border border-line rounded-md text-sm text-foreground-secondary hover:bg-background-tertiary transition"
+                        disabled={loading}
+                    >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+                        Refresh
+                    </button>
+                </div>
             </div>
 
             {error && (

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { GitCommit, GitBranch, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { csrfHeaders } from '@/lib/admin/csrfHelper';
 
 interface Release {
   id: string;
@@ -69,7 +70,7 @@ export default function ReleaseTrackingDashboard() {
       setTracking(true);
       const res = await fetch('/api/admin/releases', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: csrfHeaders(),
         body: JSON.stringify({ notes: 'Manual release tracking' }),
       });
 
@@ -105,28 +106,29 @@ export default function ReleaseTrackingDashboard() {
         </Button>
       </div>
 
-      <div className="bg-background-secondary rounded-md  border border-line overflow-hidden">
+      <div className="bg-background-secondary rounded border border-line overflow-hidden">
         <div className="p-4 border-b border-line">
-          <h4 className="font-medium text-foreground">Deployment History</h4>
+          <h4 id="releases-history-heading" className="font-medium text-foreground">Deployment History</h4>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" role="region" tabIndex={0} aria-labelledby="releases-history-heading">
           <table className="w-full">
-            <thead className="bg-background-secondary">
+            <caption className="sr-only">Deployment release history</caption>
+            <thead className="bg-background border-b border-line">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted">Version</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted">Deployed At</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted">Deployed By</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted">Commit</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted">Compare</th>
+                <th scope="col" className="px-6 py-3 text-left font-mono text-[11px] uppercase tracking-wider text-foreground-muted">Version</th>
+                <th scope="col" className="px-6 py-3 text-left font-mono text-[11px] uppercase tracking-wider text-foreground-muted">Deployed At</th>
+                <th scope="col" className="px-6 py-3 text-left font-mono text-[11px] uppercase tracking-wider text-foreground-muted">Deployed By</th>
+                <th scope="col" className="px-6 py-3 text-left font-mono text-[11px] uppercase tracking-wider text-foreground-muted">Commit</th>
+                <th scope="col" className="px-6 py-3 text-left font-mono text-[11px] uppercase tracking-wider text-foreground-muted">Compare</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
               {releases.map((release, index) => (
-                <tr key={release.id} className="hover:bg-background-secondary">
+                <tr key={release.id} className="hover:bg-background">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge variant="outline">{release.version}</Badge>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground-secondary">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-mono tabular-nums text-foreground-secondary">
                     {new Date(release.deployedAt).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground-secondary">
@@ -137,7 +139,8 @@ export default function ReleaseTrackingDashboard() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
-                      className="text-sm border border-line rounded px-2 py-1"
+                      aria-label={`Select release comparison slot ${(index % 2) + 1} from ${release.version}`}
+                      className="text-sm bg-background border border-line rounded px-2 py-1"
                       value={selectedVersions?.[index % 2] || ''}
                       onChange={(e) => {
                         if (e.target.value) {

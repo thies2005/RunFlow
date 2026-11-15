@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Users, Activity as ActivityIcon, Database, RefreshCw, AlertTriangle, CheckCircle, Bot, Cpu, LucideIcon, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
+import { Users, Activity as ActivityIcon, Database, RefreshCw, AlertTriangle, CheckCircle, Bot, Cpu, LucideIcon, ArrowRight } from 'lucide-react';
 
 import AnalyticsTab from '@/components/admin/AnalyticsTab';
 import AiSettingsTab from '@/components/admin/AiSettingsTab';
@@ -12,26 +12,25 @@ import AuditLogsTab from '@/components/admin/AuditLogsTab';
 import FeedbackQueueTab from '@/components/admin/FeedbackQueueTab';
 import MigrationTab from '@/components/admin/MigrationTab';
 import PerformanceTab from '@/components/admin/PerformanceTab';
+import WorkoutTemplatesTab from '@/components/admin/WorkoutTemplatesTab';
 import { AdminStats, AdminUser, AdminBackup, AdminAiSettings } from './types';
 
 
-interface StatCardProps {
-    title: string;
+interface TelemetryMetricProps {
+    label: string;
     value: string | number;
     subtext?: string;
     icon: LucideIcon;
 }
 
-const StatCard = ({ title, value, subtext, icon: Icon }: StatCardProps) => (
-    <div className="glass-card p-6 flex items-start space-x-4">
-        <div className="bg-background-tertiary text-accent-blue rounded-md p-3">
-            <Icon className="w-6 h-6" />
-        </div>
-        <div>
-            <p className="text-foreground-muted text-sm">{title}</p>
-            <h3 className="text-2xl font-bold font-mono tabular-nums text-foreground">{value}</h3>
+const TelemetryMetric = ({ label, value, subtext, icon: Icon }: TelemetryMetricProps) => (
+    <div className="p-4 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+            <p className="font-mono text-[11px] uppercase tracking-wider text-foreground-muted">{label}</p>
+            <p className="text-2xl font-bold font-mono tabular-nums text-foreground mt-1">{value}</p>
             {subtext && <p className="text-xs text-foreground-muted mt-1">{subtext}</p>}
         </div>
+        <Icon className="w-4 h-4 text-foreground-muted shrink-0 mt-0.5" aria-hidden="true" />
     </div>
 );
 
@@ -39,47 +38,34 @@ interface DashboardWidgetProps {
     title: string;
     icon: LucideIcon;
     value: string | number;
-    change?: number;
     subtext?: string;
     onClick: () => void;
-    color: string;
+    alert?: boolean;
 }
 
-const DashboardWidget = ({ title, icon: Icon, value, change, subtext, onClick, color }: DashboardWidgetProps) => {
-    const isPositive = change !== undefined && change > 0;
-    const isNegative = change !== undefined && change < 0;
-    const changeText = change !== undefined ? `${isPositive ? '+' : ''}${change}%` : undefined;
-
-    return (
-        <button
-            onClick={onClick}
-            className="bg-background-secondary p-6 rounded-md border border-line hover:border-line-strong transition-colors text-left group"
-        >
-            <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                    <div className={`p-3 rounded-md ${color}`}>
-                        <Icon className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <p className="text-foreground-muted text-sm font-medium">{title}</p>
-                        <h3 className="text-2xl font-bold font-mono tabular-nums text-foreground mt-1">{value}</h3>
-                    </div>
+const DashboardWidget = ({ title, icon: Icon, value, subtext, onClick, alert = false }: DashboardWidgetProps) => (
+    <button
+        type="button"
+        onClick={onClick}
+        className="bg-background-secondary p-4 rounded border border-line hover:border-accent-orange/60 transition-colors text-left group flex flex-col justify-between"
+    >
+        <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+                <div className="flex items-center gap-1.5 text-foreground-muted">
+                    <Icon className={`w-3.5 h-3.5 shrink-0 ${alert ? 'text-warning' : 'text-foreground-muted group-hover:text-accent-orange transition-colors'}`} aria-hidden="true" />
+                    <span className="font-mono text-[11px] uppercase tracking-wider">{title}</span>
                 </div>
-                <ArrowRight className="w-5 h-5 text-foreground-muted group-hover:text-foreground-secondary transition-colors" />
+                <p className={`text-2xl font-bold font-mono tabular-nums mt-2 ${alert ? 'text-warning' : 'text-foreground'}`}>{value}</p>
             </div>
-            <div className="mt-4 flex items-center justify-between">
-                {subtext && <p className="text-xs text-foreground-muted">{subtext}</p>}
-                {changeText && (
-                    <div className={`flex items-center text-xs font-medium font-mono tabular-nums ${isPositive ? 'text-positive' : isNegative ? 'text-negative' : 'text-foreground-muted'}`}>
-                        {isPositive && <TrendingUp className="w-3 h-3 mr-1" />}
-                        {isNegative && <TrendingDown className="w-3 h-3 mr-1" />}
-                        {changeText} vs avg
-                    </div>
-                )}
-            </div>
-        </button>
-    );
-};
+            <ArrowRight className="w-4 h-4 text-foreground-muted group-hover:text-accent-orange group-hover:translate-x-0.5 transition-all shrink-0 mt-0.5" aria-hidden="true" />
+        </div>
+        {subtext && (
+            <p className="text-xs text-foreground-muted mt-3 pt-2.5 border-t border-line w-full font-mono tabular-nums">
+                {subtext}
+            </p>
+        )}
+    </button>
+);
 
 function DashboardContent() {
     const router = useRouter();
@@ -87,39 +73,21 @@ function DashboardContent() {
 
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [users, setUsers] = useState<AdminUser[]>([]);
+    const [userPage, setUserPage] = useState(1);
+    const [userSearch, setUserSearch] = useState('');
+    const [usersTotal, setUsersTotal] = useState(0);
+    const [usersTotalPages, setUsersTotalPages] = useState(1);
+    const [usersLoading, setUsersLoading] = useState(false);
     const [backups, setBackups] = useState<AdminBackup[]>([]);
     const [aiSettings, setAiSettings] = useState<AdminAiSettings | null>(null);
     const [loading, setLoading] = useState(true);
 
     const tabParam = searchParams.get('tab');
 
-    const runMigration = async () => {
-        try {
-            setProcessing(true);
-            const res = await fetch('/api/admin/run-migration', {
-                method: 'POST',
-            });
-
-            const data = await res.json();
-            
-            if (res.ok && data.success) {
-                setActionMessage({ type: 'success', text: `Migration complete! Created tables: ${data.tablesCreated?.length || 5}` });
-                setTimeout(() => setActionMessage(null), 10000);
-            } else {
-                setActionMessage({ type: 'error', text: data.details || 'Migration failed' });
-                setTimeout(() => setActionMessage(null), 10000);
-            }
-        } catch (error) {
-            console.error('Migration error:', error);
-            setActionMessage({ type: 'error', text: 'Failed to run migration' });
-            setTimeout(() => setActionMessage(null), 10000);
-        } finally {
-            setProcessing(false);
-        }
-    };
     const activeTab = tabParam === 'backups' ? 'backups' :
                       tabParam === 'ai' ? 'ai' :
                       tabParam === 'analytics' ? 'analytics' :
+                      tabParam === 'templates' ? 'templates' :
                       tabParam === 'audit' ? 'audit' :
                       tabParam === 'feedback-queue' ? 'feedback-queue' :
                       tabParam === 'migration' ? 'migration' :
@@ -130,12 +98,52 @@ function DashboardContent() {
     const [processing, setProcessing] = useState(false);
     const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+    const fetchUsersPage = React.useCallback(async (page: number, search: string) => {
+        try {
+            setUsersLoading(true);
+            const params = new URLSearchParams({
+                page: String(page),
+                limit: '25',
+            });
+            if (search.trim()) {
+                params.set('search', search.trim());
+            }
+            const res = await fetch(`/api/admin/users?${params.toString()}`);
+            if (res.status === 401) {
+                router.push('/admin/login');
+                return;
+            }
+            if (res.ok) {
+                const data = await res.json();
+                setUsers(data.users || []);
+                setUsersTotal(data.total ?? (data.users?.length || 0));
+                setUsersTotalPages(data.totalPages || 1);
+            } else {
+                const errBody = await res.json().catch(() => ({}));
+                setActionMessage({ type: 'error', text: `Users: ${errBody.error || res.statusText}` });
+            }
+        } catch (error) {
+            console.error('Failed to fetch users:', error);
+            setActionMessage({ type: 'error', text: 'Failed to load users' });
+        } finally {
+            setUsersLoading(false);
+        }
+    }, [router]);
+
     const fetchAllData = React.useCallback(async () => {
         try {
             setLoading(true);
+            const userParams = new URLSearchParams({
+                page: String(userPage),
+                limit: '25',
+            });
+            if (userSearch.trim()) {
+                userParams.set('search', userSearch.trim());
+            }
+
             const [statsRes, usersRes, backupsRes, aiRes] = await Promise.all([
                 fetch('/api/admin/stats'),
-                fetch('/api/admin/users?limit=20'),
+                fetch(`/api/admin/users?${userParams.toString()}`),
                 fetch('/api/admin/backups'),
                 fetch('/api/admin/ai-settings'),
             ]);
@@ -147,6 +155,8 @@ function DashboardContent() {
 
             let statsData: AdminStats | null = null;
             let usersData: AdminUser[] = [];
+            let usersTotalCount = 0;
+            let usersPagesCount = 1;
             let backupsData: AdminBackup[] = [];
             let aiData: AdminAiSettings | null = null;
             const errors: string[] = [];
@@ -161,6 +171,8 @@ function DashboardContent() {
             if (usersRes.ok) {
                 const usersJson = await usersRes.json();
                 usersData = usersJson.users || [];
+                usersTotalCount = usersJson.total ?? usersData.length;
+                usersPagesCount = usersJson.totalPages || 1;
             } else {
                 const errBody = await usersRes.json().catch(() => ({}));
                 errors.push(`Users: ${errBody.error || usersRes.statusText}`);
@@ -180,6 +192,8 @@ function DashboardContent() {
 
             setStats(statsData);
             setUsers(usersData);
+            setUsersTotal(usersTotalCount);
+            setUsersTotalPages(usersPagesCount);
             setBackups(backupsData);
             setAiSettings(aiData);
 
@@ -194,7 +208,7 @@ function DashboardContent() {
         } finally {
             setLoading(false);
         }
-    }, [router]);
+    }, [router, userPage, userSearch]);
 
     useEffect(() => {
         fetchAllData();
@@ -208,22 +222,32 @@ function DashboardContent() {
         );
     }
 
-    const usersChange = stats?.users?.newToday && stats?.users?.newToday > 0 ? 15 : -5;
-    const aiUsageChange = 23;
-    const feedbackHandledChange = 18;
-    const performanceScore = 94;
+    const handleUserPageChange = (nextPage: number) => {
+        setUserPage(nextPage);
+        fetchUsersPage(nextPage, userSearch);
+    };
+
+    const handleUserSearch = (nextSearch: string) => {
+        setUserSearch(nextSearch);
+        setUserPage(1);
+        fetchUsersPage(1, nextSearch);
+    };
+
+    const unresolvedErrors = stats?.monitoring?.unresolvedErrors ?? 0;
+    const failedQueueJobs = stats?.feedbackQueue?.failed ?? 0;
 
     return (
-        <div className="space-y-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-line">
                 <div>
-                    <h1 className="text-2xl font-bold text-foreground">
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">
                         {activeTab ? (
                             {
                                 users: 'User Management',
                                 backups: 'Backups',
                                 ai: 'AI Settings',
                                 analytics: 'Analytics',
+                                templates: 'Workout Templates',
                                 audit: 'Audit Trail',
                                 'feedback-queue': 'Feedback Queue',
                                 migration: 'Migration',
@@ -237,163 +261,179 @@ function DashboardContent() {
                 </div>
                 <div className="flex items-center space-x-2 w-full sm:w-auto">
                     <button
-                        onClick={runMigration}
-                        disabled={processing}
-                        className="p-2 text-accent-blue hover:bg-accent-blue/10 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Run Database Migration"
-                    >
-                        <Database className="w-5 h-5" />
-                    </button>
-                    <button
+                        type="button"
                         onClick={fetchAllData}
-                        className="p-2 text-foreground-muted hover:bg-background-tertiary rounded-md transition"
+                        className="p-2 text-foreground-muted hover:text-foreground hover:bg-background-secondary border border-line rounded transition"
+                        aria-label="Refresh dashboard data"
                         title="Refresh Data"
                     >
-                        <RefreshCw className="w-5 h-5" />
+                        <RefreshCw className="w-4 h-4" aria-hidden="true" />
                     </button>
-                    <div className="bg-positive/10 text-positive border border-positive/30 px-3 py-1 rounded-full text-xs font-medium flex items-center">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        System Healthy
+                    <div
+                        role="status"
+                        className={`px-3 py-1 rounded text-xs font-medium font-mono flex items-center border ${
+                            unresolvedErrors > 0 || failedQueueJobs > 0
+                                ? 'bg-warning/10 text-warning border-warning/30'
+                                : 'bg-positive/10 text-positive border-positive/30'
+                        }`}
+                    >
+                        {unresolvedErrors > 0 || failedQueueJobs > 0 ? (
+                            <AlertTriangle className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" />
+                        ) : (
+                            <CheckCircle className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" />
+                        )}
+                        {unresolvedErrors > 0
+                            ? `${unresolvedErrors} unresolved error${unresolvedErrors === 1 ? '' : 's'}`
+                            : failedQueueJobs > 0
+                                ? `${failedQueueJobs} failed job${failedQueueJobs === 1 ? '' : 's'}`
+                                : 'Operational'}
                     </div>
                 </div>
             </div>
 
             {actionMessage && (
-                <div className={`p-4 rounded-md flex items-center ${actionMessage.type === 'success' ? 'bg-positive/10 text-positive' : 'bg-negative/10 text-negative'}`}>
+                <div
+                    role={actionMessage.type === 'error' ? 'alert' : 'status'}
+                    className={`p-3.5 rounded border text-sm flex items-center ${actionMessage.type === 'success' ? 'bg-positive/10 border-positive/30 text-positive' : 'bg-negative/10 border-negative/30 text-negative'}`}
+                >
                     {actionMessage.type === 'success' ? (
-                        <CheckCircle className="w-5 h-5 mr-2" />
+                        <CheckCircle className="w-4 h-4 mr-2 shrink-0" aria-hidden="true" />
                     ) : (
-                        <AlertTriangle className="w-5 h-5 mr-2" />
+                        <AlertTriangle className="w-4 h-4 mr-2 shrink-0" aria-hidden="true" />
                     )}
-                    {actionMessage.text}
+                    <span>{actionMessage.text}</span>
                 </div>
             )}
 
             {!activeTab && (
-                <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <DashboardWidget
-                            title="Users Activity"
+                            title="New Users (24h)"
                             icon={Users}
                             value={stats?.users?.newToday || 0}
-                            change={usersChange}
-                            subtext="Today"
+                            subtext={`${stats?.users?.newLast7Days ?? 0} in last 7 days`}
                             onClick={() => router.push('/admin?tab=users')}
-                            color="bg-background-tertiary text-accent-blue"
                         />
                         <DashboardWidget
                             title="AI Enabled Users"
                             icon={Bot}
                             value={aiSettings?.stats?.enabledUsers || 0}
-                            change={aiUsageChange}
-                            subtext="Total active"
+                            subtext={`${(stats?.aiUsage?.todayTokens || 0).toLocaleString()} tokens today`}
                             onClick={() => router.push('/admin?tab=analytics')}
-                            color="bg-background-tertiary text-workout-long-run"
                         />
                         <DashboardWidget
-                            title="Feedback Handled"
+                            title="Feedback Queue"
                             icon={ActivityIcon}
-                            value={stats?.activities?.last7Days || 0}
-                            change={feedbackHandledChange}
-                            subtext="Today"
+                            value={stats?.feedbackQueue?.doneToday || 0}
+                            subtext={`${stats?.feedbackQueue?.pending || 0} pending • ${failedQueueJobs} failed`}
                             onClick={() => router.push('/admin?tab=feedback-queue')}
-                            color="bg-background-tertiary text-positive"
+                            alert={failedQueueJobs > 0}
                         />
                         <DashboardWidget
-                            title="Performance"
+                            title="Unresolved Errors"
                             icon={Cpu}
-                            value={`${performanceScore}%`}
-                            subtext="Score"
+                            value={unresolvedErrors}
+                            subtext={`${stats?.monitoring?.errorsLast24h || 0} logged in last 24h`}
                             onClick={() => router.push('/admin?tab=performance')}
-                            color="bg-background-tertiary text-workout-tempo"
+                            alert={unresolvedErrors > 0}
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <StatCard
-                            title="Total Users"
+                    <div className="grid grid-cols-2 lg:grid-cols-4 border border-line bg-background-secondary divide-y lg:divide-y-0 lg:divide-x divide-line rounded">
+                        <TelemetryMetric
+                            label="Total Users"
                             value={stats?.users?.total || 0}
                             subtext={`${stats?.users?.newToday || 0} new today`}
                             icon={Users}
                         />
-                        <StatCard
-                            title="Active Sessions"
+                        <TelemetryMetric
+                            label="Active Sessions"
                             value={stats?.sessions?.active || 0}
                             subtext={`${stats?.sessions?.total || 0} total sessions`}
                             icon={ActivityIcon}
                         />
-                        <StatCard
-                            title="Activities"
+                        <TelemetryMetric
+                            label="Activities"
                             value={stats?.activities?.total || 0}
                             subtext={`${stats?.activities?.last7Days || 0} this week`}
                             icon={ActivityIcon}
                         />
-                        <StatCard
-                            title="Backups"
+                        <TelemetryMetric
+                            label="Backups"
                             value={stats?.backups?.count || 0}
                             subtext={`Last: ${stats?.backups?.lastBackupAt ? new Date(stats.backups.lastBackupAt).toLocaleDateString() : 'Never'}`}
                             icon={Database}
                         />
                     </div>
-                </>
+                </div>
             )}
 
             {activeTab && (
-                <div className="bg-background-secondary rounded-md border border-line overflow-hidden">
-                    <div className="p-4 sm:p-6">
-                        {activeTab === 'users' && (
-                            <UsersTab
-                                users={users}
-                                setUsers={setUsers}
-                                aiSettings={aiSettings}
-                                processing={processing}
-                                setProcessing={setProcessing}
-                                setActionMessage={setActionMessage}
-                                fetchAllData={fetchAllData}
-                            />
-                        )}
+                <div>
+                    {activeTab === 'users' && (
+                        <UsersTab
+                            users={users}
+                            setUsers={setUsers}
+                            aiSettings={aiSettings}
+                            processing={processing}
+                            setProcessing={setProcessing}
+                            setActionMessage={setActionMessage}
+                            fetchAllData={fetchAllData}
+                            userPage={userPage}
+                            usersTotal={usersTotal}
+                            usersTotalPages={usersTotalPages}
+                            userSearch={userSearch}
+                            usersLoading={usersLoading}
+                            onPageChange={handleUserPageChange}
+                            onSearchSubmit={handleUserSearch}
+                        />
+                    )}
 
-                        {activeTab === 'backups' && (
-                            <BackupsTab
-                                backups={backups}
-                                processing={processing}
-                                setProcessing={setProcessing}
-                                setActionMessage={setActionMessage}
-                                fetchAllData={fetchAllData}
-                            />
-                        )}
+                    {activeTab === 'backups' && (
+                        <BackupsTab
+                            backups={backups}
+                            processing={processing}
+                            setProcessing={setProcessing}
+                            setActionMessage={setActionMessage}
+                            fetchAllData={fetchAllData}
+                        />
+                    )}
 
-                        {activeTab === 'ai' && (
-                            <AiSettingsTab
-                                settings={aiSettings?.settings}
-                                stats={aiSettings?.stats}
-                                onRefresh={fetchAllData}
-                                processing={processing}
-                                setProcessing={setProcessing}
-                                setActionMessage={setActionMessage}
-                            />
-                        )}
+                    {activeTab === 'ai' && (
+                        <AiSettingsTab
+                            settings={aiSettings?.settings}
+                            stats={aiSettings?.stats}
+                            onRefresh={fetchAllData}
+                            processing={processing}
+                            setProcessing={setProcessing}
+                            setActionMessage={setActionMessage}
+                        />
+                    )}
 
-                        {activeTab === 'analytics' && (
-                            <AnalyticsTab />
-                        )}
+                    {activeTab === 'analytics' && (
+                        <AnalyticsTab />
+                    )}
 
-                        {activeTab === 'audit' && (
-                            <AuditLogsTab />
-                        )}
+                    {activeTab === 'templates' && (
+                        <WorkoutTemplatesTab />
+                    )}
 
-                        {activeTab === 'feedback-queue' && (
-                            <FeedbackQueueTab />
-                        )}
+                    {activeTab === 'audit' && (
+                        <AuditLogsTab />
+                    )}
 
-                        {activeTab === 'migration' && (
-                            <MigrationTab />
-                        )}
+                    {activeTab === 'feedback-queue' && (
+                        <FeedbackQueueTab />
+                    )}
 
-                        {activeTab === 'performance' && (
-                            <PerformanceTab />
-                        )}
-                    </div>
+                    {activeTab === 'migration' && (
+                        <MigrationTab />
+                    )}
+
+                    {activeTab === 'performance' && (
+                        <PerformanceTab />
+                    )}
                 </div>
             )}
         </div>

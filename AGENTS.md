@@ -1,60 +1,52 @@
-# AGENTS.md
+# RunFlow
 
-The Flutter app was removed from the repository (v2.3.0). The mobile app is the
-native Kotlin/Compose app in `android/`; Strava OAuth is configured server-side,
-so no client ID is needed at build time. A backup of the old Flutter source is
-kept outside the repo (`~/Documents/runflow-flutter-app-backup-2026-09-11.zip`).
+## Purpose and layout
 
-## Build Commands (native Android app)
+Native Kotlin/Compose Android app in `android/` and Next.js dashboard in `Web/`. The plan engine is the web engine (server when signed in, on-device port otherwise); do not restore the classic Daniels engine.
 
-Working directory for all commands: `android/`
+## Working agreements
 
-### Build APK
-```
-./gradlew assembleDebug     # debug APK
-./gradlew assembleRelease   # R8-minified + signed (needs android/key.properties)
-```
+- Inspect the code and instructions first; make the smallest correct change and
+  preserve unrelated staged, unstaged and untracked work. Never commit secrets.
+- Plan and independently review substantial changes in proportion to their risk,
+  using available tools. Make routine reversible decisions without approval loops.
+- Give delegated workers a bounded scope, working directory and acceptance
+  criteria. Assigned workers do not recursively delegate. Serialize shared edits
+  and device control, and inspect results before integration.
+- Commit, push and publish only when authorized. Report actual providers/fallbacks,
+  checks performed and concrete limitations; never imply an unavailable review ran.
+- Read the repository root guide when working in a subdirectory. Read
+  `../AGENTS.md` for workspace publishing guidance when present; essential project
+  safeguards below remain applicable without ancestor-file discovery.
 
-When asked to build the APK, always build the release APK (`assembleRelease`);
-only use debug if explicitly requested.
+## Setup and commands
 
-### Compile check
-```
-./gradlew :app:compileDebugKotlin
-```
+From `android/` with JDK 17 and Android SDK: `./gradlew assembleRelease` builds the default requested APK; use `assembleDebug` only when explicitly requested. Release signing uses gitignored `key.properties`; preserve the existing certificate. Without signing configuration the local release build is unsigned; do not label it a signed release. The SDK path comes from local `android/local.properties` or SDK environment variables, not `org.gradle.java.home`. From `Web/`: `npm ci --legacy-peer-deps`, `npm run dev`.
 
-### Test
-```
-./gradlew testDebugUnitTest
-```
+## Verification
 
-## Pre-push Checklist
+From `android/`: `./gradlew :app:compileDebugKotlin testDebugUnitTest lintDebug :app:compileDebugAndroidTestKotlin`; run `./gradlew connectedDebugAndroidTest` when device tests are applicable. From `Web/`: `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm run build`; integration and Playwright checks apply when relevant. From the repository root for release workflow changes: `python3 -m unittest discover -s scripts/tests -p 'test_android_release.py'`.
 
-Before pushing changes to the Android app, always run:
-1. `./gradlew :app:compileDebugKotlin` - must pass with zero errors
-2. `./gradlew testDebugUnitTest` - must pass with zero failures
+## Android QA
 
-## Important Notes
-- JDK 17 and the Android SDK path come from `android/gradle.properties` (`org.gradle.java.home`).
-- Release signing reads the gitignored `android/key.properties`; without it the release build is unsigned.
-- The plan engine is the web engine only (server when signed in, on-device port otherwise) — the classic Daniels engine was removed in v2.3.0.
+- For Android UI/flow changes, test relevant normal, error and persistence
+  scenarios on an appropriate device when available; report blocked scenarios.
+- Prefer Gemini 4 Hydrogen through Antigravity (AGY) for Android QA. Use
+  GPT-6.1 Terra through Codex when working without AGY. The worker needs both
+  adb shell and screenshot viewing. Report the actual provider and any fallback.
+- Record device serial, API, package, build variant and source commit. Use
+  `adb -s SERIAL` for device operations; inspect UI-tree bounds before taps.
+- Capture screenshots and scoped logs without secrets. Report pass/fail/blocked
+  outcomes with evidence. Unit tests alone do not establish emulator validation.
+- Serialize shared-device control. Do not perform production actions or reset
+  user data without authorization.
 
-## Android release policy
+## Release and boundaries
 
-Follow `docs/releases/README.md` and the `github-release-publishing` skill for release
-work. Pushes to master update the rolling development prerelease. Create or push a
-stable `vX.Y.Z` tag **only after the user explicitly requests that stable release**;
-setup, routine fixes and ordinary pushes are not a stable release instruction.
-Preserve the native app signing identity. Before release, calculate the source
-versionCode from the final full-history commit count (including preparation commits),
-verify tag/version/notes and checks, then monitor publication and verify downloads.
-Do not choose a project license or delete old releases without explicit user approval.
+Preserve signing identity, immutable stable tags and published assets. A stable release requires an explicit request; ordinary pushes authorize no stable release. Follow the repository release guide for source versions, default-branch ancestry, checks, notes and publication; monitor workflows and verify downloads before claiming success. Do not clean up releases without explicit scoped authorization. APK/AAB or metadata alone does not imply Play or F-Droid publication.
 
-## MyWhoosh integration constraint
+Source versionCode must reflect the final full-history commit count including preparation commits. MyWhoosh integration is limited to local workout-file import, offline catalog matching and `.zwo` export. Never contact `mywhoosh.com`, `service14.mywhoosh.com`, `service20.mywhoosh.com`, `coaching.mywhoosh.com`, MyWhoosh CDN hosts or unofficial MyWhoosh HTTP APIs; do not add account/login/token flows, calendar pulls, cloud pushes or MyWhoosh-specific database models.
 
-Use local workout-file import, offline catalog matching, and `.zwo` export only.
-Do not use unofficial MyWhoosh HTTP APIs or contact `mywhoosh.com`,
-`service14.mywhoosh.com`, `service20.mywhoosh.com`, `coaching.mywhoosh.com`,
-or MyWhoosh CDN hosts from this integration. Do not add account connections,
-login/token flows, calendar pulls, cloud pushes, or MyWhoosh-specific database
-models. This preserves the user's October 20, 2026 scope decision.
+## Sources
+
+[README](README.md), [release guide](docs/releases/README.md), [Android CI](.github/workflows/android.yml), [web CI](.github/workflows/ci.yml).

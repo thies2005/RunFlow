@@ -78,7 +78,7 @@ async function flushErrors() {
     errorGroups.get(fingerprint)!.push(error);
   }
 
-  for (const [fingerprint, errors] of Object.entries(errorGroups)) {
+  for (const [fingerprint, errors] of errorGroups.entries()) {
     try {
       const existingError = await prisma.errorLog.findFirst({
         where: {
@@ -127,27 +127,4 @@ export function isErrorRateTooHigh(): boolean {
     e => e.timestamp ? now - e.timestamp < 60000 : false
   );
   return recentErrors.length > 100;
-}
-
-export function createGlobalErrorHandler() {
-  return function globalErrorHandler(error: Error, context?: {
-    routePath?: string;
-    method?: string;
-    userId?: string;
-    userAgent?: string;
-  }) {
-    if (isErrorRateTooHigh()) {
-      console.error('Error rate too high, skipping tracking');
-      return;
-    }
-
-    trackError({
-      routePath: context?.routePath || 'unknown',
-      method: context?.method || 'UNKNOWN',
-      errorMessage: error.message,
-      stackTrace: error.stack,
-      userId: context?.userId,
-      userAgent: context?.userAgent,
-    });
-  };
 }

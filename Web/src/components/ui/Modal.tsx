@@ -76,31 +76,8 @@ export function Modal({
 
         document.addEventListener('keydown', handleKeyDown);
 
-        let isCancelled = false;
-        let backListener: { remove: () => void } | null = null;
-        const setupCapacitor = async () => {
-            try {
-                const { Capacitor } = await import('@capacitor/core');
-                if (Capacitor.isNativePlatform()) {
-                    const { App } = await import('@capacitor/app');
-                    const listener = await App.addListener('backButton', () => {
-                        if (openDialogs[openDialogs.length - 1] === dialog) onCloseRef.current();
-                    });
-                    if (isCancelled) {
-                        listener.remove();
-                    } else {
-                        backListener = listener;
-                    }
-                }
-            } catch (e) {
-                console.error('Failed to setup capacitor back button', e);
-            }
-        };
-        setupCapacitor();
-
         return () => {
             clearTimeout(focusTimer);
-            isCancelled = true;
             const index = openDialogs.indexOf(dialog);
             if (index !== -1) openDialogs.splice(index, 1);
             document.removeEventListener('keydown', handleKeyDown);
@@ -111,9 +88,6 @@ export function Modal({
             }
             if (index === openDialogs.length && previouslyFocused.current instanceof HTMLElement && typeof previouslyFocused.current.focus === 'function') {
                 previouslyFocused.current.focus();
-            }
-            if (backListener) {
-                backListener.remove();
             }
         };
     }, [isOpen]);

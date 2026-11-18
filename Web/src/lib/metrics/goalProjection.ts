@@ -11,7 +11,7 @@
  * over the plan duration.
  */
 
-import { predictRaceTime, calculateVdot, type RaceDistance } from './vdot';
+import { predictRaceTime, type RaceDistance } from './vdot';
 
 // ============================================
 // Types and Interfaces
@@ -248,16 +248,7 @@ export function calculateWeeksUntilRace(
 }
 
 function predictTimeForNumericDistance(vdot: number, distanceMeters: number): number {
-    let low = 600;
-    let high = 43200;
-    for (let i = 0; i < 50; i++) {
-        const mid = (low + high) / 2;
-        const testVdot = calculateVdot({ distance: distanceMeters, timeSeconds: mid });
-        if (Math.abs(testVdot - vdot) < 0.01) return Math.round(mid);
-        if (testVdot > vdot) low = mid;
-        else high = mid;
-    }
-    return Math.round((low + high) / 2);
+    return predictRaceTime(vdot, distanceMeters);
 }
 
 export function calculateProjectedGoalTimeForDistance(
@@ -294,12 +285,4 @@ export function calculateProjectedGoalTimeForDistance(
     const conservativeTime = Math.round(conservativeBase * (1 + conservativePenalty));
 
     return { optimalTime: Math.round(optimalTime), projectedTime, conservativeTime };
-}
-
-export function calculateProjectedDistanceForTime(
-    _currentVO2max: number,
-    _settings: { durationWeeks: number; runsPerWeek: number; weeklyMileageGoal?: number },
-    _targetTimeSeconds: number,
-): { estimatedDistanceM: number } {
-    return { estimatedDistanceM: 0 };
 }

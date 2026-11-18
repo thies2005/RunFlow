@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { analyzeRace, calculateTrainingPaces, calculateVdot, DISTANCES, type RaceDistance } from '@/lib/metrics/vdot';
+import { analyzeRace, calculateTrainingPaces, calculateVdot, predictRaceTime, DISTANCES, type RaceDistance } from '@/lib/metrics/vdot';
 import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
 import { calculateProjectedGoalTime, type PlanSettings } from '@/lib/metrics/goalProjection';
 import { buildPlanPhaseBlocks, buildStructuredStepsForWorkout, generateTrainingPlan, PLAN_CONSTANTS, type PlanConfig, type GeneratedWorkout, getMinStartVolume } from '@/lib/plans';
@@ -463,16 +463,7 @@ export const CALIB_DISTANCE_MAP: Record<string, RaceDistance> = {
 };
 
 export function predictTimeForDist(vdot: number, distM: number): number {
-    let low = 600;
-    let high = 18000;
-    for (let i = 0; i < 50; i++) {
-        const mid = (low + high) / 2;
-        const tv = calculateVdot({ distance: distM, timeSeconds: mid });
-        if (Math.abs(tv - vdot) < 0.01) return Math.round(mid);
-        if (tv > vdot) low = mid;
-        else high = mid;
-    }
-    return Math.round((low + high) / 2);
+    return predictRaceTime(vdot, distM);
 }
 
 export interface ResolveVdotInput {

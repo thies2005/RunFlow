@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, memo, useCallback, useEffect } from 'react';
+import { useState, memo, useCallback, useRef } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { List } from 'react-window';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import {
     Activity,
     Bike,
@@ -333,45 +333,16 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
 
 ActivityCard.displayName = 'ActivityCard';
 
-interface ActivityRowData {
-    activities: ActivityListItem[];
-    onClick: (_activity: ActivityListItem) => void;
-}
-
-const ActivityRow = ({ index, style, activities, onClick, ariaAttributes }: ActivityRowData & {
-    index: number;
-    style: React.CSSProperties;
-    ariaAttributes: {
-        "aria-posinset": number;
-        "aria-setsize": number;
-        role: "listitem";
-    };
-}) => {
-    const activity = activities[index];
-    return (
-        <div {...ariaAttributes} style={{ ...style, top: (style.top as number) + 12, height: (style.height as number) - 12 }}>
-            <button
-                type="button"
-                className="appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
-                onClick={() => onClick(activity)}
-                aria-label={`View details for ${getDisplayActivityName(activity)}`}
-            >
-                <ActivityCard activity={activity} />
-            </button>
-        </div>
-    );
-};
-
 export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionFactor, selectedIds, onSelectionChange, selectionDisabled }: ActivityListProps) {
     const [selectedActivity, setSelectedActivity] = useState<ActivityListItem | null>(null);
-    const [windowHeight, setWindowHeight] = useState(800);
+    const parentRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        setWindowHeight(window.innerHeight - 200);
-        const handleResize = () => setWindowHeight(window.innerHeight - 200);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    const rowVirtualizer = useVirtualizer({
+        count: activities.length,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 160,
+        overscan: 5,
+    });
 
     // Memoized handlers to prevent re-creating functions on each render
     const handleActivityClick = useCallback((activity: ActivityListItem) => {
@@ -421,13 +392,44 @@ export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionF
         <>
             <div className={activities.length > 50 ? "" : "space-y-3"}>
                 {activities.length > 50 && !onSelectionChange ? (
-                    <List
-                        style={{ height: windowHeight }}
-                        rowCount={activities.length}
-                        rowHeight={160}
-                        rowComponent={ActivityRow}
-                        rowProps={{ activities, onClick: handleActivityClick }}
-                    />
+                    <div
+                        ref={parentRef}
+                        style={{ height: Math.min(activities.length * 80, 600), overflow: 'auto' }}
+                    >
+                        <div
+                            style={{
+                                height: `${rowVirtualizer.getTotalSize()}px`,
+                                width: '100%',
+                                position: 'relative',
+                            }}
+                        >
+                            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                                const activity = activities[virtualRow.index];
+                                return (
+                                    <div
+                                        key={activity.id}
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: `${virtualRow.size - 12}px`,
+                                            transform: `translateY(${virtualRow.start + 12}px)`,
+                                        }}
+                                    >
+                                        <button
+                                            type="button"
+                                            className="appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
+                                            onClick={() => handleActivityClick(activity)}
+                                            aria-label={`View details for ${getDisplayActivityName(activity)}`}
+                                        >
+                                            <ActivityCard activity={activity} />
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
                 ) : (
                     activities.map((activity, index) => (
                         <div key={activity.id} className="flex items-center gap-3">

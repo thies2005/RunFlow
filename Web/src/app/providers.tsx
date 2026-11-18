@@ -8,7 +8,6 @@ import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider'
 import { NotificationProvider } from '@/components/providers/NotificationProvider';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { UnitProvider } from '@/lib/units';
-import { HealthSyncProvider } from '@/components/providers/HealthSyncProvider';
 import { CoachDrawerProvider } from '@/components/providers/CoachDrawerProvider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -29,13 +28,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                     <UnitProvider>
                         <NotificationProvider>
-                            <HealthSyncProvider>
-                                <UserMetricsProvider>
-                                    <CoachDrawerProvider>
-                                        {children}
-                                    </CoachDrawerProvider>
-                                </UserMetricsProvider>
-                            </HealthSyncProvider>
+                            <UserMetricsProvider>
+                                <CoachDrawerProvider>
+                                    {children}
+                                </CoachDrawerProvider>
+                            </UserMetricsProvider>
                         </NotificationProvider>
                     </UnitProvider>
                 </ThemeProvider>

@@ -36,6 +36,8 @@ export interface ZwoWorkoutInput {
     description?: string | null;
     workoutType?: string | null;
     structuredSteps?: unknown;
+    sportType?: 'run' | 'bike';
+    tags?: string[];
 }
 
 const AUTHOR = 'RunFlow';
@@ -130,19 +132,24 @@ function pow(value: number): string {
 
 function buildV2StepElement(step: StructuredStep): string {
     const duration = durationForV2Step(step);
+    const cadAttr = step.cadenceRpm ? ` Cadence="${step.cadenceRpm}"` : '';
+
+    if (step.target?.type === 'free') {
+        return `  <FreeRide Duration="${duration}"${cadAttr}/>`;
+    }
 
     switch (step.kind) {
         case 'warmup': {
             const high = powerFractionForStep(step);
-            return `  <Warmup Duration="${duration}" PowerLow="${pow(0.50)}" PowerHigh="${pow(high)}"/>`;
+            return `  <Warmup Duration="${duration}" PowerLow="${pow(0.50)}" PowerHigh="${pow(high)}"${cadAttr}/>`;
         }
         case 'cooldown': {
             const high = powerFractionForStep(step);
-            return `  <Cooldown Duration="${duration}" PowerLow="${pow(high)}" PowerHigh="${pow(0.50)}"/>`;
+            return `  <Cooldown Duration="${duration}" PowerLow="${pow(high)}" PowerHigh="${pow(0.50)}"${cadAttr}/>`;
         }
         default: {
             const power = powerFractionForStep(step);
-            return `  <SteadyState Duration="${duration}" Power="${pow(power)}"/>`;
+            return `  <SteadyState Duration="${duration}" Power="${pow(power)}"${cadAttr}/>`;
         }
     }
 }
@@ -163,7 +170,8 @@ function buildIntervalsT(group: Extract<StepNode, { kind: 'repeat' }>): string |
     const onPower = powerFractionForStep(inner);
     const offDuration = Math.round(group.setRest.seconds);
     const offPower = 0.65; // recovery spin between efforts
-    return `  <IntervalsT Repeat="${group.times}" OnDuration="${onDuration}" OnPower="${pow(onPower)}" OffDuration="${offDuration}" OffPower="${pow(offPower)}"/>`;
+    const cadAttr = inner.cadenceRpm ? ` Cadence="${inner.cadenceRpm}"` : '';
+    return `  <IntervalsT Repeat="${group.times}" OnDuration="${onDuration}" OnPower="${pow(onPower)}" OffDuration="${offDuration}" OffPower="${pow(offPower)}"${cadAttr}/>`;
 }
 
 /**
@@ -301,13 +309,22 @@ export function workoutToZwo(workout: ZwoWorkoutInput): string {
             : extractLegacySteps(workout.structuredSteps).map(buildLegacyStepElement);
     }
 
+    const sportType = workout.sportType ?? 'run';
+    const tagLines = workout.tags && workout.tags.length > 0
+        ? [
+            '  <tags>',
+            ...workout.tags.map(t => `    <tag name="${escapeXml(t)}"/>`),
+            '  </tags>',
+        ]
+        : ['  <tags/>'];
+
     const lines = [
         '<workout_file>',
         `  <author>${AUTHOR}</author>`,
         `  <name>${name}</name>`,
         `  <description>${description}</description>`,
-        '  <sportType>run</sportType>',
-        '  <tags/>',
+        `  <sportType>${sportType}</sportType>`,
+        ...tagLines,
         '  <workout>',
         ...bodyLines,
         '  </workout>',

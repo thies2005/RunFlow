@@ -25,7 +25,7 @@ export type RateLimitResult = {
     retryAfter?: number;
 };
 
-function cleanOldTimestamps(timestamps: number[], now: number, windowMs: number): number[] {
+export function cleanOldTimestamps(timestamps: number[], now: number, windowMs: number): number[] {
     const cutoff = now - windowMs;
     let left = 0;
     let right = timestamps.length;

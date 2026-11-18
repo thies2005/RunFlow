@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { generateTrainingPlan, type PlanConfig, type GeneratedWorkout } from '@/lib/plans';
+import { generateTrainingPlan, type PlanConfig } from '@/lib/plans';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders, type RateLimitConfig } from '@/lib/rateLimit';
 import { adjustDefaultsForVdot, getRaceDefaults } from '@/lib/plans/defaults';
 import { RaceType } from '@/generated/prisma/browser';
 import { readBodyWithLimit } from '@/lib/api/bodyLimit';
+import { escapeHtml, groupWorkoutsByWeek, parseStrictRaceDate } from '../shared';
 
 const PUBLIC_PLAN_RATE_LIMIT: RateLimitConfig = {
     limit: 10,
     windowSeconds: 3600,
     prefix: 'public-plan',
 };
-
-// Training plans are at most ~2 years. Bound the accepted raceDate horizon so a
-// single request cannot drive an unbounded generation loop (the generators also
-// clamp totalWeeks defensively to PLAN_CONSTANTS.MAX_TOTAL_WEEKS).
-const MAX_PLAN_HORIZON_DAYS = 104 * 7;
 
 const FITNESS_VDOT_MAP: Record<string, number> = {
     beginner: 30,
@@ -36,100 +32,6 @@ const planRequestSchema = z.object({
     runsPerWeek: z.number().int().min(2).max(7).optional(),
     weeklyVolumeKm: z.number().min(10).max(200).optional(),
 });
-
-type PlanWorkout = {
-    date: string;
-    dayOfWeek: string;
-    type: string;
-    description: string;
-    displayDescription: string;
-    distanceKm: string;
-    durationMin: string;
-    pace: string;
-    phase: string;
-    intensityZone: string | null;
-};
-
-type PlanWeek = {
-    weekNumber: number;
-    phase: string;
-    workouts: PlanWorkout[];
-    totalDistanceKm: string;
-};
-
-function escapeHtml(str: string): string {
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function formatPace(secPerKm: number | undefined): string {
-    if (!secPerKm || secPerKm <= 0) return '-';
-    const mins = Math.floor(secPerKm / 60);
-    const secs = Math.round(secPerKm % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}/km`;
-}
-
-function formatDuration(seconds: number | undefined): string {
-    if (!seconds || seconds <= 0) return '-';
-    return `${Math.round(seconds / 60)}min`;
-}
-
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-function groupWorkoutsByWeek(workouts: GeneratedWorkout[]): PlanWeek[] {
-    const weeks: PlanWeek[] = [];
-    let currentWeek: PlanWorkout[] = [];
-    let currentWeekStart: Date | null = null;
-    let weekNum = 0;
-
-    const sorted = [...workouts].sort((a, b) => a.date.getTime() - b.date.getTime());
-
-    for (const w of sorted) {
-        const d = new Date(w.date);
-        const weekStart = new Date(d);
-        weekStart.setDate(d.getDate() - d.getDay());
-
-        if (!currentWeekStart || weekStart.getTime() !== currentWeekStart.getTime()) {
-            if (currentWeek.length > 0) {
-                const totalDist = currentWeek.reduce((s, w) => s + parseFloat(w.distanceKm) || 0, 0);
-                weeks.push({
-                    weekNumber: weekNum,
-                    phase: currentWeek[0]?.phase || 'BASE',
-                    workouts: currentWeek,
-                    totalDistanceKm: totalDist.toFixed(1),
-                });
-            }
-            currentWeekStart = weekStart;
-            weekNum++;
-            currentWeek = [];
-        }
-
-        currentWeek.push({
-            date: d.toISOString().split('T')[0],
-            dayOfWeek: DAY_NAMES[d.getDay()],
-            type: w.type,
-            description: w.description,
-            displayDescription: w.displayDescription || w.description,
-            distanceKm: (w.totalDistance / 1000).toFixed(1),
-            durationMin: formatDuration(w.targetDuration),
-            pace: formatPace(w.targetPace),
-            phase: w.phase || 'BASE',
-            intensityZone: w.intensityZone || null,
-        });
-    }
-
-    if (currentWeek.length > 0) {
-        const totalDist = currentWeek.reduce((s, w) => s + parseFloat(w.distanceKm) || 0, 0);
-        weeks.push({
-            weekNumber: weekNum,
-            phase: currentWeek[0]?.phase || 'BASE',
-            workouts: currentWeek,
-            totalDistanceKm: totalDist.toFixed(1),
-        });
-    }
-
-    return weeks;
-}
 
 export async function POST(request: NextRequest) {
     const clientId = getClientIdentifier(request);
@@ -160,36 +62,14 @@ export async function POST(request: NextRequest) {
 
         const { raceType, raceDate, fitnessLevel, runsPerWeek, weeklyVolumeKm } = parsed.data;
 
-        const raceDateObj = new Date(raceDate);
-        const ymdMatch = raceDate.trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/);
-        const isRolloverDate = ymdMatch && (
-            raceDateObj.getUTCFullYear() !== Number(ymdMatch[1]) ||
-            raceDateObj.getUTCMonth() + 1 !== Number(ymdMatch[2]) ||
-            raceDateObj.getUTCDate() !== Number(ymdMatch[3])
-        );
-        if (isNaN(raceDateObj.getTime()) || isRolloverDate) {
+        const parsedRaceDate = parseStrictRaceDate(raceDate);
+        if ('error' in parsedRaceDate) {
             return NextResponse.json(
-                { error: 'Invalid race date' },
+                { error: parsedRaceDate.error },
                 { status: 400, headers }
             );
         }
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (raceDateObj <= today) {
-            return NextResponse.json(
-                { error: 'Race date must be in the future' },
-                { status: 400, headers }
-            );
-        }
-
-        const horizonDays = (raceDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
-        if (horizonDays > MAX_PLAN_HORIZON_DAYS) {
-            return NextResponse.json(
-                { error: `Race date is too far in the future. Plans are limited to ${MAX_PLAN_HORIZON_DAYS / 7} weeks.` },
-                { status: 400, headers }
-            );
-        }
+        const raceDateObj = parsedRaceDate.date;
 
         const vdot = FITNESS_VDOT_MAP[fitnessLevel];
         const defaults = getRaceDefaults(raceType);

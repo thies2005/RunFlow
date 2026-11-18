@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
-import { Activity, Watch, Dumbbell, Waves, Mountain, Timer, Check, Heart, Loader2 } from 'lucide-react';
-import {
-    isMobile,
-    isHealthConnectAvailable,
-    requestHealthPermissions,
-    syncHealthData,
-    type ZoneSettings,
-} from '@/lib/mobile/healthConnect';
+import { Activity, Watch, Dumbbell, Waves, Mountain, Timer, Check } from 'lucide-react';
+
+interface ZoneSettings {
+    z1: number;
+    z2: number;
+    z3: number;
+    z4: number;
+    z5: number;
+    z6: number;
+}
 
 interface SyncPlatform {
     id: string;
@@ -17,7 +18,6 @@ interface SyncPlatform {
     icon: React.ReactNode;
     color: string;
     available: boolean;
-    mobileOnly?: boolean;
     description: string;
 }
 
@@ -29,15 +29,6 @@ const platforms: SyncPlatform[] = [
         color: 'bg-[#FC4C02]',
         available: true,
         description: 'Sync runs, rides, and more',
-    },
-    {
-        id: 'health-connect',
-        name: 'Health Connect',
-        icon: <Heart className="w-8 h-8" />,
-        color: 'bg-positive',
-        available: true,
-        mobileOnly: true,
-        description: 'Sync from Android Health',
     },
     {
         id: 'garmin',
@@ -91,78 +82,17 @@ interface SyncPlatformSelectorProps {
 
 export default function SyncPlatformSelector({
     onStravaConnected: _onStravaConnected,
-    onHealthConnectSynced,
+    onHealthConnectSynced: _onHealthConnectSynced,
     connectedPlatforms = [],
     onSkip,
-    zoneSettings,
+    zoneSettings: _zoneSettings,
 }: SyncPlatformSelectorProps) {
-    const [healthConnectAvailable, setHealthConnectAvailable] = useState(false);
-    const [healthConnectSyncing, setHealthConnectSyncing] = useState(false);
-    const [healthConnectError, setHealthConnectError] = useState<string | null>(null);
-    const [healthConnectSynced, setHealthConnectSynced] = useState(false);
-
-    // Check Health Connect availability on mount (mobile only)
-    useEffect(() => {
-        const checkHealthConnect = async () => {
-            if (isMobile()) {
-                const available = await isHealthConnectAvailable();
-                setHealthConnectAvailable(available);
-            }
-        };
-        checkHealthConnect();
-    }, []);
-
-    const handleConnect = async (platformId: string) => {
+    const handleConnect = (platformId: string) => {
         if (platformId === 'strava') {
             // Redirect to Strava OAuth
             signIn('strava', { callbackUrl: '/onboarding?step=1' });
-        } else if (platformId === 'health-connect') {
-            setHealthConnectError(null);
-            setHealthConnectSyncing(true);
-
-            try {
-                // Request permissions
-                const permitted = await requestHealthPermissions();
-                if (!permitted) {
-                    setHealthConnectError('Permission denied. Please grant access to Health Connect.');
-                    setHealthConnectSyncing(false);
-                    return;
-                }
-
-                // Sync activities
-                const result = await syncHealthData(30, zoneSettings); // Last 30 days
-
-                if (result.synced > 0 || result.skipped > 0) {
-                    setHealthConnectSynced(true);
-                    // Report total activities processed (new + already synced)
-                    onHealthConnectSynced?.(result.synced + result.skipped);
-                } else if (result.errors > 0) {
-                    setHealthConnectError(
-                        `Sync completed with ${result.errors} error${result.errors > 1 ? 's' : ''}.`
-                    );
-                } else {
-                    setHealthConnectError('No activities found in Health Connect.');
-                }
-            } catch (error) {
-                console.error('Health Connect sync failed:', error);
-                setHealthConnectError('Failed to sync with Health Connect.');
-            } finally {
-                setHealthConnectSyncing(false);
-            }
         }
     };
-
-    // Filter platforms: hide Health Connect on web, show it on mobile
-    const visiblePlatforms = platforms.filter(p => {
-        if (p.mobileOnly && !isMobile()) {
-            return false;
-        }
-        // Hide Health Connect if not available on this device
-        if (p.id === 'health-connect' && !healthConnectAvailable && isMobile()) {
-            return false;
-        }
-        return true;
-    });
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -176,10 +106,8 @@ export default function SyncPlatformSelector({
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {visiblePlatforms.map((platform) => {
-                    const isConnected = connectedPlatforms.includes(platform.id) ||
-                        (platform.id === 'health-connect' && healthConnectSynced);
-                    const isSyncing = platform.id === 'health-connect' && healthConnectSyncing;
+                {platforms.map((platform) => {
+                    const isConnected = connectedPlatforms.includes(platform.id);
 
                     return (
                         <div
@@ -192,15 +120,6 @@ export default function SyncPlatformSelector({
                                 <div className="absolute top-2 right-2">
                                     <span className="text-[10px] bg-foreground/10 text-foreground-muted px-2 py-0.5 rounded-full">
                                         Soon
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Android Only Badge */}
-                            {platform.mobileOnly && platform.available && (
-                                <div className="absolute top-2 right-2">
-                                    <span className="text-[10px] bg-positive/15 text-positive px-2 py-0.5 rounded-full">
-                                        Android
                                     </span>
                                 </div>
                             )}
@@ -240,14 +159,6 @@ export default function SyncPlatformSelector({
                                     >
                                         Connected
                                     </button>
-                                ) : isSyncing ? (
-                                    <button
-                                        disabled
-                                        className="w-full py-2 px-3 bg-accent-orange/50 text-white rounded-md text-sm font-medium flex items-center justify-center gap-2"
-                                    >
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Syncing...
-                                    </button>
                                 ) : (
                                     platform.id === 'strava' ? (
                                         <button
@@ -277,13 +188,6 @@ export default function SyncPlatformSelector({
                     );
                 })}
             </div>
-
-            {/* Health Connect Error Message */}
-            {healthConnectError && (
-                <div className="text-center">
-                    <p className="text-sm text-negative">{healthConnectError}</p>
-                </div>
-            )}
 
             {onSkip && (
                 <div className="text-center">

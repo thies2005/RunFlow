@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { MINUTE_MS } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';
 import { getRedisClient, type RedisClient } from '@/lib/redis';
+import { cleanOldTimestamps } from '@/lib/rateLimit';
 
 interface AdminRateLimitRecord {
     timestamps: number[];
@@ -33,40 +34,6 @@ const ADMIN_RATE_LIMITS = {
 } as const;
 
 type AdminOperation = keyof typeof ADMIN_RATE_LIMITS;
-
-function cleanOldTimestamps(timestamps: number[], now: number, windowMs: number): number[] {
-    const cutoff = now - windowMs;
-    let left = 0;
-    let right = timestamps.length;
-
-    while (left < right) {
-        const mid = Math.floor((left + right) / 2);
-        if (timestamps[mid] <= cutoff) {
-            left = mid + 1;
-        } else {
-            right = mid;
-        }
-    }
-
-    return timestamps.slice(left);
-}
-
-function cleanOldViolations(violations: number[], now: number, windowMs: number): number[] {
-    const cutoff = now - windowMs;
-    let left = 0;
-    let right = violations.length;
-
-    while (left < right) {
-        const mid = Math.floor((left + right) / 2);
-        if (violations[mid] <= cutoff) {
-            left = mid + 1;
-        } else {
-            right = mid;
-        }
-    }
-
-    return violations.slice(left);
-}
 
 /**
  * Number of trusted reverse proxies in front of the app that APPEND to
@@ -144,7 +111,7 @@ function isIPBlocked(ip: string): boolean {
     }
 
     const now = Date.now();
-    const cleanViolations = cleanOldViolations(record.violations, now, BLOCK_DURATION);
+    const cleanViolations = cleanOldTimestamps(record.violations, now, BLOCK_DURATION);
     return cleanViolations.length >= VIOLATION_THRESHOLD;
 }
 
@@ -168,7 +135,7 @@ function recordViolation(ip: string): void {
     const now = Date.now();
     const record = adminCache.get(key) || { timestamps: [], violations: [] };
 
-    const cleanViolations = cleanOldViolations(record.violations, now, BLOCK_DURATION);
+    const cleanViolations = cleanOldTimestamps(record.violations, now, BLOCK_DURATION);
     cleanViolations.push(now);
 
     adminCache.set(key, {

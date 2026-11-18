@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { generateAndSaveActivityFeedback } from '@/lib/ai/feedback';
 import { AiProviderError, toSafeUserError } from '@/lib/ai/errors';
@@ -8,8 +9,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const userId = (await auth())?.user?.id ?? (await getAuthenticatedUser(request))?.id;
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
         }
 
         const activity = await prisma.activity.findFirst({
-            where: { id: activityId, userId: session.user.id },
+            where: { id: activityId, userId },
         });
 
         if (!activity) {
@@ -44,12 +45,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const userId = (await auth())?.user?.id ?? (await getAuthenticatedUser(request))?.id;
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-
-        const userId = session.user.id;
         const body = await request.json();
         const { activityId, regenerate = false } = body as { activityId: string; regenerate?: boolean };
 

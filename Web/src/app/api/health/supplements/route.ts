@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { handleError } from '@/lib/errors/handler';
 
-export async function GET(_request: NextRequest) {
+async function resolveUserId(request: NextRequest): Promise<string | undefined> {
+    return (await auth())?.user?.id ?? (await getAuthenticatedUser(request))?.id;
+}
+
+export async function GET(request: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const userId = await resolveUserId(request);
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const supplements = await prisma.supplement.findMany({
-            where: { userId: session.user.id },
+            where: { userId },
             orderBy: [{ timeOfDay: 'asc' }, { order: 'asc' }],
             include: { stack: true }
         });
@@ -24,8 +29,8 @@ export async function GET(_request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const userId = await resolveUserId(request);
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -34,7 +39,7 @@ export async function POST(request: NextRequest) {
 
         if (stackId) {
             const ownedStack = await prisma.supplementStack.findFirst({
-                where: { id: String(stackId), userId: session.user.id },
+                where: { id: String(stackId), userId },
                 select: { id: true },
             });
             if (!ownedStack) {
@@ -44,7 +49,7 @@ export async function POST(request: NextRequest) {
 
         const supplement = await prisma.supplement.create({
             data: {
-                userId: session.user.id,
+                userId,
                 name,
                 amount: parseFloat(amount),
                 unit,
@@ -63,8 +68,8 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const userId = await resolveUserId(request);
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -73,13 +78,13 @@ export async function PUT(request: NextRequest) {
 
         // Ensure user owns this supplement
         const existing = await prisma.supplement.findUnique({ where: { id } });
-        if (!existing || existing.userId !== session.user.id) {
+        if (!existing || existing.userId !== userId) {
             return NextResponse.json({ error: 'Not found' }, { status: 404 });
         }
 
         if (stackId) {
             const ownedStack = await prisma.supplementStack.findFirst({
-                where: { id: String(stackId), userId: session.user.id },
+                where: { id: String(stackId), userId },
                 select: { id: true },
             });
             if (!ownedStack) {
@@ -109,8 +114,8 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const userId = await resolveUserId(request);
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -120,7 +125,7 @@ export async function DELETE(request: NextRequest) {
         if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
         const existing = await prisma.supplement.findUnique({ where: { id } });
-        if (!existing || existing.userId !== session.user.id) {
+        if (!existing || existing.userId !== userId) {
             return NextResponse.json({ error: 'Not found' }, { status: 404 });
         }
 

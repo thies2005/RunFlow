@@ -47,39 +47,6 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
     const [weight, setWeight] = useState(70);
 
     useEffect(() => {
-        if (!isOpen) return;
-
-        let isCancelled = false;
-        let backListener: any = null;
-        const setupCapacitor = async () => {
-            try {
-                const { Capacitor } = await import('@capacitor/core');
-                if (Capacitor.isNativePlatform()) {
-                    const { App } = await import('@capacitor/app');
-                    const listener = await App.addListener('backButton', () => {
-                        onClose();
-                    });
-                    if (isCancelled) {
-                        listener.remove();
-                    } else {
-                        backListener = listener;
-                    }
-                }
-            } catch (e) {
-                console.error('Failed to setup capacitor back button', e);
-            }
-        };
-        setupCapacitor();
-
-        return () => {
-            isCancelled = true;
-            if (backListener) {
-                backListener.remove();
-            }
-        };
-    }, [isOpen, onClose]);
-
-    useEffect(() => {
         if (targetData) {
             setTargetCalories(targetData.dailyCalories || 2000);
 

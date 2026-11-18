@@ -3,7 +3,6 @@
 import { useState, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { saveAs } from 'file-saver';
 import { X, Download, Loader2, FileSpreadsheet } from 'lucide-react';
 import { FormatSelector, type CsvFormat } from './FormatSelector';
 import { CsvPreview } from './CsvPreview';
@@ -77,7 +76,12 @@ export function CsvExportDialog({ goalId, isOpen, onClose }: CsvExportDialogProp
                 runflow: 'runflow',
             };
             const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
-            saveAs(blob, `plan-${goalId}-${formatLabels[format]}.csv`);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `plan-${goalId}-${formatLabels[format]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
             toast.success('CSV downloaded');
         },
         onError: (err: Error) => {

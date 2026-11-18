@@ -220,12 +220,7 @@ export async function middleware(request: NextRequest) {
         return corsResponse;
     }
 
-    // Rewrite /api/latest/* to /api/v1/*
     const url = request.nextUrl;
-    if (url.pathname.startsWith('/api/latest/')) {
-        const rewriteUrl = new URL(url.pathname.replace('/api/latest/', '/api/v1/'), request.url);
-        return NextResponse.rewrite(rewriteUrl);
-    }
 
     // Server-side gate on /admin pages (except /admin/login): prevent rendering the
     // admin shell HTML when the HttpOnly admin session cookie is absent.

@@ -12,7 +12,7 @@ import RacePredictionChart from '@/components/RacePredictionChart';
 import RacePredictionTimeChart from '@/components/RacePredictionTimeChart';
 import CombinedAnalyticsChart, { TimeRange } from '@/components/CombinedAnalyticsChart';
 import SplitPmcChart, { PmcRange } from '@/components/Analytics/SplitPmcChart';
-import ZoneDistributionSection from '@/components/analytics/ZoneDistributionSection';
+import ZoneDistributionSection from '@/components/Analytics/ZoneDistributionSection';
 import CyclingAnalyticsSection from '@/components/Analytics/CyclingAnalyticsSection';
 import { Footer } from '@/components';
 import LazyChartWrapper from '@/components/LazyChartWrapper';
@@ -132,9 +132,7 @@ interface AnalyticsViewProps {
     activitiesData: any;
     cyclingData?: any;
     timeRange: TimeRange;
-    zonesTimeRange: '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL';
     setTimeRange: (_range: TimeRange) => void;
-    setZonesTimeRange: (_range: '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL') => void;
     onRecalculate: () => void;
     isRecalculating: boolean;
     onOpenCalibration: () => void;
@@ -152,9 +150,7 @@ export function AnalyticsView({
     activitiesData,
     cyclingData,
     timeRange,
-    zonesTimeRange: _zonesTimeRange,
     setTimeRange,
-    setZonesTimeRange: _setZonesTimeRange,
     onRecalculate,
     isRecalculating,
     onOpenCalibration,

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { handleError } from '@/lib/errors/handler';
 import { serializeDailyRecord, parseDateOnly } from '@/lib/readiness/serialization';
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const userId = (await auth())?.user?.id ?? (await getAuthenticatedUser(request))?.id;
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
 
         const records = await prisma.dailyReadinessRecord.findMany({
             where: {
-                userId: session.user.id,
+                userId,
                 date: { gte: startDate, lte: endDate },
             },
             orderBy: { date: 'asc' },

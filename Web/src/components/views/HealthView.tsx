@@ -2,12 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Info, Bell, RefreshCw } from 'lucide-react';
-import { isMobile, syncHistoricalHealthData, SyncHistoricalResult, isHealthConnectAvailable } from '@/lib/mobile/healthConnect';
-import { Capacitor } from '@capacitor/core';
+import { Bell } from 'lucide-react';
 import { toast } from 'sonner';
-
-const IS_NATIVE = Capacitor.isNativePlatform();
 import { useSession } from 'next-auth/react';
 import { AppTopBar } from '@/components/layout/AppTopBar';
 import { AddSupplementModal } from './AddSupplementModal';
@@ -50,7 +46,6 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const queryClient = useQueryClient();
     const [activeHealthTab, setActiveHealthTab] = useState<HealthTab>('today');
     const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
-    const [isMobileDevice, setIsMobileDevice] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isAddStackModalOpen, setIsAddStackModalOpen] = useState(false);
     const [supplementToEdit, setSupplementToEdit] = useState<Supplement | null>(null);
@@ -61,9 +56,6 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     });
 
     const [isGoalsOpen, setIsGoalsOpen] = useState(false);
-    const [isSyncingHistory, setIsSyncingHistory] = useState(false);
-    const [hasHealthConnect, setHasHealthConnect] = useState(false);
-    const [bannerDismissed, setBannerDismissed] = useState(true);
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
     const [scanResult, setScanResult] = useState<FoodScanResult | null>(null);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -85,45 +77,6 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
             return null;
         });
     }, []);
-
-    const handleSyncHistoricalData = async () => {
-        setIsSyncingHistory(true);
-        try {
-            const result: SyncHistoricalResult = await syncHistoricalHealthData(30);
-
-            if (result.error) {
-                toast.error(`Sync failed: ${result.error}`);
-            } else {
-                let message = `Synced ${result.synced} days of health data.`;
-                if (result.stravaFallbackUsed) {
-                    message += ' Weight imported from Strava.';
-                }
-                toast.success(message);
-            }
-
-            queryClient.invalidateQueries({ queryKey: ['daily-health'] });
-        } catch (error) {
-            console.error('Failed to sync historical data:', error);
-            toast.error('Failed to sync health data. Please try again.');
-        } finally {
-            setIsSyncingHistory(false);
-        }
-    };
-
-    useEffect(() => {
-        setIsMobileDevice(isMobile());
-        const dismissed = localStorage.getItem('health-banner-dismissed');
-        if (dismissed) {
-            const dismissedAt = parseInt(dismissed, 10);
-            const sevenDays = 7 * 24 * 60 * 60 * 1000;
-            setBannerDismissed(Date.now() - dismissedAt < sevenDays);
-        } else {
-            setBannerDismissed(false);
-        }
-        if (isMobile()) {
-            isHealthConnectAvailable().then(available => setHasHealthConnect(available));
-        }
-    }, [queryClient]);
 
     const todayStr = getCurrentUtcDayKey();
     const todayDayOfWeek = parseUtcDayKey(todayStr).getUTCDay();
@@ -260,7 +213,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
         },
     });
 
-    const showSteps = hasHealthConnect || !!dailyData?.meta?.hasStepHistory;
+    const showSteps = !!dailyData?.meta?.hasStepHistory;
 
     const activeCalories = dailyData?.dailyHealth?.activeCalories ?? 0;
     const exerciseCalories = targetData?.exerciseCalorieSource === 'health_connect'
@@ -336,17 +289,6 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                         <AppTopBar
                             rightSlot={
                                 <div className="flex items-center gap-1">
-                                    {isMobileDevice && (
-                                        <button
-                                            type="button"
-                                            onClick={handleSyncHistoricalData}
-                                            disabled={isSyncingHistory}
-                                            className="topbar-btn p-1.5 rounded-sm"
-                                            aria-label="Sync Health Data"
-                                        >
-                                            <RefreshCw className={`w-4 h-4 ${isSyncingHistory ? 'animate-spin' : ''}`} />
-                                        </button>
-                                    )}
                                     <button
                                         type="button"
                                         onClick={() => setIsRemindersOpen(true)}
@@ -397,17 +339,6 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
 
                             {!showHeader && (
                                 <div className="flex items-center gap-1">
-                                    {isMobileDevice && (
-                                        <button
-                                            type="button"
-                                            onClick={handleSyncHistoricalData}
-                                            disabled={isSyncingHistory}
-                                            className="p-2 border border-line rounded-sm text-foreground-muted hover:text-foreground"
-                                            aria-label="Sync Health Data"
-                                        >
-                                            <RefreshCw className={`w-4 h-4 ${isSyncingHistory ? 'animate-spin' : ''}`} />
-                                        </button>
-                                    )}
                                     <button
                                         type="button"
                                         onClick={() => setIsRemindersOpen(true)}
@@ -427,26 +358,6 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 aria-labelledby="health-tab-today"
                                 className="health-dashboard flex flex-col gap-4"
                             >
-                                {!isMobileDevice && !bannerDismissed && (
-                                    <div className="health-notice bg-accent-blue/10 border border-accent-blue/20 p-4 rounded-md flex items-start gap-3">
-                                        <Info className="w-5 h-5 text-accent-blue shrink-0 mt-0.5" />
-                                        <div className="text-sm flex-1">
-                                            <p className="font-semibold text-accent-blue mb-1">Mobile App Recommended</p>
-                                            <p className="text-foreground-muted">Step and weight tracking use Health Connect, which is only available on the mobile app. You can manually enter weight here or track supplements.</p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                localStorage.setItem('health-banner-dismissed', Date.now().toString());
-                                                setBannerDismissed(true);
-                                            }}
-                                            className="text-accent-blue/70 hover:text-accent-blue transition-colors text-xs font-medium shrink-0"
-                                        >
-                                            Dismiss
-                                        </button>
-                                    </div>
-                                )}
-
                                 <div className="health-nutrition flex min-w-0 flex-col gap-4">
                                     {isTargetLoading ? (
                                         <SectionLoadingCard label="Loading nutrition summary..." />
@@ -500,14 +411,12 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                     <QuickActions
                                         onOpenAiScan={() => setFoodSheetState({ isOpen: true, tab: 'photo' })}
                                         onOpenBarcode={async () => {
-                                            if (!IS_NATIVE) {
-                                                try {
-                                                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                                                    setCameraStream(stream);
-                                                } catch {
-                                                    toast.error('Camera permission is required to scan barcodes. Please allow camera access in your browser settings.');
-                                                    return;
-                                                }
+                                            try {
+                                                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                                                setCameraStream(stream);
+                                            } catch {
+                                                toast.error('Camera permission is required to scan barcodes. Please allow camera access in your browser settings.');
+                                                return;
                                             }
                                             setFoodSheetState({ isOpen: true, tab: 'barcode' });
                                         }}

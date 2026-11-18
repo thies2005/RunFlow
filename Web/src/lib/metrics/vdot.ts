@@ -80,7 +80,7 @@ export function calculateVdot(input: RaceInput): number {
  * Predict race time from VDOT
  * Inverse of the calculateVdot function
  */
-export function predictRaceTime(vdot: number, distance: RaceDistance): number {
+export function predictRaceTime(vdot: number, distance: RaceDistance | number): number {
     // Binary search for the time that gives this VDOT
     let low = 180;   // 3 minutes
     let high = 36000; // 10 hours (prevents 5:00:00 clamp below VDOT 28.7)

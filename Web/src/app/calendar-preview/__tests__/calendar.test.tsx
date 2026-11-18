@@ -6,7 +6,6 @@ import { render, screen } from '@testing-library/react';
 import { buildDays, buildWeeks, fmtPace, fmtKm, fmtDuration, fillFitness } from '../components/metrics';
 import { WeeklyView } from '../components/WeeklyView';
 import type { MockActivity, MockWorkout } from '../components/mockData';
-import { resolveDeepLink } from '@/components/DeepLinkHandler';
 
 describe('Calendar Metrics & Formatting', () => {
     it('places an activity on its local calendar day, including the last day of a range', () => {
@@ -206,12 +205,5 @@ describe('WeeklyView Minimal Pills', () => {
         expect(screen.getByText('Pace Swim')).toBeInTheDocument();
         expect(screen.getByText('1:45/100m')).toBeInTheDocument();
         expect(screen.getByText('TSS 30')).toBeInTheDocument();
-    });
-});
-
-describe('Navigation & Deep Links', () => {
-    it('resolves /calendar deep link correctly', () => {
-        expect(resolveDeepLink('https://runflow.schuelken.uk/calendar')).toBe('/calendar');
-        expect(resolveDeepLink('runflow:/calendar')).toBe('/calendar');
     });
 });

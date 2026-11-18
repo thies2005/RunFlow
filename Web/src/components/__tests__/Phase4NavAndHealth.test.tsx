@@ -67,20 +67,6 @@ jest.mock('dompurify', () => ({
     default: { sanitize: (s: string) => s },
 }));
 
-jest.mock('@/lib/mobile/healthConnect', () => ({
-    isMobile: () => false,
-    isHealthConnectAvailable: async () => false,
-    syncHistoricalHealthData: async () => ({ synced: 0 }),
-}));
-
-jest.mock('@capacitor/core', () => ({
-    Capacitor: {
-        isNativePlatform: () => false,
-    },
-    registerPlugin: jest.fn(() => ({})),
-    WebPlugin: class WebPlugin {},
-}));
-
 jest.mock('recharts', () => ({
     ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     LineChart: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,

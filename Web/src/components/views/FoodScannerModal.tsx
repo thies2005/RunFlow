@@ -4,10 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { X, Camera, Upload, ScanLine, Loader2, MessageSquare } from 'lucide-react';
-import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Capacitor } from '@capacitor/core';
-
-const IS_NATIVE = Capacitor.isNativePlatform();
 
 interface FoodScanItem {
     name: string;
@@ -119,27 +115,8 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete, embedded = f
         reader.readAsDataURL(file);
     };
 
-    const handleCameraClick = async () => {
-        if (IS_NATIVE) {
-            try {
-                const image = await CapacitorCamera.getPhoto({
-                    quality: 90,
-                    allowEditing: false,
-                    resultType: CameraResultType.DataUrl,
-                    source: CameraSource.Camera,
-                });
-
-                if (image.dataUrl) {
-                    setImagePreview(image.dataUrl);
-                    setImageBase64(image.dataUrl);
-                    setError(null);
-                }
-            } catch (error) {
-                console.error('Camera error:', error);
-            }
-        } else {
-            cameraInputRef.current?.click();
-        }
+    const handleCameraClick = () => {
+        cameraInputRef.current?.click();
     };
 
     const handleAnalyze = async () => {

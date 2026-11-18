@@ -3,60 +3,34 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle } from 'lucide-react';
-import { format, startOfWeek, endOfWeek } from 'date-fns';
-import { SettingsModal, PullToRefresh } from '@/components';
+import { PullToRefresh } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
-import ProfileModal from '@/components/ProfileModal';
 import DashboardView from '@/components/views/DashboardView';
-import { useStravaSync } from '@/hooks/useStravaSync';
-import type { Workout, Goal } from '@/lib/types';
+import { useDashboardData } from '@/hooks/useDashboardData';
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const queryClient = useQueryClient();
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
-    const [initialComplete, setInitialComplete] = useState(false);
     const [sessionTimedOut, setSessionTimedOut] = useState(false);
     const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // 1. Unified Dashboard Query
-    const { data: dashboardData, isLoading, error } = useQuery({
-        queryKey: ['dashboard-data'],
-        // Workout links can change in the Android app while this view is idle.
-        staleTime: 0,
-        refetchOnWindowFocus: true,
-        queryFn: async () => {
-            const todayStr = format(new Date(), 'yyyy-MM-dd');
-            const res = await fetch(`/api/dashboard?date=${todayStr}`, { cache: 'no-store' });
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Failed to load dashboard');
-            }
-            return res.json();
-        },
-        enabled: status === 'authenticated',
-    });
-
-    const statsData = dashboardData?.stats ?? null;
-    const recentActivities = dashboardData?.recentActivities?.activities || [];
-    const goalsList = dashboardData?.goals?.goals || [];
-    const { syncStatus, syncMutation } = useStravaSync(dashboardData?.syncStatus, session?.user?.id);
-
-    const activeGoal: Goal | undefined = goalsList.find((g: Goal) => g.isActive);
-    const incompleteGoal: Goal | null = dashboardData?.incompleteGoal || null;
-    const now = new Date();
-    const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 });
-    const currentWeekEnd = endOfWeek(now, { weekStartsOn: 1 });
-    const allGoalWorkouts: Workout[] = activeGoal?.workouts || [];
-    const weeklyWorkouts: Workout[] = allGoalWorkouts.filter((w) => {
-        const d = new Date(w.scheduledDate);
-        return d >= currentWeekStart && d <= currentWeekEnd;
-    });
+    const {
+        statsData,
+        recentActivities,
+        activeGoal,
+        incompleteGoal,
+        weeklyWorkouts,
+        syncStatus,
+        syncMutation,
+        isLoading,
+        error,
+        editingWorkout,
+        initialComplete,
+        openEditWorkout,
+        closeEditWorkout,
+        invalidateAll,
+    } = useDashboardData({ status, userId: session?.user?.id });
 
     useEffect(() => {
         if (status === 'loading') {
@@ -106,7 +80,7 @@ export default function Dashboard() {
     }
 
     return (
-        <PullToRefresh onRefresh={async () => { await queryClient.invalidateQueries(); }}>
+        <PullToRefresh onRefresh={async () => { await invalidateAll(); }}>
             <DashboardView
                 session={session}
                 statsData={statsData}
@@ -117,34 +91,19 @@ export default function Dashboard() {
                 syncStatus={syncStatus}
                 syncMutation={syncMutation}
                 isLoading={isLoading}
-                error={error as Error | null}
-                onOpenSettings={() => setIsSettingsOpen(true)}
-                onOpenProfile={() => setIsProfileOpen(true)}
-                onEditWorkout={(w, complete = false) => {
-                    setEditingWorkout(w);
-                    setInitialComplete(complete);
-                }}
-                onInvalidateQueries={() => queryClient.invalidateQueries()}
+                error={error}
+                onEditWorkout={openEditWorkout}
+                onInvalidateQueries={invalidateAll}
                 showHeader={true}
-            />
-
-            <SettingsModal
-                isOpen={isSettingsOpen}
-                onClose={() => setIsSettingsOpen(false)}
             />
 
             <EditWorkoutModal
                 key={editingWorkout?.id ?? 'new'}
                 isOpen={!!editingWorkout}
-                onClose={() => setEditingWorkout(null)}
+                onClose={closeEditWorkout}
                 workout={editingWorkout}
                 goalId={activeGoal?.id}
                 initialComplete={initialComplete}
-            />
-
-            <ProfileModal
-                isOpen={isProfileOpen}
-                onClose={() => setIsProfileOpen(false)}
             />
         </PullToRefresh>
     );

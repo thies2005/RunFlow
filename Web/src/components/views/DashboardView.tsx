@@ -26,8 +26,6 @@ interface DashboardViewProps {
     syncMutation: UseMutationResult<any, Error, void, unknown>;
     isLoading: boolean;
     error: Error | null;
-    onOpenSettings: () => void;
-    onOpenProfile: () => void;
     onEditWorkout: (_workout: Workout, _complete?: boolean) => void;
     onInvalidateQueries: () => void;
     showHeader?: boolean;
@@ -60,8 +58,6 @@ export function DashboardView({
     syncMutation,
     isLoading,
     error,
-    onOpenSettings: _onOpenSettings,
-    onOpenProfile: _onOpenProfile,
     onEditWorkout,
     onInvalidateQueries,
     showHeader = true,

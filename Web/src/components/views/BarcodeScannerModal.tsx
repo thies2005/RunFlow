@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Capacitor } from '@capacitor/core';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Html5Qrcode } from 'html5-qrcode';
 import { X, AlertTriangle } from 'lucide-react';
 
@@ -14,23 +12,10 @@ interface Props {
     embedded?: boolean;
 }
 
-// Evaluate synchronously so the very first render knows which path to take
-const IS_NATIVE = Capacitor.isNativePlatform();
-
 export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStream, embedded = false }: Props) {
     const [error, setError] = useState<string | null>(null);
     const webScannerRef = useRef<Html5Qrcode | null>(null);
     const scanHandledRef = useRef(false);
-
-    const stopNativeScanner = useCallback(async () => {
-        document.body.classList.remove('barcode-scanner-active');
-        document.body.style.background = '';
-        document.documentElement.style.background = '';
-        try {
-            await BarcodeScanner.stopScan();
-            await BarcodeScanner.removeAllListeners();
-        } catch { /* already stopped */ }
-    }, []);
 
     const stopWebScanner = useCallback(() => {
         if (webScannerRef.current) {
@@ -55,100 +40,65 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStre
         setError(null);
         scanHandledRef.current = false;
 
-        if (IS_NATIVE) {
-            // ─── NATIVE CAPACITOR LOGIC ───
-            const startNativeScanner = async () => {
-                try {
-                    const { camera } = await BarcodeScanner.requestPermissions();
-                    if (camera === 'granted' || camera === 'limited') {
-                        document.body.classList.add('barcode-scanner-active');
-                        document.body.style.background = 'transparent';
-                        document.documentElement.style.background = 'transparent';
-
-                        await BarcodeScanner.startScan();
-                        BarcodeScanner.addListener('barcodesScanned', async (event: any) => {
-                            if (scanHandledRef.current) return;
-                            if (event.barcodes && event.barcodes.length > 0) {
-                                scanHandledRef.current = true;
-                                await stopNativeScanner();
-                                onScan(event.barcodes[0].rawValue);
-                            }
-                        });
-                    } else {
-                        setError('Camera permission was denied. Please allow camera access in your device settings.');
-                    }
-                } catch (err) {
-                    console.error("Error starting native scanner:", err);
-                    setError('Could not start camera. Please check permissions in your device settings.');
+        const startWebScanner = async () => {
+            let html5QrCode: Html5Qrcode | null = null;
+            try {
+                // Stop the pre-authorized stream tracks — Html5Qrcode manages its own stream,
+                // but permission is already granted from the click handler
+                if (preAuthorizedStream) {
+                    preAuthorizedStream.getTracks().forEach(track => track.stop());
                 }
-            };
-            startNativeScanner();
-        } else {
-            // ─── WEB / PWA LOGIC ───
-            const startWebScanner = async () => {
-                let html5QrCode: Html5Qrcode | null = null;
+
+                html5QrCode = new Html5Qrcode("web-reader");
+                webScannerRef.current = html5QrCode;
+
+                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+                const onSuccess = (decodedText: string) => {
+                    if (scanHandledRef.current) return;
+                    scanHandledRef.current = true;
+                    stopWebScanner();
+                    onScan(decodedText);
+                };
+
                 try {
-                    // Stop the pre-authorized stream tracks — Html5Qrcode manages its own stream,
-                    // but permission is already granted from the click handler
-                    if (preAuthorizedStream) {
-                        preAuthorizedStream.getTracks().forEach(track => track.stop());
-                    }
-
-                    html5QrCode = new Html5Qrcode("web-reader");
-                    webScannerRef.current = html5QrCode;
-
-                    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-                    const onSuccess = (decodedText: string) => {
-                        if (scanHandledRef.current) return;
-                        scanHandledRef.current = true;
-                        stopWebScanner();
-                        onScan(decodedText);
-                    };
-
-                    try {
+                    await html5QrCode.start(
+                        { facingMode: "environment" },
+                        config,
+                        onSuccess,
+                        () => { /* ignore stream noise */ }
+                    );
+                } catch {
+                    // Fallback: try to get camera list and use first one
+                    const cameras = await Html5Qrcode.getCameras();
+                    if (cameras && cameras.length > 0) {
                         await html5QrCode.start(
-                            { facingMode: "environment" },
+                            cameras[0].id,
                             config,
                             onSuccess,
-                            () => { /* ignore stream noise */ }
+                            () => { /* ignore */ }
                         );
-                    } catch {
-                        // Fallback: try to get camera list and use first one
-                        const cameras = await Html5Qrcode.getCameras();
-                        if (cameras && cameras.length > 0) {
-                            await html5QrCode.start(
-                                cameras[0].id,
-                                config,
-                                onSuccess,
-                                () => { /* ignore */ }
-                            );
-                        } else {
-                            setError('No cameras found on this device.');
-                        }
-                    }
-                } catch (err: any) {
-                    console.error("Error starting web scanner:", err);
-                    if (err?.message?.includes('Permission') || err?.name === 'NotAllowedError') {
-                        setError('Camera permission was denied. Please allow camera access in your browser settings.');
                     } else {
-                        setError('Could not start camera. Make sure the site is served over HTTPS and camera access is allowed.');
+                        setError('No cameras found on this device.');
                     }
                 }
-            };
-
-            // Start immediately — permission was already granted in the click handler
-            startWebScanner();
-        }
-
-        return () => {
-            if (IS_NATIVE) {
-                stopNativeScanner();
-            } else {
-                stopWebScanner();
+            } catch (err: any) {
+                console.error("Error starting web scanner:", err);
+                if (err?.message?.includes('Permission') || err?.name === 'NotAllowedError') {
+                    setError('Camera permission was denied. Please allow camera access in your browser settings.');
+                } else {
+                    setError('Could not start camera. Make sure the site is served over HTTPS and camera access is allowed.');
+                }
             }
         };
-    }, [isOpen, onScan, stopNativeScanner, stopWebScanner, preAuthorizedStream]);
+
+        // Start immediately — permission was already granted in the click handler
+        startWebScanner();
+
+        return () => {
+            stopWebScanner();
+        };
+    }, [isOpen, onScan, stopWebScanner, preAuthorizedStream]);
 
     if (!isOpen) return null;
 
@@ -160,8 +110,6 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStre
                         <AlertTriangle className="w-10 h-10 text-workout-tempo" />
                         <p className="text-foreground text-sm">{error}</p>
                     </div>
-                ) : IS_NATIVE ? (
-                    <div className="w-56 h-56 border-2 border-positive bg-black/40 rounded-md" />
                 ) : (
                     <div id="web-reader" className="w-full max-w-sm bg-white rounded-md overflow-hidden" />
                 )}
@@ -175,11 +123,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStre
     }
 
     return (
-        <div className={`fixed inset-0 z-[100] flex flex-col pb-safe barcode-scanner-modal ${IS_NATIVE ? 'bg-transparent' : 'bg-black/90'}`}>
-            {IS_NATIVE && (
-                <div className="absolute inset-0 bg-black/60 z-0 select-none pointer-events-none" />
-            )}
-
+        <div className="fixed inset-0 z-[100] flex flex-col pb-safe barcode-scanner-modal bg-black/90">
             <div className="flex justify-between items-center p-4 pt-12 relative z-10">
                 <h2 className="text-white font-semibold text-lg">Scan Barcode</h2>
                 <button onClick={onClose} className="p-2 bg-white/10 rounded-full">
@@ -199,8 +143,6 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStre
                             Close
                         </button>
                     </div>
-                ) : IS_NATIVE ? (
-                    <div className="w-64 h-64 border-2 border-positive bg-transparent rounded-md shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
                 ) : (
                     <div id="web-reader" className="w-full max-w-sm bg-white rounded-lg overflow-hidden"></div>
                 )}

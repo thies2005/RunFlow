@@ -1,4 +1,4 @@
-import { safeStringify, safeStringifyResponse } from '../serializer';
+import { safeStringify } from '../serializer';
 
 describe('serializer', () => {
     describe('safeStringify', () => {
@@ -45,20 +45,6 @@ describe('serializer', () => {
             // The exact output depends on JSON.stringify behavior with space argument
             // Using a simple check
             expect(safeStringify(obj, 2)).toBe('{\n  "a": 1\n}');
-        });
-    });
-
-    describe('safeStringifyResponse', () => {
-        it('should return a Response object with correct body and headers', async () => {
-            const data = { id: BigInt(123), success: true };
-            const response = safeStringifyResponse(data);
-
-            expect(response).toBeInstanceOf(Response);
-            expect(response.headers.get('Content-Type')).toBe('application/json');
-
-            const text = await response.text();
-            expect(text).toBe('{"id":"123","success":true}');
-            expect(response.status).toBe(200);
         });
     });
 });

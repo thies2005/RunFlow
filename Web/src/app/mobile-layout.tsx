@@ -4,25 +4,11 @@ import { useState, useCallback, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { format, isSameDay, startOfWeek, endOfWeek } from 'date-fns';
-import {
-    useSensor,
-    useSensors,
-    DragEndEvent,
-    PointerSensor,
-    TouchSensor,
-    KeyboardSensor,
-} from '@dnd-kit/core';
 
 import { MobileSwipeLayout } from '@/components/navigation';
-import { useAnalyticsMetrics } from '@/hooks/useAnalyticsMetrics';
-import { useStravaSync } from '@/hooks/useStravaSync';
-import type { TimeRange } from '@/components/CombinedAnalyticsChart';
-import type { Workout, Goal, ActivityListItem } from '@/lib/types';
-import { WorkoutWithLinkedActivity, PlanResponse } from '@/lib/types';
-import { Capacitor } from '@capacitor/core';
-import { syncLocalNotifications } from '@/lib/mobile/notifications';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { useAnalyticsPageData } from '@/hooks/useAnalyticsPageData';
+import type { Workout } from '@/lib/types';
 
 const DashboardView = dynamic(() => import('@/components/views/DashboardView'), {
     ssr: false,
@@ -40,10 +26,7 @@ const HealthView = dynamic(() => import('@/components/views/HealthView'), { ssr:
 const AiChat = dynamic(() => import('@/components/AiChat'), { ssr: false, loading: () => <div className="flex-1 bg-background" /> });
 const ChatSidebar = dynamic(() => import('@/components/ChatSidebar'), { ssr: false, loading: () => null });
 const AiSettingsModal = dynamic(() => import('@/components/AiSettingsModal'), { ssr: false, loading: () => null });
-const SettingsModal = dynamic(() => import('@/components/SettingsModal'), { ssr: false, loading: () => null });
 const EditWorkoutModal = dynamic(() => import('@/components/EditWorkoutModal'), { ssr: false, loading: () => null });
-const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false, loading: () => null });
-const ActivityDetailsModal = dynamic(() => import('@/components/ActivityDetailsModal'), { ssr: false, loading: () => null });
 const ShapeCalibrationModal = dynamic(() => import('@/components/ShapeCalibrationModal'), { ssr: false, loading: () => null });
 
 interface MobileChatPaneProps {
@@ -130,277 +113,45 @@ function MobileChatPane({
 export function MobileLayout() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const queryClient = useQueryClient();
 
-    // Modals State
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const [editingWorkout, setEditingWorkout] = useState<(Workout | WorkoutWithLinkedActivity) | null>(null);
-    const [initialComplete, setInitialComplete] = useState(false);
-    const [createDate, setCreateDate] = useState<Date | undefined>(undefined);
-    const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
-    // M-06 fix: Use proper ActivityListItem type (matches ActivityDetailsModal props)
-    const [selectedActivity, setSelectedActivity] = useState<ActivityListItem | null>(null);
-    const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
     const [activePath, setActivePath] = useState(() => (typeof window !== 'undefined' ? window.location.pathname : '/'));
     const [isMobileChatSidebarOpen, setIsMobileChatSidebarOpen] = useState(false);
     const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
     const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
     const [chatResetKey, setChatResetKey] = useState(0);
 
-    // Plan State
-    const [showUnlinked, setShowUnlinked] = useState(true);
-
-    // Analytics State
-    const [timeRange, setTimeRange] = useState<TimeRange>('1Y');
-    const [zonesTimeRange, setZonesTimeRange] = useState<'1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL'>('1Y');
-
     const isCalendarPath = activePath === '/calendar' || activePath === '/plan';
     const isAnalyticsPath = activePath === '/analytics';
 
-    // DnD Sensors for Plan
-    // DnD Sensors for Plan
-    const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-        useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } }),
-        useSensor(KeyboardSensor),
-    );
+    const {
+        statsData: dashboardStats,
+        recentActivities,
+        activeGoal,
+        incompleteGoal,
+        weeklyWorkouts,
+        syncStatus,
+        syncMutation,
+        isLoading: isDashboardLoading,
+        error: dashboardError,
+        editingWorkout,
+        initialComplete,
+        openEditWorkout,
+        closeEditWorkout,
+        invalidateAll,
+    } = useDashboardData({ status, userId: session?.user?.id });
 
-    // === QUERIES ===
-
-    // Dashboard Query
-    const { data: dashboardData, isLoading: isDashboardLoading, error: dashboardError } = useQuery({
-        queryKey: ['dashboard-data'],
-        // Workout links can change in the Android app while this view is idle.
-        staleTime: 0,
-        refetchOnWindowFocus: true,
-        queryFn: async () => {
-            const todayStr = format(new Date(), 'yyyy-MM-dd');
-            const res = await fetch(`/api/dashboard?date=${todayStr}`, { cache: 'no-store' });
-            if (!res.ok) throw new Error('Failed to load dashboard');
-            return res.json();
-        },
-        enabled: status === 'authenticated',
-    });
-
-    // Plan Query
-    const { data: planData, isLoading: isPlanLoading, refetch: refetchPlan } = useQuery<PlanResponse>({
-        queryKey: ['plan', showUnlinked],
-        // Workout links can change in the Android app while this view is idle.
-        staleTime: 0,
-        refetchOnWindowFocus: true,
-        queryFn: async () => {
-            const url = showUnlinked ? '/api/plan?includeUnlinked=true' : '/api/plan';
-            const res = await fetch(url, { cache: 'no-store' });
-            if (!res.ok) throw new Error('Failed to fetch plan');
-            return res.json();
-        },
-        enabled: status === 'authenticated' && (isCalendarPath || !!editingWorkout || !!createDate),
-        placeholderData: keepPreviousData
-    });
-
-    // Activities Query
-    const { data: activitiesData } = useQuery({
-        queryKey: ['all-activities'],
-        staleTime: 0,
-        refetchOnWindowFocus: true,
-        queryFn: async () => {
-            const res = await fetch('/api/activities?limit=500', { cache: 'no-store' });
-            if (!res.ok) throw new Error('Failed to fetch activities');
-            return res.json();
-        },
-        enabled: status === 'authenticated' && (isAnalyticsPath || isCalibrationOpen),
-    });
-
-    // User Settings Query
-    const { data: userData } = useQuery({
-        queryKey: ['user-settings'],
-        queryFn: async () => {
-            const res = await fetch('/api/settings/update-vdot');
-            if (!res.ok) throw new Error('Failed to fetch user settings');
-            return res.json();
-        },
-        enabled: status === 'authenticated',
-    });
-
-    // Goals Query
-    const { data: goalsData } = useQuery({
-        queryKey: ['goals'],
-        queryFn: async () => {
-            const res = await fetch('/api/goals');
-            if (!res.ok) throw new Error('Failed to fetch goals');
-            return res.json();
-        },
-        enabled: status === 'authenticated' && isAnalyticsPath,
-    });
-
-    // Analytics Stats Query
-    const { data: statsData } = useQuery({
-        queryKey: ['analytics-stats'],
-        queryFn: async () => {
-            const res = await fetch('/api/analytics/stats');
-            if (!res.ok) throw new Error('Failed to fetch stats');
-            return res.json();
-        },
-        enabled: status === 'authenticated' && isAnalyticsPath,
-    });
-
-    // Analytics History Query
-    const { data: historyData } = useQuery({
-        queryKey: ['analytics-history', timeRange],
-        queryFn: async () => {
-            const rangeMap: Record<string, string> = {
-                'ALL': 'ALL',
-                '1Y': '1_YEAR',
-                '6M': '6_MONTHS',
-                '3M': '12_WEEKS',
-                '1M': '4_WEEKS'
-            };
-            const res = await fetch(`/api/analytics/history?range=${rangeMap[timeRange] || '1_YEAR'}`);
-            if (!res.ok) throw new Error('Failed to fetch history');
-            return res.json();
-        },
-        enabled: status === 'authenticated' && isAnalyticsPath,
-    });
-
-    // Cycling Analytics Query (multi-sport PMC + cycling highlights)
-    const { data: cyclingData } = useQuery({
-        queryKey: ['cycling-analytics', timeRange],
-        queryFn: async () => {
-            const rangeMap: Record<string, string> = {
-                'ALL': 'all',
-                '1Y': '1y',
-                '6M': '180d',
-                '3M': '90d',
-                '1M': '42d'
-            };
-            const res = await fetch(`/api/analytics/cycling?range=${rangeMap[timeRange] || '90d'}`);
-            if (!res.ok) return null;
-            return res.json();
-        },
-        enabled: status === 'authenticated' && isAnalyticsPath,
-    });
-
-    // Background Sync for Native Mobile Notifications
-    // Whenever the mobile layout mounts and auth is ready, fetch reminder settings to ensure alarms are in sync
-    useEffect(() => {
-        if (Capacitor.isNativePlatform() && status === 'authenticated') {
-            const syncMobileNotifications = async () => {
-                try {
-                    const response = await fetch('/api/reminders/settings');
-                    if (response.ok) {
-                        const settings = await response.json();
-                        await syncLocalNotifications(settings);
-                    }
-                } catch (err: unknown) {
-                    if (err instanceof Error) {
-                        console.error('Failed to sync mobile notifications:', err.message);
-                    } else {
-                        console.error('Failed to sync mobile notifications:', err);
-                    }
-                }
-            };
-            syncMobileNotifications();
-
-            // We could optionally listen for Capacitor 'appStateChange' here
-            // to re-sync every time the app comes to foreground.
-        }
-    }, [status]);
-
-    // === MUTATIONS ===
-
-    const reorderMutation = useMutation({
-        mutationFn: async ({ workoutId, newDate }: { workoutId: string; newDate: string }) => {
-            const res = await fetch('/api/workouts/reorder', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ workoutId, newDate }),
-            });
-            if (!res.ok) throw new Error('Failed to reorder');
-            return res.json();
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['plan'] });
-            queryClient.invalidateQueries({ queryKey: ['goals'] });
-        },
-    });
-
-    const recalculateMutation = useMutation({
-        mutationFn: async () => {
-            const res = await fetch('/api/settings/recalculate-vdot', { method: 'POST' });
-            if (!res.ok) throw new Error('Failed to recalculate');
-            return res.json();
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['all-activities'] });
-            queryClient.invalidateQueries({ queryKey: ['analytics-history'] });
-            queryClient.invalidateQueries({ queryKey: ['analytics-stats'] });
-            queryClient.invalidateQueries({ queryKey: ['cycling-analytics'] });
-        },
-    });
-
-    // === DERIVED DATA ===
-
-    const dashboardStats = dashboardData?.stats;
-    const recentActivities = dashboardData?.recentActivities?.activities || [];
-    const goalsList = dashboardData?.goals?.goals || [];
-    const activeGoal: Goal | undefined = goalsList.find((g: Goal) => g.isActive);
-    const incompleteGoal: Goal | null = dashboardData?.incompleteGoal || null;
-    const now = new Date();
-    const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 });
-    const currentWeekEnd = endOfWeek(now, { weekStartsOn: 1 });
-    const allGoalWorkouts: Workout[] = activeGoal?.workouts || [];
-    const weeklyWorkouts: Workout[] = allGoalWorkouts.filter((w) => {
-        const d = new Date(w.scheduledDate);
-        return d >= currentWeekStart && d <= currentWeekEnd;
-    });
-    const { syncStatus, syncMutation } = useStravaSync(dashboardData?.syncStatus, session?.user?.id);
-
-    // Analytics calculated data
-    const analyticsMetrics = useAnalyticsMetrics(
-        isAnalyticsPath ? activitiesData : undefined,
-        isAnalyticsPath ? goalsData : undefined,
-        isAnalyticsPath ? statsData : undefined,
-        isAnalyticsPath ? historyData : undefined,
-        isAnalyticsPath ? userData : undefined
-    );
-
-    // === HANDLERS ===
-
-    const handleDragEnd = useCallback((event: DragEndEvent) => {
-        const { active, over } = event;
-        if (over && active) {
-            const workoutId = active.id as string;
-            const overId = over.id as string;
-            if (overId.startsWith('day-')) {
-                const newDate = overId.replace('day-', '');
-                const currentWorkout = planData?.goal?.workouts?.find((w: WorkoutWithLinkedActivity) => w.id === workoutId);
-                if (currentWorkout) {
-                    if (!isSameDay(new Date(currentWorkout.scheduledDate), new Date(newDate))) {
-                        reorderMutation.mutate({ workoutId, newDate });
-                    }
-                }
-            }
-        }
-    }, [planData, reorderMutation]);
-
-    const handleEditWorkout = useCallback((workout: Workout | WorkoutWithLinkedActivity, complete: boolean = false) => {
-        setEditingWorkout(workout);
-        setCreateDate(undefined);
-        setInitialComplete(complete);
-    }, []);
-
-    const handleCreateWorkout = useCallback((date: Date) => {
-        setEditingWorkout(null);
-        setCreateDate(date);
-    }, []);
-
-    const handleActivityClick = useCallback((activity: ActivityListItem, e?: React.MouseEvent) => {
-        e?.stopPropagation?.();
-        // M-06 fix: UnlinkedActivity is a subset of ActivityListItem, safe to cast for modal display
-        setSelectedActivity(activity as unknown as ActivityListItem);
-        setIsActivityModalOpen(true);
-    }, []);
+    const {
+        activitiesData,
+        userData,
+        statsData: analyticsStatsData,
+        cyclingData,
+        timeRange,
+        setTimeRange,
+        isCalibrationOpen,
+        setIsCalibrationOpen,
+        recalculateMutation,
+        analyticsMetrics,
+    } = useAnalyticsPageData({ status, enabled: isAnalyticsPath });
 
     // === AUTH GUARDS ===
     // Redirects must run in an effect — calling router.push() during render
@@ -448,10 +199,8 @@ export function MobileLayout() {
                         syncMutation={syncMutation}
                         isLoading={isDashboardLoading}
                         error={dashboardError}
-                        onOpenSettings={() => setIsSettingsOpen(true)}
-                        onOpenProfile={() => setIsProfileOpen(true)}
-                        onEditWorkout={handleEditWorkout}
-                        onInvalidateQueries={() => queryClient.invalidateQueries()}
+                        onEditWorkout={openEditWorkout}
+                        onInvalidateQueries={invalidateAll}
                         showHeader={false}
                     />
                 ) : <div className="h-full w-full" />}
@@ -474,9 +223,7 @@ export function MobileLayout() {
                         activitiesData={activitiesData}
                         cyclingData={cyclingData}
                         timeRange={timeRange}
-                        zonesTimeRange={zonesTimeRange}
                         setTimeRange={setTimeRange}
-                        setZonesTimeRange={setZonesTimeRange}
                         onRecalculate={() => recalculateMutation.mutate()}
                         isRecalculating={recalculateMutation.isPending}
                         onOpenCalibration={() => setIsCalibrationOpen(true)}
@@ -502,11 +249,6 @@ export function MobileLayout() {
             </MobileSwipeLayout>
 
             {/* Modals */}
-            <SettingsModal
-                isOpen={isSettingsOpen}
-                onClose={() => setIsSettingsOpen(false)}
-            />
-
             <AiSettingsModal
                 isOpen={isAiSettingsOpen}
                 onClose={() => setIsAiSettingsOpen(false)}
@@ -514,24 +256,12 @@ export function MobileLayout() {
 
             <EditWorkoutModal
                 key={editingWorkout?.id ?? 'new'}
-                isOpen={!!editingWorkout || !!createDate}
-                onClose={() => { setEditingWorkout(null); setCreateDate(undefined); refetchPlan(); }}
+                isOpen={!!editingWorkout}
+                onClose={closeEditWorkout}
                 // M-06 fix: WorkoutWithLinkedActivity extends Workout, safe cast
                 workout={editingWorkout as Workout | null}
-                defaultDate={createDate}
-                goalId={activeGoal?.id || planData?.goal?.id}
+                goalId={activeGoal?.id}
                 initialComplete={initialComplete}
-            />
-
-            <ProfileModal
-                isOpen={isProfileOpen}
-                onClose={() => setIsProfileOpen(false)}
-            />
-
-            <ActivityDetailsModal
-                isOpen={isActivityModalOpen}
-                onClose={() => setIsActivityModalOpen(false)}
-                activity={selectedActivity}
             />
 
             <ShapeCalibrationModal
@@ -541,7 +271,7 @@ export function MobileLayout() {
                 effectiveVO2max={analyticsMetrics.runalyzeMetrics.effectiveVO2max}
                 rawVO2max={analyticsMetrics.runalyzeMetrics.rawVO2max}
                 vdotCorrectionFactor={analyticsMetrics.runalyzeMetrics.vdotCorrectionFactor}
-                effectiveVo2maxCorrectionFactor={statsData?.effectiveVo2maxCorrectionFactor || 1.0}
+                effectiveVo2maxCorrectionFactor={analyticsStatsData?.effectiveVo2maxCorrectionFactor || 1.0}
                 shapePercent={analyticsMetrics.runalyzeMetrics.shape}
                 activities={activitiesData?.activities || []}
             />

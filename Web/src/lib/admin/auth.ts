@@ -142,25 +142,6 @@ export async function verifyAdminToken(token: string): Promise<AdminJWTPayload |
 }
 
 /**
- * Extract admin token from request (header or cookie)
- */
-function extractAdminToken(request: NextRequest): string | null {
-    // Try Authorization header first
-    const authHeader = request.headers.get('authorization');
-    if (authHeader?.startsWith('Bearer ')) {
-        return authHeader.slice(7);
-    }
-
-    // Try cookie
-    const cookieToken = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
-    if (cookieToken) {
-        return cookieToken;
-    }
-
-    return null;
-}
-
-/**
  * Middleware to require admin authentication
  * Returns the admin payload if authenticated, or an error response
  */

@@ -202,7 +202,6 @@ const nextConfig = {
             "remark-gfm",
             "sonner",
             "js-tiktoken",
-            "react-window",
         ],
     },
     images: {

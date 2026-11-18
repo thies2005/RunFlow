@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next';
 import { Archivo, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
-import DeepLinkHandler from '@/components/DeepLinkHandler';
 import AdaptiveLayout from './adaptive-layout';
 import ConsentBanners from '@/components/layout/ConsentBanners';
 import { PendingConsentHandler } from '@/components/PendingConsentHandler';
@@ -78,7 +77,6 @@ export default function RootLayout({
                     <PendingConsentHandler />
                     <ConsentBanners />
                 </Providers>
-                <DeepLinkHandler />
             </body>
         </html>
     );

@@ -1,8 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">RunFlow</string>
-    <string name="title_activity_main">RunFlow</string>
-    <string name="package_name">com.runflow.app</string>
-    <string name="custom_url_scheme">com.runflow.app</string>
-    <string name="health_connect_privacy_policy_url">https://runflow.schuelken.uk/privacy</string>
-</resources>

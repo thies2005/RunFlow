@@ -3,18 +3,17 @@ import { z } from 'zod';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders, type RateLimitConfig } from '@/lib/rateLimit';
 import { csvCell } from '@/lib/export/csv-cell';
 import { readBodyWithLimit } from '@/lib/api/bodyLimit';
-import { generateTrainingPlan, type PlanConfig, type GeneratedWorkout } from '@/lib/plans';
+import { generateTrainingPlan, type PlanConfig } from '@/lib/plans';
 import { calculateVdot } from '@/lib/metrics/vdot';
 import { RaceType } from '@/generated/prisma/browser';
 import { applyPlanDefaults } from '@/lib/mcp/server';
+import { escapeHtml, groupWorkoutsByWeek, MAX_PLAN_HORIZON_DAYS, parseStrictRaceDate } from '../shared';
 
 const EXPORT_RATE_LIMIT: RateLimitConfig = {
     limit: 20,
     windowSeconds: 3600,
     prefix: 'public-plan-export',
 };
-
-const MAX_PLAN_HORIZON_DAYS = 104 * 7;
 
 const exportRequestSchema = z.object({
     format: z.enum(['csv', 'html']),
@@ -41,75 +40,6 @@ const exportRequestSchema = z.object({
     }),
 });
 
-function formatPaceStr(secPerKm: number | undefined): string {
-    if (!secPerKm || secPerKm <= 0) return '-';
-    const mins = Math.floor(secPerKm / 60);
-    const secs = Math.round(secPerKm % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}/km`;
-}
-
-function formatDurationStr(seconds: number | undefined): string {
-    if (!seconds || seconds <= 0) return '-';
-    return `${Math.round(seconds / 60)}min`;
-}
-
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-function groupWorkoutsByWeek(workouts: GeneratedWorkout[]): z.infer<typeof exportRequestSchema>['plan']['weeks'] {
-    const weeks: z.infer<typeof exportRequestSchema>['plan']['weeks'] = [];
-    let currentWeek: z.infer<typeof exportRequestSchema>['plan']['weeks'][0]['workouts'] = [];
-    let currentWeekStart: Date | null = null;
-    let weekNum = 0;
-
-    const sorted = [...workouts].sort((a, b) => a.date.getTime() - b.date.getTime());
-
-    for (const w of sorted) {
-        const d = new Date(w.date);
-        const weekStart = new Date(d);
-        weekStart.setDate(d.getDate() - d.getDay());
-
-        if (!currentWeekStart || weekStart.getTime() !== currentWeekStart.getTime()) {
-            if (currentWeek.length > 0) {
-                const totalDist = currentWeek.reduce((s, item) => s + parseFloat(item.distanceKm) || 0, 0);
-                weeks.push({
-                    weekNumber: weekNum,
-                    phase: currentWeek[0]?.phase || 'BASE',
-                    workouts: currentWeek,
-                    totalDistanceKm: totalDist.toFixed(1),
-                });
-            }
-            currentWeekStart = weekStart;
-            weekNum++;
-            currentWeek = [];
-        }
-
-        currentWeek.push({
-            date: d.toISOString().split('T')[0],
-            dayOfWeek: DAY_NAMES[d.getDay()],
-            type: w.type,
-            description: w.description,
-            displayDescription: w.displayDescription || w.description,
-            distanceKm: (w.totalDistance / 1000).toFixed(1),
-            durationMin: formatDurationStr(w.targetDuration),
-            pace: formatPaceStr(w.targetPace),
-            phase: w.phase || 'BASE',
-            intensityZone: w.intensityZone || null,
-        });
-    }
-
-    if (currentWeek.length > 0) {
-        const totalDist = currentWeek.reduce((s, item) => s + parseFloat(item.distanceKm) || 0, 0);
-        weeks.push({
-            weekNumber: weekNum,
-            phase: currentWeek[0]?.phase || 'BASE',
-            workouts: currentWeek,
-            totalDistanceKm: totalDist.toFixed(1),
-        });
-    }
-
-    return weeks;
-}
-
 function generateCsv(plan: z.infer<typeof exportRequestSchema>['plan']): string {
     const headers = ['Date', 'Day', 'Type', 'Description', 'Distance (km)', 'Duration', 'Pace', 'Phase', 'Intensity Zone'];
     const lines = [headers.join(',')];
@@ -132,11 +62,6 @@ function generateCsv(plan: z.infer<typeof exportRequestSchema>['plan']): string 
     }
 
     return lines.join('\n');
-}
-
-function escapeHtml(str: string): string {
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function generateHtml(plan: z.infer<typeof exportRequestSchema>['plan']): string {
@@ -263,36 +188,14 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        const raceDateObj = new Date(raceDate);
-        const ymdMatch = raceDate.trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/);
-        const isRolloverDate = ymdMatch && (
-            raceDateObj.getUTCFullYear() !== Number(ymdMatch[1]) ||
-            raceDateObj.getUTCMonth() + 1 !== Number(ymdMatch[2]) ||
-            raceDateObj.getUTCDate() !== Number(ymdMatch[3])
-        );
-        if (isNaN(raceDateObj.getTime()) || isRolloverDate) {
+        const parsedRaceDate = parseStrictRaceDate(raceDate);
+        if ('error' in parsedRaceDate) {
             return NextResponse.json(
-                { error: 'Invalid race date' },
+                { error: parsedRaceDate.error },
                 { status: 400, headers }
             );
         }
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (raceDateObj <= today) {
-            return NextResponse.json(
-                { error: 'Race date must be in the future' },
-                { status: 400, headers }
-            );
-        }
-
-        const horizonDays = (raceDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
-        if (horizonDays > MAX_PLAN_HORIZON_DAYS) {
-            return NextResponse.json(
-                { error: `Race date is too far in the future. Plans are limited to ${MAX_PLAN_HORIZON_DAYS / 7} weeks.` },
-                { status: 400, headers }
-            );
-        }
+        const raceDateObj = parsedRaceDate.date;
 
         let vdot = searchParams.get('vdot') ? parseFloat(searchParams.get('vdot')!) : 0;
         if (!vdot || isNaN(vdot) || vdot <= 0) {

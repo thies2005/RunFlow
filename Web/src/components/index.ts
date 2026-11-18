@@ -1,4 +1,3 @@
-export { TodayWorkout } from './TodayWorkout';
 export { RaceCountdown } from './RaceCountdown';
 export { ActivityList } from './ActivityList';
 export { default as AnalyticsDashboard } from './AnalyticsDashboard';
@@ -10,7 +9,6 @@ export { default as PlanSetupForm } from './PlanSetupForm';
 export { default as ActivityPicker } from './ActivityPicker';
 export * from './StravaLogos';
 export { Footer } from './Footer';
-export { UserMenu } from './UserMenu';
 export { MinimalistPillsMenu } from './MinimalistPillsMenu';
 export { ErrorBoundary, ChartErrorBoundary } from './ErrorBoundary';
 export { default as SyncPlatformSelector } from './SyncPlatformSelector';

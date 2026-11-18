@@ -5,8 +5,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell, BellOff, Clock, Dumbbell, UtensilsCrossed, Pill, Scale, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { useMobileNotifications } from '@/hooks/useMobileNotifications';
-import { Capacitor } from '@capacitor/core';
 
 interface ReminderSettingsModalProps {
     isOpen: boolean;
@@ -36,16 +34,7 @@ interface ReminderSettingsData {
 
 export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModalProps) {
     const queryClient = useQueryClient();
-    const [isNative, setIsNative] = useState(false);
-    const webPush = usePushNotifications();
-    const mobilePush = useMobileNotifications();
-
-    useEffect(() => {
-        setIsNative(Capacitor.isNativePlatform());
-    }, []);
-
-    // Dynamically use the correct hook implementation
-    const push = isNative ? mobilePush : webPush;
+    const push = usePushNotifications();
 
     const [localSettings, setLocalSettings] = useState<Partial<ReminderSettingsData>>({});
     const [isDirty, setIsDirty] = useState(false);
@@ -144,10 +133,10 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                                     {!push.isSupported
                                         ? 'Not supported on this device/browser'
                                         : push.permission === 'denied'
-                                            ? isNative ? 'Blocked — enable in app settings' : 'Blocked — enable in browser settings'
+                                            ? 'Blocked — enable in browser settings'
                                             : push.isSubscribed
                                                 ? 'Enabled — you\'ll receive reminders'
-                                                : isNative ? 'Enable to get local reminders' : 'Enable to receive reminders'}
+                                                : 'Enable to receive reminders'}
                                 </p>
                             </div>
                         </div>
@@ -169,7 +158,7 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                         <div className="mt-3 flex items-start gap-2 bg-negative/10 border border-negative/20 rounded-md p-3">
                             <AlertCircle className="w-4 h-4 text-negative shrink-0 mt-0.5" />
                             <p className="text-xs text-negative">
-                                Notifications are blocked. Open your {isNative ? 'device' : 'browser'} settings and allow notifications to receive reminders.
+                                Notifications are blocked. Open your browser settings and allow notifications to receive reminders.
                             </p>
                         </div>
                     )}

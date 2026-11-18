@@ -12,6 +12,10 @@ jest.mock('@/auth', () => ({
     auth: jest.fn(),
 }));
 
+jest.mock('@/lib/mobile/auth', () => ({
+    getAuthenticatedUser: jest.fn(),
+}));
+
 jest.mock('@/lib/db', () => ({
     prisma: {
         activity: {

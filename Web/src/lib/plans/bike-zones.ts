@@ -1,3 +1,5 @@
+import { estimateBikeFtpFromVdot as estimateRawBikeFtpFromVdot } from '@/lib/metrics/power';
+
 export type BikeZoneRange = { min: number; max: number };
 
 export type BikeZones = {
@@ -57,7 +59,7 @@ export function calculateBikeZonesFromHR(hrMax: number, thresholdHR: number): Bi
 export function estimateBikeFtpFromVdot(vdot: number, weightKg: number = 70): number {
     if (!vdot || vdot <= 0) return 100;
     const safeWeight = weightKg > 0 ? weightKg : 70;
-    const powerVo2PerKg = Math.max(0, (vdot - 7) / 10.8);
-    const ftpWatts = powerVo2PerKg * 0.75 * safeWeight;
-    return Math.max(100, Math.min(450, Math.round(ftpWatts)));
+    const raw = estimateRawBikeFtpFromVdot(vdot, safeWeight);
+    if (raw === null) return 100;
+    return Math.max(100, Math.min(450, raw));
 }

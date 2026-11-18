@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { logger, generateRequestId } from '@/lib/logging/logger'
+import { logger, generateRequestId } from '@/lib/logging/logger';
+import { recordTrackedRequest } from '@/lib/monitoring/request-tracker';
 
 /**
  * CORS Configuration
@@ -301,27 +302,15 @@ export async function middleware(request: NextRequest) {
     if (request.nextUrl.pathname.startsWith('/api/') &&
         !request.nextUrl.pathname.startsWith('/api/auth') &&
         !request.nextUrl.pathname.startsWith('/api/webhooks') &&
-        !request.nextUrl.pathname.startsWith('/api/health') &&
+        request.nextUrl.pathname !== '/api/health' &&
         !request.nextUrl.pathname.startsWith('/api/monitoring')) {
-        // Fail closed: only self-track when CRON_SECRET is configured.
-        // The /api/monitoring/track endpoint rejects requests when the secret is unset.
-        const trackingSecret = process.env.CRON_SECRET;
-        if (trackingSecret) {
-            const origin = request.nextUrl.origin;
-            fetch(`${origin}/api/monitoring/track`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${trackingSecret}`,
-                },
-                body: JSON.stringify({
-                    routePath: request.nextUrl.pathname,
-                    method: request.method,
-                    statusCode: response.status,
-                    responseTime: duration,
-                }),
-            }).catch(() => {});
-        }
+        recordTrackedRequest({
+            routePath: request.nextUrl.pathname,
+            method: request.method,
+            statusCode: response.status,
+            responseTime: duration,
+            timestamp: Date.now(),
+        });
     }
 
     return addCorsHeaders(response, request);
@@ -352,6 +341,6 @@ export const config = {
          * only new middleware behavior for them is the 413 gate, CSP headers
          * and request logging).
          */
-        '/((?!api/health|api/monitoring|login|register|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|swe-worker|workbox).*)',
+        '/((?!api/health$|api/monitoring(?:/|$)|login|register|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|swe-worker|workbox).*)',
     ],
 }

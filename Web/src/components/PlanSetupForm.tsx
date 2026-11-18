@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    AlertCircle, Save, Check, Trash2, Target, Plus, Upload, X, Zap, Waves, Clock, Download, ImagePlus
+    AlertCircle, Save, Check, Trash2
 } from 'lucide-react';
 import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
 import { calculateVdot, calculateTrainingPaces, predictRaceTime, type RaceDistance, DISTANCES } from '@/lib/metrics/vdot';
@@ -17,73 +17,20 @@ import GoalTimeRenderer from './setup/GoalTimeRenderer';
 import TriathlonGoalTimeRenderer from './setup/TriathlonGoalTimeRenderer';
 import PlanVolumeSection from './setup/PlanVolumeSection';
 import HeartRateZonesSection from './setup/HeartRateZonesSection';
+import CustomTriathlonDistancesSection from './setup/CustomTriathlonDistancesSection';
+import DirectPlanImportSection from './setup/DirectPlanImportSection';
+import StartMileageAndSubGoalsSection from './setup/StartMileageAndSubGoalsSection';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { getRaceDefaults, adjustDefaultsForVdot, getScaledPhaseDefaults } from '@/lib/plans/defaults';
-
-
-interface RaceActivity {
-    id: string;
-    name: string;
-    distance: number;
-    movingTime: number;
-    startDate: string;
-}
-
-interface SubGoalForm {
-    name: string;
-    sport: string;
-    raceType: string;
-    raceDate: string;
-    targetTime?: number;
-}
-
-interface PlanSetupFormProps {
-    mode: 'onboarding' | 'advanced' | 'modal' | 'settings';
-    onSuccess?: () => void;
-    onCancel?: () => void;
-    currentVdot?: number;
-    shapePercent?: number;
-    planSource?: string;
-    creationMode?: string;
-    initialExperienceLevel?: string;
-}
-
-const MAX_LONG_RUN_KM_BY_RACE: Record<string, number> = {
-    FIVE_K: 18,
-    TEN_K: 22,
-    HALF_MARATHON: 24,
-    MARATHON: 32,
-    FIFTY_K: 35,
-    FIFTY_MILE: 40,
-    HUNDRED_K: 45,
-    HUNDRED_MILE: 50,
-    TWELVE_HOUR: 40,
-    TWENTY_FOUR_HOUR: 50,
-    BACKYARD_ULTRA: 35,
-    CUSTOM_DISTANCE: 25,
-    SPRINT_TRI: 15,
-    OLYMPIC_TRI: 18,
-    HALF_IRONMAN: 22,
-    FULL_IRONMAN: 30,
-    CUSTOM_TRI: 22,
-};
-
-const TRIATHLON_RACE_TYPES = new Set([
-    'SPRINT_TRI', 'OLYMPIC_TRI', 'HALF_IRONMAN', 'FULL_IRONMAN', 'CUSTOM_TRI',
-]);
-
-const ULTRA_DISTANCE_MAP: Record<string, number> = {
-    FIFTY_K: 50000,
-    FIFTY_MILE: 80467,
-    HUNDRED_K: 100000,
-    HUNDRED_MILE: 160934,
-};
-
-function getDefaultMaxLongRunKm(raceType: string, weeklyMileageKm: number): number {
-    const defaults = getRaceDefaults(raceType);
-    const calculated = Math.round(weeklyMileageKm * 0.55);
-    return Math.max(6, Math.min(calculated, defaults.maxLongRunKm));
-}
+import {
+    type RaceActivity,
+    type SubGoalForm,
+    type PlanSetupFormProps,
+    MAX_LONG_RUN_KM_BY_RACE,
+    TRIATHLON_RACE_TYPES,
+    ULTRA_DISTANCE_MAP,
+    getDefaultMaxLongRunKm,
+} from './setup/types';
 
 export default function PlanSetupForm({
     mode,
@@ -197,8 +144,6 @@ export default function PlanSetupForm({
 
     // Sub-Goals (advanced mode)
     const [subGoals, setSubGoals] = useState<SubGoalForm[]>([]);
-    const [showSubGoalForm, setShowSubGoalForm] = useState(false);
-    const [newSubGoal, setNewSubGoal] = useState<SubGoalForm>({ name: '', sport: 'RUN', raceType: '', raceDate: '' });
 
     // Calibration Result
     const [calibrationFactor, setCalibrationFactor] = useState<number>(1.0);
@@ -210,8 +155,6 @@ export default function PlanSetupForm({
 
     const [message, setMessage] = useState('');
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-    const [isImportingSetupPlan, setIsImportingSetupPlan] = useState(false);
-    const setupCsvInputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
         if (initialExperienceLevel) {
@@ -993,48 +936,14 @@ export default function PlanSetupForm({
             )}
 
             {raceType === 'CUSTOM_TRI' && (
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-accent-orange mb-2">
-                        <Target className="w-5 h-5" />
-                        <h3 className="text-sm font-semibold">Custom Triathlon Distances</h3>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                        <div>
-                            <label className="block text-xs text-foreground-muted mb-1">Swim (m)</label>
-                            <input
-                                type="number"
-                                value={customSwimDistM || ''}
-                                onChange={(e) => setCustomSwimDistM(parseFloat(e.target.value) || 0)}
-                                placeholder="1500"
-                                min={100}
-                                className="bg-surface border border-glass-border rounded-md p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs text-foreground-muted mb-1">Bike (m)</label>
-                            <input
-                                type="number"
-                                value={customBikeDistM || ''}
-                                onChange={(e) => setCustomBikeDistM(parseFloat(e.target.value) || 0)}
-                                placeholder="40000"
-                                min={1000}
-                                className="bg-surface border border-glass-border rounded-md p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs text-foreground-muted mb-1">Run (m)</label>
-                            <input
-                                type="number"
-                                value={customRunDistM || ''}
-                                onChange={(e) => setCustomRunDistM(parseFloat(e.target.value) || 0)}
-                                placeholder="10000"
-                                min={1000}
-                                className="bg-surface border border-glass-border rounded-md p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
-                            />
-                        </div>
-                    </div>
-                    <p className="text-xs text-foreground-muted">Leave blank to use Olympic triathlon defaults (1500m / 40km / 10km)</p>
-                </div>
+                <CustomTriathlonDistancesSection
+                    customSwimDistM={customSwimDistM}
+                    setCustomSwimDistM={setCustomSwimDistM}
+                    customBikeDistM={customBikeDistM}
+                    setCustomBikeDistM={setCustomBikeDistM}
+                    customRunDistM={customRunDistM}
+                    setCustomRunDistM={setCustomRunDistM}
+                />
             )}
 
             {sport !== 'CYCLING' && runsPerWeek > 0 && !TRIATHLON_RACE_TYPES.has(raceType) && raceType !== 'BACKYARD_ULTRA' && !['TWELVE_HOUR', 'TWENTY_FOUR_HOUR'].includes(raceType) && (
@@ -1065,181 +974,17 @@ export default function PlanSetupForm({
             )}
 
             {/* Direct Plan Import in Plan Setup Phase (CSV / Calendar Screenshot AI / .zwo) */}
-            <div className="border-t border-glass-border pt-6">
-                <div className="p-4 rounded-md bg-surface border border-positive/40 space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-positive">
-                            Import Existing Training Plan Directly (CSV / Calendar Picture / .zwo)
-                        </span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-positive/10 text-positive border border-positive/30">
-                            Direct Setup Import
-                        </span>
-                    </div>
-                    <p className="text-[11px] text-foreground-muted leading-relaxed">
-                        Already have a schedule from a <strong>CSV file</strong>, a <strong>MyWhoosh / Coach Calendar screenshot</strong>, or a <strong>.zwo workout</strong>? Import it directly right here instead of generating from scratch. All cycling workouts can also be exported as <strong>.zwo</strong> files for{' '}
-                        <a href="https://workout.mywhoosh.com" target="_blank" rel="noopener noreferrer" className="text-positive underline">
-                            workout.mywhoosh.com
-                        </a>.
-                    </p>
-
-                    <input
-                        ref={setupCsvInputRef}
-                        type="file"
-                        accept=".csv"
-                        className="hidden"
-                        onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            e.target.value = '';
-                            if (!file) return;
-                            setIsImportingSetupPlan(true);
-                            setMessage('');
-                            try {
-                                let targetGoalId = activeGoalId;
-                                if (!targetGoalId) {
-                                    const isDurationBased = sport === 'NO_RACE' || sport === 'CYCLING';
-                                    const effectiveSport = sport === 'CYCLING' ? 'CYCLING' : TRIATHLON_RACE_TYPES.has(raceType) ? 'TRIATHLON' : sport;
-                                    const createRes = await fetch('/api/plans', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({
-                                            name: goalName && goalName !== 'My First Race' ? goalName : file.name.replace(/\.csv$/i, '') || 'Imported Plan',
-                                            sport: effectiveSport,
-                                            raceType: isDurationBased ? null : raceType,
-                                            raceDate: isDurationBased ? null : (raceDate ? new Date(raceDate).toISOString() : null),
-                                            planStartDate: planStartDate ? new Date(planStartDate).toISOString() : new Date().toISOString(),
-                                            durationWeeks: parseInt(durationWeeks) || 8,
-                                            planSource: 'advanced',
-                                            creationMode: 'EXPERT_MANUAL',
-                                            matchToMyWhoosh: false,
-                                            mywhooshPlanId: null,
-                                        }),
-                                    });
-                                    if (!createRes.ok) throw new Error('Failed to initialize plan for CSV import');
-                                    const createData = await createRes.json();
-                                    targetGoalId = createData.plan?.id ?? createData.goal?.id;
-                                }
-                                if (!targetGoalId) throw new Error('Could not resolve plan ID');
-
-                                const formData = new FormData();
-                                formData.append('file', file);
-                                formData.append('formatHint', 'runflow');
-                                const previewRes = await fetch(`/api/plan-advanced/${encodeURIComponent(targetGoalId)}/csv/import`, {
-                                    method: 'POST',
-                                    body: formData,
-                                });
-                                const previewData = await previewRes.json().catch(() => ({}));
-                                if (!previewRes.ok || !previewData.previewId) {
-                                    throw new Error(previewData.error || 'Failed to parse CSV file');
-                                }
-
-                                const confirmRes = await fetch(`/api/plan-advanced/${encodeURIComponent(targetGoalId)}/csv/import`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ previewId: previewData.previewId, confirm: true }),
-                                });
-                                const confirmData = await confirmRes.json().catch(() => ({}));
-                                if (!confirmRes.ok) {
-                                    throw new Error(confirmData.error || 'Failed to confirm CSV import');
-                                }
-
-                                if (typeof window !== 'undefined') {
-                                    localStorage.removeItem('runflow_onboarding_dismissed');
-                                }
-                                queryClient.invalidateQueries({ queryKey: ['goals'] });
-                                queryClient.invalidateQueries({ queryKey: ['plan'] });
-                                queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
-                                setMessage(`Imported ${confirmData.created ?? previewData.validRows ?? 0} workouts from ${file.name}!`);
-                                window.location.href = `/plan-advanced/${encodeURIComponent(targetGoalId)}`;
-                            } catch (err) {
-                                setMessage(`Error: ${err instanceof Error ? err.message : 'CSV import failed'}`);
-                            } finally {
-                                setIsImportingSetupPlan(false);
-                            }
-                        }}
-                    />
-
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                        <button
-                            type="button"
-                            disabled={isImportingSetupPlan || isLoading}
-                            onClick={() => setupCsvInputRef.current?.click()}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-positive/15 border border-positive/40 text-positive text-xs font-semibold hover:bg-positive/25 transition-colors disabled:opacity-50"
-                        >
-                            <Upload className="w-3.5 h-3.5" />
-                            {isImportingSetupPlan ? 'Importing CSV...' : 'Upload & Import CSV (.csv)'}
-                        </button>
-
-                        <button
-                            type="button"
-                            disabled={isImportingSetupPlan || isLoading}
-                            onClick={async () => {
-                                setIsImportingSetupPlan(true);
-                                setMessage('');
-                                try {
-                                    let targetGoalId = activeGoalId;
-                                    if (!targetGoalId) {
-                                        const isDurationBased = sport === 'NO_RACE' || sport === 'CYCLING';
-                                        const effectiveSport = sport === 'CYCLING' ? 'CYCLING' : TRIATHLON_RACE_TYPES.has(raceType) ? 'TRIATHLON' : sport;
-                                        const createRes = await fetch('/api/plans', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({
-                                                name: goalName && goalName !== 'My First Race' ? goalName : 'Imported Calendar Plan',
-                                                sport: effectiveSport,
-                                                raceType: isDurationBased ? null : raceType,
-                                                raceDate: isDurationBased ? null : (raceDate ? new Date(raceDate).toISOString() : null),
-                                                planStartDate: planStartDate ? new Date(planStartDate).toISOString() : new Date().toISOString(),
-                                                durationWeeks: parseInt(durationWeeks) || 8,
-                                                planSource: 'advanced',
-                                                creationMode: 'EXPERT_MANUAL',
-                                                matchToMyWhoosh: false,
-                                                mywhooshPlanId: null,
-                                            }),
-                                        });
-                                        if (!createRes.ok) throw new Error('Failed to create plan for AI Calendar import');
-                                        const createData = await createRes.json();
-                                        targetGoalId = createData.plan?.id ?? createData.goal?.id;
-                                    }
-                                    if (!targetGoalId) throw new Error('Could not resolve plan ID');
-                                    window.location.href = `/plan-advanced/${encodeURIComponent(targetGoalId)}?import=ai-image`;
-                                } catch (err) {
-                                    setMessage(`Error: ${err instanceof Error ? err.message : 'Failed to open Calendar Picture importer'}`);
-                                    setIsImportingSetupPlan(false);
-                                }
-                            }}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-surface-hover border border-glass-border text-foreground text-xs font-medium hover:border-positive/50 transition-colors disabled:opacity-50"
-                        >
-                            <ImagePlus className="w-3.5 h-3.5 text-positive" />
-                            Import from Calendar Picture (AI)
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => {
-                                const sampleCsv = [
-                                    'date,workout_type,phase,name,description,distance_m,duration_s,pace_s_km,hr_zone',
-                                    '2026-10-26,RIDE_INTERVALS,BASE,Sweet Spot 3x10m,10m Warmup + 3x10m @ 90% FTP + 10m Cooldown,,3600,,3',
-                                    '2026-10-28,EASY,BASE,Easy Aerobic Run,Easy Zone 2 run,8000,2640,330,2',
-                                    '2026-10-31,LONG_RIDE,BASE,Endurance Ride 90m,Zone 2 sustained indoor/outdoor ride,,5400,,2',
-                                ].join('\n');
-                                const blob = new Blob([sampleCsv], { type: 'text/csv;charset=utf-8;' });
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = 'runflow_plan_template.csv';
-                                document.body.appendChild(a);
-                                a.click();
-                                URL.revokeObjectURL(url);
-                                document.body.removeChild(a);
-                            }}
-                            className="inline-flex items-center gap-1 px-2.5 py-2 rounded-md border border-glass-border text-foreground-muted hover:text-foreground text-xs transition-colors"
-                        >
-                            <Download className="w-3.5 h-3.5" />
-                            Sample CSV Template
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <DirectPlanImportSection
+                activeGoalId={activeGoalId}
+                sport={sport}
+                raceType={raceType}
+                raceDate={raceDate}
+                planStartDate={planStartDate}
+                goalName={goalName}
+                durationWeeks={durationWeeks}
+                isLoading={isLoading}
+                setMessage={setMessage}
+            />
 
             <PlanVolumeSection
                 runsPerWeek={runsPerWeek}
@@ -1315,110 +1060,16 @@ export default function PlanSetupForm({
                 setZone6Max={setZone6Max}
             />
 
-            {/* Start Weekly Mileage (only when running is part of the plan) */}
-            {runsPerWeek > 0 && (
-                <div className="border-t border-glass-border pt-6">
-                    <div className="flex justify-between mb-2">
-                        <label className="text-xs text-foreground-muted">Start Weekly Mileage</label>
-                        <span className="text-positive font-bold">{startWeeklyMileage} km</span>
-                    </div>
-                    <input
-                        type="range"
-                        min={0}
-                        max={Math.round(weeklyMileage)}
-                        step="5"
-                        value={startWeeklyMileage}
-                        onChange={(e) => setStartWeeklyMileage(parseInt(e.target.value))}
-                        className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-positive"
-                    />
-                    <div className="flex justify-between text-xs text-foreground-muted mt-1">
-                        <span>0km</span>
-                        <span>{Math.round(weeklyMileage / 2)}km</span>
-                        <span>{Math.round(weeklyMileage)}km</span>
-                    </div>
-                    <p className="text-xs text-foreground-muted mt-1">
-                        {internalStatsData?.avgWeeklyKmLast4Weeks > 0
-                            ? `Based on your last 4 weeks avg (${internalStatsData.avgWeeklyKmLast4Weeks} km/wk). Adjust if needed.`
-                            : 'Your current weekly mileage at the start of the plan.'}
-                    </p>
-                </div>
-            )}
-
-            {/* Sub-Goals (advanced mode only) */}
-            {mode === 'advanced' && (
-                <div className="border-t border-glass-border pt-6">
-                    <div className="flex items-center justify-between mb-2">
-                        <label className="text-xs font-medium text-foreground-muted">Sub-Goals</label>
-                        {!showSubGoalForm && (
-                            <button
-                                type="button"
-                                onClick={() => setShowSubGoalForm(true)}
-                                className="flex items-center gap-1 text-xs text-foreground-muted hover:text-foreground transition-colors"
-                            >
-                                <Plus className="w-3 h-3" />
-                                Add Sub-Goal
-                            </button>
-                        )}
-                    </div>
-                    {subGoals.length > 0 && (
-                        <div className="space-y-1.5 mb-2">
-                            {subGoals.map((sg, i) => (
-                                <div key={i} className="flex items-center justify-between bg-surface border border-glass-border rounded-md px-3 py-2">
-                                    <div>
-                                        <span className="text-xs text-foreground">{sg.name}</span>
-                                        {sg.raceDate && <span className="text-[10px] text-foreground-muted ml-2">{sg.raceDate}</span>}
-                                    </div>
-                                    <button type="button" onClick={() => setSubGoals(subGoals.filter((_, idx) => idx !== i))} className="text-foreground-muted hover:text-negative transition-colors">
-                                        <X className="w-3.5 h-3.5" />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                    {showSubGoalForm && (
-                        <div className="bg-surface border border-glass-border rounded-md p-3 space-y-2">
-                            <input
-                                type="text"
-                                value={newSubGoal.name}
-                                onChange={(e) => setNewSubGoal((p) => ({ ...p, name: e.target.value }))}
-                                placeholder="Sub-goal name"
-                                className="w-full bg-surface border border-glass-border rounded-md px-2.5 py-1.5 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-accent-orange"
-                            />
-                            <div className="flex gap-2">
-                                <select
-                                    value={newSubGoal.raceType}
-                                    onChange={(e) => setNewSubGoal((p) => ({ ...p, raceType: e.target.value }))}
-                                    className="bg-surface border border-glass-border rounded-md px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent-orange flex-1"
-                                >
-                                    <option value="">Distance / Type</option>
-                                    <optgroup label="Running">
-                                        <option value="FIVE_K">5K</option>
-                                        <option value="TEN_K">10K</option>
-                                        <option value="HALF_MARATHON">Half Marathon</option>
-                                        <option value="MARATHON">Marathon</option>
-                                    </optgroup>
-                                    <optgroup label="Triathlon">
-                                        <option value="SPRINT_TRI">Sprint Triathlon</option>
-                                        <option value="OLYMPIC_TRI">Olympic Triathlon</option>
-                                        <option value="HALF_IRONMAN">Middle Distance</option>
-                                        <option value="FULL_IRONMAN">Long Distance</option>
-                                    </optgroup>
-                                </select>
-                                <input
-                                    type="date"
-                                    value={newSubGoal.raceDate}
-                                    onChange={(e) => setNewSubGoal((p) => ({ ...p, raceDate: e.target.value }))}
-                                    className="bg-surface border border-glass-border rounded-md px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent-orange"
-                                />
-                            </div>
-                            <div className="flex gap-2 justify-end">
-                                <button type="button" onClick={() => { setShowSubGoalForm(false); setNewSubGoal({ name: '', sport: 'RUN', raceType: '', raceDate: '' }); }} className="px-2.5 py-1 rounded-md text-xs text-foreground-muted hover:text-foreground transition-colors">Cancel</button>
-                                <button type="button" onClick={() => { if (!newSubGoal.name.trim()) return; setSubGoals([...subGoals, { ...newSubGoal }]); setNewSubGoal({ name: '', sport: 'RUN', raceType: '', raceDate: '' }); setShowSubGoalForm(false); }} className="px-2.5 py-1 rounded-md text-xs bg-surface-hover text-foreground hover:bg-glass-border transition-colors">Add</button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
+            <StartMileageAndSubGoalsSection
+                mode={mode}
+                runsPerWeek={runsPerWeek}
+                weeklyMileage={weeklyMileage}
+                startWeeklyMileage={startWeeklyMileage}
+                setStartWeeklyMileage={setStartWeeklyMileage}
+                avgWeeklyKmLast4Weeks={internalStatsData?.avgWeeklyKmLast4Weeks}
+                subGoals={subGoals}
+                setSubGoals={setSubGoals}
+            />
 
             {/* Direct Plan Import is available above across all setup modes */}
 

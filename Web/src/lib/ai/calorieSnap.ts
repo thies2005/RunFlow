@@ -12,7 +12,13 @@ import { AiProviderError, toSafeUserError } from './errors';
 import { executeCompletionWithFallback, executeVisionWithFallback } from './executor';
 import type { AiImageInput } from './providers';
 import { countTokens } from './tokenCounter';
-import { ensurePeriodUsageReset, getFeatureDailyLimit, incrementUsage, isByokActive } from './usage';
+import {
+    ensurePeriodUsageReset,
+    extractAiJsonObject,
+    incrementUsage,
+    isByokActive,
+    withDailyFeatureQuota,
+} from './usage';
 
 const IMAGE_TOKEN_ESTIMATE = 512;
 
@@ -94,41 +100,18 @@ Confidence should be "high", "medium", or "low" based on ${hasImage ? 'image cla
     return `${basePrompt}\n\nUSER ${hasImage ? 'CAPTION' : 'DESCRIPTION'}: "${trimmedCaption}"`;
 }
 
-function stripReasoningBlocks(text: string): string {
-    let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
-    cleaned = cleaned.replace(/<details>[\s\S]*?<\/details>/gi, '');
-    return cleaned.trim();
-}
-
 export function parseCalorieSnapJson(rawText: string): {
     mealName?: unknown;
     items?: unknown[];
     confidence?: unknown;
 } {
-    const cleaned = stripReasoningBlocks(rawText);
-
     try {
-        return JSON.parse(cleaned);
+        return extractAiJsonObject<{
+            mealName?: unknown;
+            items?: unknown[];
+            confidence?: unknown;
+        }>(rawText);
     } catch {
-        const fencedMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
-        if (fencedMatch) {
-            try {
-                return JSON.parse(fencedMatch[1].trim());
-            } catch {
-                // Fall through to bracket extraction
-            }
-        }
-
-        const start = cleaned.indexOf('{');
-        const end = cleaned.lastIndexOf('}');
-        if (start !== -1 && end > start) {
-            try {
-                return JSON.parse(cleaned.slice(start, end + 1));
-            } catch {
-                // Throw structured error below
-            }
-        }
-
         throw new AiProviderError({
             code: 'INVALID_RESPONSE',
             httpStatus: 422,
@@ -148,208 +131,177 @@ export async function analyzeFoodWithCalorieSnap(params: {
 }): Promise<CalorieSnapResult> {
     const { userId, image, caption, logPrefix = '[Food Scanner]' } = params;
 
-    let slotClaimed = false;
-    const releaseClaimedSlot = async (): Promise<void> => {
-        if (!slotClaimed) return;
-        slotClaimed = false;
-        await prisma.userAiSettings
-            .updateMany({
-                where: {
-                    userId,
-                    calorieSnapsUsedToday: { gt: 0 },
-                },
-                data: {
-                    calorieSnapsUsedToday: { decrement: 1 },
-                },
-            })
-            .catch(() => undefined);
-    };
+    await ensurePeriodUsageReset(userId);
 
-    try {
-        await ensurePeriodUsageReset(userId);
+    const [userSettings, globalSettings] = await Promise.all([
+        prisma.userAiSettings.findUnique({ where: { userId } }),
+        prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } }),
+    ]);
 
-        const [userSettings, globalSettings] = await Promise.all([
-            prisma.userAiSettings.findUnique({ where: { userId } }),
-            prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } }),
-        ]);
-
-        if (!userSettings || !userSettings.adminAllowed) {
-            throw new AiProviderError({
-                code: 'AI_DISABLED',
-                httpStatus: 403,
-                userMessage: 'AI access is not enabled for your account. Contact an administrator.',
-            });
-        }
-
-        if (!userSettings.aiEnabled) {
-            throw new AiProviderError({
-                code: 'AI_DISABLED',
-                httpStatus: 403,
-                userMessage: 'AI features are currently disabled. Enable them in your AI settings.',
-            });
-        }
-
-        const userTier = userSettings.usageTier || 'none';
-        const isByok = isByokActive(userSettings);
-
-        if (userTier === 'none' && (!isByok || !userSettings.customApiKey?.trim())) {
-            throw new AiProviderError({
-                code: 'NOT_CONFIGURED',
-                httpStatus: 403,
-                userMessage: 'No AI access tier assigned and no personal API key configured. Add your API key in AI Settings.',
-            });
-        }
-
-        const isManagedTier = userTier === 'tier1' || userTier === 'tier2' || userTier === 'tier3';
-        const dailyLimit = isManagedTier ? getFeatureDailyLimit('calorieSnap', userTier, globalSettings) : 0;
-
-        let currentScans = 0;
-        if (isManagedTier) {
-            const startOfToday = new Date();
-            startOfToday.setHours(0, 0, 0, 0);
-            const lastResetDay = userSettings.lastUsageReset
-                ? new Date(userSettings.lastUsageReset).toDateString()
-                : '';
-            currentScans =
-                lastResetDay === startOfToday.toDateString()
-                    ? (userSettings.calorieSnapsUsedToday || 0)
-                    : 0;
-
-            if (dailyLimit <= 0 || currentScans >= dailyLimit) {
-                throw new CalorieSnapLimitError(dailyLimit);
-            }
-
-            const claimed = await prisma.userAiSettings.updateMany({
-                where: {
-                    userId,
-                    calorieSnapsUsedToday: { lt: dailyLimit },
-                },
-                data: {
-                    calorieSnapsUsedToday: { increment: 1 },
-                    lastUsageReset: new Date(),
-                },
-            });
-
-            if (claimed.count === 0) {
-                throw new CalorieSnapLimitError(dailyLimit);
-            }
-            slotClaimed = true;
-        }
-
-        const fullPrompt = buildCalorieSnapPrompt(Boolean(image), caption);
-
-        logger.info(`${logPrefix} Initiating AI analysis`, {
-            userId,
-            hasCaption: Boolean(caption?.trim()),
-            hasImage: Boolean(image),
-            imageLength: image?.base64Data.length || 0,
-            mimeType: image?.mimeType,
-            promptLength: fullPrompt.length,
+    if (!userSettings || !userSettings.adminAllowed) {
+        throw new AiProviderError({
+            code: 'AI_DISABLED',
+            httpStatus: 403,
+            userMessage: 'AI access is not enabled for your account. Contact an administrator.',
         });
+    }
 
-        const execution = image
-            ? await executeVisionWithFallback(userId, 'calorieSnap', fullPrompt, image, {
-                  maxTokens: 4096,
-                  temperature: 0.3,
-              })
-            : await executeCompletionWithFallback(
-                  userId,
-                  'calorieSnap',
-                  [{ role: 'user', content: fullPrompt }],
-                  {
+    if (!userSettings.aiEnabled) {
+        throw new AiProviderError({
+            code: 'AI_DISABLED',
+            httpStatus: 403,
+            userMessage: 'AI features are currently disabled. Enable them in your AI settings.',
+        });
+    }
+
+    const userTier = userSettings.usageTier || 'none';
+    const isByok = isByokActive(userSettings);
+
+    if (userTier === 'none' && (!isByok || !userSettings.customApiKey?.trim())) {
+        throw new AiProviderError({
+            code: 'NOT_CONFIGURED',
+            httpStatus: 403,
+            userMessage: 'No AI access tier assigned and no personal API key configured. Add your API key in AI Settings.',
+        });
+    }
+
+    const isManagedTier = userTier === 'tier1' || userTier === 'tier2' || userTier === 'tier3';
+    let currentScans = 0;
+    if (isManagedTier) {
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        const lastResetDay = userSettings.lastUsageReset
+            ? new Date(userSettings.lastUsageReset).toDateString()
+            : '';
+        currentScans =
+            lastResetDay === startOfToday.toDateString()
+                ? (userSettings.calorieSnapsUsedToday || 0)
+                : 0;
+    }
+
+    return withDailyFeatureQuota({
+        userId,
+        feature: 'calorieSnap',
+        userTier: isManagedTier ? userTier : 'none',
+        isByok,
+        globalSettings,
+        currentCountFromSnapshot: isManagedTier ? currentScans : undefined,
+        onLimitReached: (limit) => {
+            throw new CalorieSnapLimitError(limit);
+        },
+        fn: async ({ dailyLimit }) => {
+            const fullPrompt = buildCalorieSnapPrompt(Boolean(image), caption);
+
+            logger.info(`${logPrefix} Initiating AI analysis`, {
+                userId,
+                hasCaption: Boolean(caption?.trim()),
+                hasImage: Boolean(image),
+                imageLength: image?.base64Data.length || 0,
+                mimeType: image?.mimeType,
+                promptLength: fullPrompt.length,
+            });
+
+            const execution = image
+                ? await executeVisionWithFallback(userId, 'calorieSnap', fullPrompt, image, {
                       maxTokens: 4096,
                       temperature: 0.3,
-                  }
-              );
+                  })
+                : await executeCompletionWithFallback(
+                      userId,
+                      'calorieSnap',
+                      [{ role: 'user', content: fullPrompt }],
+                      {
+                          maxTokens: 4096,
+                          temperature: 0.3,
+                      }
+                  );
 
-        logger.info(`${logPrefix} AI request successful`, {
-            model: execution.targetUsed.model,
-            providerId: execution.targetUsed.providerId,
-            providerSlug: execution.targetUsed.providerSlug,
-            attempts: execution.attempts,
-            userId,
-        });
-
-        const parsed = parseCalorieSnapJson(execution.text);
-        if (!parsed || !Array.isArray(parsed.items)) {
-            throw new AiProviderError({
-                code: 'INVALID_RESPONSE',
-                httpStatus: 422,
-                userMessage: 'AI returned an unexpected format. Please try again.',
-                retryable: true,
+            logger.info(`${logPrefix} AI request successful`, {
+                model: execution.targetUsed.model,
                 providerId: execution.targetUsed.providerId,
                 providerSlug: execution.targetUsed.providerSlug,
-                model: execution.targetUsed.model,
-            });
-        }
-
-        const sanitizedItems: CalorieSnapItem[] = parsed.items.map((item: unknown) => {
-            const record = (item && typeof item === 'object' ? item : {}) as Record<string, unknown>;
-            return {
-                name: String(record.name || 'Unknown'),
-                estimatedGrams: Math.round(Number(record.estimatedGrams) || 0),
-                calories: Math.round(Number(record.calories) || 0),
-                protein: Math.round((Number(record.protein) || 0) * 10) / 10,
-                carbs: Math.round((Number(record.carbs) || 0) * 10) / 10,
-                fats: Math.round((Number(record.fats) || 0) * 10) / 10,
-            };
-        });
-
-        const inputTokens =
-            countTokens(fullPrompt, execution.targetUsed.model) + (image ? IMAGE_TOKEN_ESTIMATE : 0);
-        const outputTokens = countTokens(execution.text, execution.targetUsed.model);
-
-        try {
-            await incrementUsage(
+                attempts: execution.attempts,
                 userId,
-                { inputTokens, outputTokens },
-                execution.targetUsed.providerId,
-                {
-                    skipMessageIncrement: true,
+            });
+
+            const parsed = parseCalorieSnapJson(execution.text);
+            if (!parsed || !Array.isArray(parsed.items)) {
+                throw new AiProviderError({
+                    code: 'INVALID_RESPONSE',
+                    httpStatus: 422,
+                    userMessage: 'AI returned an unexpected format. Please try again.',
+                    retryable: true,
+                    providerId: execution.targetUsed.providerId,
+                    providerSlug: execution.targetUsed.providerSlug,
                     model: execution.targetUsed.model,
-                }
-            );
-        } catch (usageErr) {
-            logger.warn(`${logPrefix} Failed to record token usage`, {
-                userId,
-                error: usageErr instanceof Error ? usageErr.message : String(usageErr),
+                });
+            }
+
+            const sanitizedItems: CalorieSnapItem[] = parsed.items.map((item: unknown) => {
+                const record = (item && typeof item === 'object' ? item : {}) as Record<string, unknown>;
+                return {
+                    name: String(record.name || 'Unknown'),
+                    estimatedGrams: Math.round(Number(record.estimatedGrams) || 0),
+                    calories: Math.round(Number(record.calories) || 0),
+                    protein: Math.round((Number(record.protein) || 0) * 10) / 10,
+                    carbs: Math.round((Number(record.carbs) || 0) * 10) / 10,
+                    fats: Math.round((Number(record.fats) || 0) * 10) / 10,
+                };
             });
-        }
 
-        const newScansUsed = currentScans + 1;
-        const remaining = isManagedTier ? Math.max(0, dailyLimit - newScansUsed) : -1;
-        const confidence =
-            parsed.confidence === 'high' || parsed.confidence === 'low' ? parsed.confidence : 'medium';
+            const inputTokens =
+                countTokens(fullPrompt, execution.targetUsed.model) + (image ? IMAGE_TOKEN_ESTIMATE : 0);
+            const outputTokens = countTokens(execution.text, execution.targetUsed.model);
 
-        const result: CalorieSnapResult = {
-            mealName:
-                typeof parsed.mealName === 'string' && parsed.mealName.trim()
-                    ? parsed.mealName
-                    : 'Scanned Meal',
-            items: sanitizedItems,
-            totalCalories: sanitizedItems.reduce((sum, i) => sum + i.calories, 0),
-            totalProtein: Math.round(sanitizedItems.reduce((sum, i) => sum + i.protein, 0) * 10) / 10,
-            totalCarbs: Math.round(sanitizedItems.reduce((sum, i) => sum + i.carbs, 0) * 10) / 10,
-            totalFats: Math.round(sanitizedItems.reduce((sum, i) => sum + i.fats, 0) * 10) / 10,
-            confidence,
-            remaining,
-            limit: dailyLimit,
-        };
+            try {
+                await incrementUsage(
+                    userId,
+                    { inputTokens, outputTokens },
+                    execution.targetUsed.providerId,
+                    {
+                        skipMessageIncrement: true,
+                        model: execution.targetUsed.model,
+                    }
+                );
+            } catch (usageErr) {
+                logger.warn(`${logPrefix} Failed to record token usage`, {
+                    userId,
+                    error: usageErr instanceof Error ? usageErr.message : String(usageErr),
+                });
+            }
 
-        logger.info(`${logPrefix} Analysis complete`, {
-            userId,
-            itemCount: result.items.length,
-            totalCalories: result.totalCalories,
-            confidence: result.confidence,
-            scansUsedToday: isManagedTier ? newScansUsed : undefined,
-            remaining: result.remaining,
-        });
+            const newScansUsed = currentScans + 1;
+            const remaining = isManagedTier ? Math.max(0, dailyLimit - newScansUsed) : -1;
+            const confidence =
+                parsed.confidence === 'high' || parsed.confidence === 'low' ? parsed.confidence : 'medium';
 
-        return result;
-    } catch (error) {
-        await releaseClaimedSlot();
-        throw error;
-    }
+            const result: CalorieSnapResult = {
+                mealName:
+                    typeof parsed.mealName === 'string' && parsed.mealName.trim()
+                        ? parsed.mealName
+                        : 'Scanned Meal',
+                items: sanitizedItems,
+                totalCalories: sanitizedItems.reduce((sum, i) => sum + i.calories, 0),
+                totalProtein: Math.round(sanitizedItems.reduce((sum, i) => sum + i.protein, 0) * 10) / 10,
+                totalCarbs: Math.round(sanitizedItems.reduce((sum, i) => sum + i.carbs, 0) * 10) / 10,
+                totalFats: Math.round(sanitizedItems.reduce((sum, i) => sum + i.fats, 0) * 10) / 10,
+                confidence,
+                remaining,
+                limit: dailyLimit,
+            };
+
+            logger.info(`${logPrefix} Analysis complete`, {
+                userId,
+                itemCount: result.items.length,
+                totalCalories: result.totalCalories,
+                confidence: result.confidence,
+                scansUsedToday: isManagedTier ? newScansUsed : undefined,
+                remaining: result.remaining,
+            });
+
+            return result;
+        },
+    });
 }
 
 export function calorieSnapErrorResponse(

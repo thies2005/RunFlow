@@ -7,8 +7,12 @@
  */
 
 import { NextResponse } from 'next/server';
+import { ApiError as ApiErrorException, ApiErrorCode, isApiError } from '@/lib/apiError';
+import { isDevelopment } from '@/lib/errors/handler';
 import { safeStringify } from '@/lib/json/serializer';
 import { logger } from '@/lib/logging/logger';
+
+export { ApiErrorException, ApiErrorCode, isApiError };
 
 /**
  * Standard error response structure
@@ -190,9 +194,13 @@ export function handleApiError(
 ): NextResponse<ApiError> {
     logger.error('API error', { error: error instanceof Error ? error.message : String(error), context });
 
+    if (isApiError(error)) {
+        return error.toResponse() as unknown as NextResponse<ApiError>;
+    }
+
     if (error instanceof Error) {
         return apiError(
-            (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') ? error.message : 'An error occurred',
+            isDevelopment() ? error.message : 'An error occurred',
             500,
             ErrorCode.INTERNAL_ERROR,
             context?.details,

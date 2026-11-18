@@ -1,7 +1,7 @@
 import { Activity, MarathonShape } from '@/lib/types';
 import { METRICS } from '@/lib/constants';
 import { calculateWeightedEffectiveVO2max, calculateMarathonShape, ActivityForShape } from '@/lib/metrics/runalyze';
-import { calculateFitnessHistory, DailyLoad, FitnessHistory } from '@/lib/metrics/fitness';
+import { calculateFitnessHistory, DailyLoad, FitnessHistory, stepPmcState } from '@/lib/metrics/fitness';
 
 /**
  * Service to handle analytics calculations
@@ -52,8 +52,13 @@ export class AnalyticsService {
             const dateKey = d.toISOString().split('T')[0];
             const todayLoad = dailyLoads.get(dateKey) || 0;
 
-            ctl = ctl + (todayLoad - ctl) / METRICS.CTL_DECAY_DAYS;
-            atl = atl + (todayLoad - atl) / METRICS.ATL_DECAY_DAYS;
+            const next = stepPmcState(
+                { ctl, atl },
+                todayLoad,
+                { ctlDays: METRICS.CTL_DECAY_DAYS, atlDays: METRICS.ATL_DECAY_DAYS }
+            );
+            ctl = next.ctl;
+            atl = next.atl;
         }
 
         const tsb = ctl - atl;

@@ -4,7 +4,7 @@ import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { createSnapshot } from '@/lib/plan/snapshot';
+import { createSnapshot } from '@/lib/plans/snapshot';
 import { checkFieldConsistency, deriveMissingField } from '@/lib/plans/validate-workout';
 import { adaptPlanAfterCompletion } from '@/lib/plans/adapt';
 import { logger } from '@/lib/logging/logger';

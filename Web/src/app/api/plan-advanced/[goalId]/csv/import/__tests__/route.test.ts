@@ -68,7 +68,7 @@ jest.mock('@/lib/rateLimit', () => ({
     rateLimitHeaders: jest.fn(() => ({})),
 }));
 
-jest.mock('@/lib/plan/snapshot', () => ({
+jest.mock('@/lib/plans/snapshot', () => ({
     createSnapshot: jest.fn(),
 }));
 
@@ -78,7 +78,7 @@ jest.mock('@/auth', () => ({
 
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
-import { createSnapshot } from '@/lib/plan/snapshot';
+import { createSnapshot } from '@/lib/plans/snapshot';
 import { getPreview } from '@/lib/plans/csv-preview-cache';
 
 const ROUTE_URL = 'http://localhost/api/plan-advanced/goal-1/csv/import';

@@ -6,6 +6,7 @@ import { getCyclingAnalytics } from '@/lib/metrics/cyclingAnalytics';
 import { calculateBikeZones } from '@/lib/plans/bike-zones';
 import { calculateSwimPaces } from '@/lib/plans/swim-pace';
 import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
+import { ATL_TIME_CONSTANT, stepEwma } from '@/lib/metrics/fitness';
 import { prisma } from '@/lib/db';
 
 const STRAVA_COMPLIANCE_NOTICE =
@@ -207,11 +208,10 @@ export const getFitnessMetricsTool: McpTool = {
             overtrainingRisk = 'fresh_or_detraining';
         }
 
-        const atlDecay = Math.exp(-1 / 7);
         let currentAtlRun = records.length > 0 ? Number(records[0].ctlRunning || 0) : 0;
 
         const series = records.map(r => {
-            currentAtlRun = currentAtlRun * atlDecay + Number(r.runningTss || 0) * (1 - atlDecay);
+            currentAtlRun = stepEwma(currentAtlRun, Number(r.runningTss || 0), ATL_TIME_CONSTANT);
             const atlRunning = Number(currentAtlRun.toFixed(1));
             const tsbRunning = Number((Number(r.ctlRunning || 0) - currentAtlRun).toFixed(1));
             return {

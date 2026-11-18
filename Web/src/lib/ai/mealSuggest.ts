@@ -13,7 +13,13 @@ import { executeCompletionWithFallback } from './executor';
 import { fenceUntrusted } from './prompts';
 import type { ChatMessage } from './providers';
 import { countTokens } from './tokenCounter';
-import { ensurePeriodUsageReset, getFeatureDailyLimit, incrementUsage, isByokActive } from './usage';
+import {
+    ensurePeriodUsageReset,
+    extractAiJsonObject,
+    incrementUsage,
+    isByokActive,
+    withDailyFeatureQuota,
+} from './usage';
 
 export interface MealSuggestParams {
     userId: string;
@@ -22,86 +28,6 @@ export interface MealSuggestParams {
     remainingCarbs: number;
     remainingFats: number;
     logPrefix?: string;
-}
-
-function normalizeAiOutput(text: string): string {
-    return text
-        .replace(/<think>[\s\S]*?<\/think>/gi, '')
-        .replace(/<details>[\s\S]*?<\/details>/gi, '')
-        .trim();
-}
-
-function extractJsonObject(text: string): Record<string, unknown> {
-    const cleaned = normalizeAiOutput(text);
-
-    try {
-        const direct = JSON.parse(cleaned);
-        if (direct && typeof direct === 'object' && !Array.isArray(direct)) {
-            return direct as Record<string, unknown>;
-        }
-    } catch {
-        // Fall through to fenced / bracket extraction
-    }
-
-    const fencedMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (fencedMatch) {
-        try {
-            const parsed = JSON.parse(fencedMatch[1].trim());
-            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                return parsed as Record<string, unknown>;
-            }
-        } catch {
-            // Fall through to balanced-brace extraction
-        }
-    }
-
-    const starts: number[] = [];
-    for (let i = 0; i < cleaned.length; i += 1) {
-        if (cleaned[i] === '{') starts.push(i);
-    }
-
-    for (const start of starts) {
-        let depth = 0;
-        let inString = false;
-        let escapeNext = false;
-
-        for (let i = start; i < cleaned.length; i += 1) {
-            const char = cleaned[i];
-
-            if (inString) {
-                if (escapeNext) {
-                    escapeNext = false;
-                } else if (char === '\\') {
-                    escapeNext = true;
-                } else if (char === '"') {
-                    inString = false;
-                }
-                continue;
-            }
-
-            if (char === '"') {
-                inString = true;
-                continue;
-            }
-
-            if (char === '{') depth += 1;
-            if (char === '}') depth -= 1;
-
-            if (depth === 0) {
-                const candidate = cleaned.slice(start, i + 1);
-                try {
-                    const parsed = JSON.parse(candidate);
-                    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                        return parsed as Record<string, unknown>;
-                    }
-                } catch {
-                    break;
-                }
-            }
-        }
-    }
-
-    throw new Error('Could not extract JSON object from AI response');
 }
 
 function buildMealPrompt({
@@ -174,233 +100,207 @@ export async function generateMealSuggestion(
         logPrefix = '[AI Meal Suggester]',
     } = params;
 
-    let reservationClaimed = false;
-    const releaseClaimedSlot = async (): Promise<void> => {
-        if (!reservationClaimed) return;
-        reservationClaimed = false;
-        await prisma.userAiSettings
-            .updateMany({
-                where: { userId, mealSuggestsUsedToday: { gt: 0 } },
-                data: { mealSuggestsUsedToday: { decrement: 1 } },
-            })
-            .catch(() => undefined);
-    };
+    await ensurePeriodUsageReset(userId);
 
-    try {
-        await ensurePeriodUsageReset(userId);
+    const [userSettings, globalSettings] = await Promise.all([
+        prisma.userAiSettings.findUnique({ where: { userId } }),
+        prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } }),
+    ]);
 
-        const [userSettings, globalSettings] = await Promise.all([
-            prisma.userAiSettings.findUnique({ where: { userId } }),
-            prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } }),
-        ]);
+    if (!userSettings || !userSettings.adminAllowed) {
+        throw new AiProviderError({
+            code: 'AI_DISABLED',
+            httpStatus: 403,
+            userMessage: 'AI access is not enabled for your account. Contact an administrator.',
+        });
+    }
 
-        if (!userSettings || !userSettings.adminAllowed) {
+    if (!userSettings.aiEnabled) {
+        throw new AiProviderError({
+            code: 'AI_DISABLED',
+            httpStatus: 403,
+            userMessage: 'AI features are currently disabled. Enable them in your AI settings.',
+        });
+    }
+
+    const userTier = userSettings.usageTier || 'none';
+    const isByok = isByokActive(userSettings);
+
+    if (userTier === 'none' && !isByok) {
+        throw new AiProviderError({
+            code: 'NOT_CONFIGURED',
+            httpStatus: 403,
+            userMessage: 'No AI access tier assigned and no personal API key configured. Add your API key in AI Settings.',
+        });
+    }
+
+    const isManagedTier = userTier === 'tier1' || userTier === 'tier2' || userTier === 'tier3';
+    let currentSuggests: number | undefined;
+    if (isManagedTier && !isByok) {
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        const lastResetDay = userSettings.lastUsageReset
+            ? new Date(userSettings.lastUsageReset).toDateString()
+            : '';
+        currentSuggests =
+            lastResetDay === startOfToday.toDateString()
+                ? (userSettings.mealSuggestsUsedToday || 0)
+                : 0;
+    }
+
+    return withDailyFeatureQuota({
+        userId,
+        feature: 'mealSuggest',
+        userTier: isManagedTier ? userTier : 'none',
+        isByok,
+        globalSettings,
+        currentCountFromSnapshot: currentSuggests,
+        onLimitReached: (dailyLimit) => {
             throw new AiProviderError({
-                code: 'AI_DISABLED',
-                httpStatus: 403,
-                userMessage: 'AI access is not enabled for your account. Contact an administrator.',
+                code: 'USER_LIMIT_REACHED',
+                httpStatus: 429,
+                userMessage: `Daily limit of ${dailyLimit} meal suggestions reached for your tier.`,
             });
-        }
+        },
+        fn: async () => {
+            const [savedMeals, frequentGroup] = await Promise.all([
+                prisma.savedMeal.findMany({
+                    where: { userId },
+                    include: { items: true },
+                    take: 20,
+                }),
+                prisma.nutritionLog.groupBy({
+                    by: ['foodItemId'],
+                    where: { userId },
+                    _count: { foodItemId: true },
+                    orderBy: { _count: { foodItemId: 'desc' } },
+                    take: 15,
+                }),
+            ]);
 
-        if (!userSettings.aiEnabled) {
-            throw new AiProviderError({
-                code: 'AI_DISABLED',
-                httpStatus: 403,
-                userMessage: 'AI features are currently disabled. Enable them in your AI settings.',
-            });
-        }
-
-        const userTier = userSettings.usageTier || 'none';
-        const isByok = isByokActive(userSettings);
-
-        if (userTier === 'none' && !isByok) {
-            throw new AiProviderError({
-                code: 'NOT_CONFIGURED',
-                httpStatus: 403,
-                userMessage: 'No AI access tier assigned and no personal API key configured. Add your API key in AI Settings.',
-            });
-        }
-
-        const isManagedTier = userTier === 'tier1' || userTier === 'tier2' || userTier === 'tier3';
-        if (isManagedTier && !isByok) {
-            const dailyLimit = getFeatureDailyLimit('mealSuggest', userTier, globalSettings);
-
-            const startOfToday = new Date();
-            startOfToday.setHours(0, 0, 0, 0);
-            const lastResetDay = userSettings.lastUsageReset
-                ? new Date(userSettings.lastUsageReset).toDateString()
-                : '';
-            const currentSuggests =
-                lastResetDay === startOfToday.toDateString()
-                    ? (userSettings.mealSuggestsUsedToday || 0)
-                    : 0;
-
-            if (dailyLimit <= 0 || currentSuggests >= dailyLimit) {
-                throw new AiProviderError({
-                    code: 'USER_LIMIT_REACHED',
-                    httpStatus: 429,
-                    userMessage: `Daily limit of ${dailyLimit} meal suggestions reached for your tier.`,
+            let frequentFoodsText = '';
+            if (frequentGroup.length > 0) {
+                const frequentFoodIds = frequentGroup.map((g) => g.foodItemId);
+                const frequentItems = await prisma.foodItem.findMany({
+                    where: { id: { in: frequentFoodIds } },
                 });
+                frequentFoodsText = frequentItems
+                    .map(
+                        (item) =>
+                            `- ${fenceUntrusted(item.name?.slice(0, 120))} (${Math.round(item.calories)} kcal, ${item.protein}P/${item.carbs}C/${item.fats}F per ${fenceUntrusted(item.servingSize?.slice(0, 120)) || 'serving'})`
+                    )
+                    .join('\n');
             }
 
-            const claimed = await prisma.userAiSettings.updateMany({
-                where: { userId, mealSuggestsUsedToday: { lt: dailyLimit } },
-                data: {
-                    mealSuggestsUsedToday: { increment: 1 },
-                    lastUsageReset: new Date(),
-                },
-            });
-
-            if (claimed.count === 0) {
-                throw new AiProviderError({
-                    code: 'USER_LIMIT_REACHED',
-                    httpStatus: 429,
-                    userMessage: `Daily limit of ${dailyLimit} meal suggestions reached for your tier.`,
-                });
-            }
-            reservationClaimed = true;
-        }
-
-        const [savedMeals, frequentGroup] = await Promise.all([
-            prisma.savedMeal.findMany({
-                where: { userId },
-                include: { items: true },
-                take: 20,
-            }),
-            prisma.nutritionLog.groupBy({
-                by: ['foodItemId'],
-                where: { userId },
-                _count: { foodItemId: true },
-                orderBy: { _count: { foodItemId: 'desc' } },
-                take: 15,
-            }),
-        ]);
-
-        let frequentFoodsText = '';
-        if (frequentGroup.length > 0) {
-            const frequentFoodIds = frequentGroup.map((g) => g.foodItemId);
-            const frequentItems = await prisma.foodItem.findMany({
-                where: { id: { in: frequentFoodIds } },
-            });
-            frequentFoodsText = frequentItems
+            const savedMealsText = savedMeals
                 .map(
-                    (item) =>
-                        `- ${fenceUntrusted(item.name?.slice(0, 120))} (${Math.round(item.calories)} kcal, ${item.protein}P/${item.carbs}C/${item.fats}F per ${fenceUntrusted(item.servingSize?.slice(0, 120)) || 'serving'})`
+                    (meal) =>
+                        `- "${fenceUntrusted(meal.name?.slice(0, 120))}" (${Math.round(meal.totalCalories)} kcal, ${meal.totalProtein}P/${meal.totalCarbs}C/${meal.totalFats}F)`
                 )
                 .join('\n');
-        }
 
-        const savedMealsText = savedMeals
-            .map(
-                (meal) =>
-                    `- "${fenceUntrusted(meal.name?.slice(0, 120))}" (${Math.round(meal.totalCalories)} kcal, ${meal.totalProtein}P/${meal.totalCarbs}C/${meal.totalFats}F)`
-            )
-            .join('\n');
-
-        const prompt = buildMealPrompt({
-            remainingCalories,
-            remainingProtein,
-            remainingCarbs,
-            remainingFats,
-            savedMealsText,
-            frequentFoodsText,
-            strictJson: false,
-        });
-
-        const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
-        const firstExecution = await executeCompletionWithFallback(userId, 'mealSuggest', messages);
-
-        const usageRecords: Array<{
-            inputTokens: number;
-            outputTokens: number;
-            providerId?: string;
-            model: string;
-        }> = [
-            {
-                inputTokens: countTokens(prompt, firstExecution.targetUsed.model),
-                outputTokens: countTokens(firstExecution.text, firstExecution.targetUsed.model),
-                providerId: firstExecution.targetUsed.providerId,
-                model: firstExecution.targetUsed.model,
-            },
-        ];
-
-        let parsed: Record<string, unknown>;
-        try {
-            parsed = extractJsonObject(firstExecution.text);
-        } catch {
-            const strictPrompt = buildMealPrompt({
+            const prompt = buildMealPrompt({
                 remainingCalories,
                 remainingProtein,
                 remainingCarbs,
                 remainingFats,
                 savedMealsText,
                 frequentFoodsText,
-                strictJson: true,
+                strictJson: false,
             });
-            const strictSystem = 'Return only valid JSON. No reasoning, no markdown, no extra text.';
-            const strictMessages: ChatMessage[] = [
-                { role: 'system', content: strictSystem },
-                { role: 'user', content: strictPrompt },
+
+            const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
+            const firstExecution = await executeCompletionWithFallback(userId, 'mealSuggest', messages);
+
+            const usageRecords: Array<{
+                inputTokens: number;
+                outputTokens: number;
+                providerId?: string;
+                model: string;
+            }> = [
+                {
+                    inputTokens: countTokens(prompt, firstExecution.targetUsed.model),
+                    outputTokens: countTokens(firstExecution.text, firstExecution.targetUsed.model),
+                    providerId: firstExecution.targetUsed.providerId,
+                    model: firstExecution.targetUsed.model,
+                },
             ];
 
-            const strictExecution = await executeCompletionWithFallback(
-                userId,
-                'mealSuggest',
-                strictMessages
-            );
-
-            usageRecords.push({
-                inputTokens: countTokens(`${strictSystem}\n${strictPrompt}`, strictExecution.targetUsed.model),
-                outputTokens: countTokens(strictExecution.text, strictExecution.targetUsed.model),
-                providerId: strictExecution.targetUsed.providerId,
-                model: strictExecution.targetUsed.model,
-            });
-
+            let parsed: Record<string, unknown>;
             try {
-                parsed = extractJsonObject(strictExecution.text);
-            } catch (strictErr) {
-                logger.error(`${logPrefix} Invalid JSON response`, {
-                    error: strictErr instanceof Error ? strictErr.message : String(strictErr),
-                    model: strictExecution.targetUsed.model,
-                    userId,
-                    preview: firstExecution.text.slice(0, 500),
+                parsed = extractAiJsonObject(firstExecution.text);
+            } catch {
+                const strictPrompt = buildMealPrompt({
+                    remainingCalories,
+                    remainingProtein,
+                    remainingCarbs,
+                    remainingFats,
+                    savedMealsText,
+                    frequentFoodsText,
+                    strictJson: true,
                 });
-                throw new AiProviderError({
-                    code: 'INVALID_RESPONSE',
-                    httpStatus: 502,
-                    userMessage: 'AI returned an invalid response. Please try again.',
-                    retryable: true,
-                    providerId: strictExecution.targetUsed.providerId,
-                    providerSlug: strictExecution.targetUsed.providerSlug,
-                    model: strictExecution.targetUsed.model,
-                });
-            }
-        }
+                const strictSystem = 'Return only valid JSON. No reasoning, no markdown, no extra text.';
+                const strictMessages: ChatMessage[] = [
+                    { role: 'system', content: strictSystem },
+                    { role: 'user', content: strictPrompt },
+                ];
 
-        for (const rec of usageRecords) {
-            try {
-                await incrementUsage(
+                const strictExecution = await executeCompletionWithFallback(
                     userId,
-                    { inputTokens: rec.inputTokens, outputTokens: rec.outputTokens },
-                    rec.providerId,
-                    {
-                        skipMessageIncrement: true,
-                        model: rec.model,
-                    }
+                    'mealSuggest',
+                    strictMessages
                 );
-            } catch (usageErr) {
-                logger.warn(`${logPrefix} Failed to record token usage`, {
-                    userId,
-                    error: usageErr instanceof Error ? usageErr.message : String(usageErr),
-                });
-            }
-        }
 
-        return parsed;
-    } catch (error) {
-        await releaseClaimedSlot();
-        throw error;
-    }
+                usageRecords.push({
+                    inputTokens: countTokens(`${strictSystem}\n${strictPrompt}`, strictExecution.targetUsed.model),
+                    outputTokens: countTokens(strictExecution.text, strictExecution.targetUsed.model),
+                    providerId: strictExecution.targetUsed.providerId,
+                    model: strictExecution.targetUsed.model,
+                });
+
+                try {
+                    parsed = extractAiJsonObject(strictExecution.text);
+                } catch (strictErr) {
+                    logger.error(`${logPrefix} Invalid JSON response`, {
+                        error: strictErr instanceof Error ? strictErr.message : String(strictErr),
+                        model: strictExecution.targetUsed.model,
+                        userId,
+                        preview: firstExecution.text.slice(0, 500),
+                    });
+                    throw new AiProviderError({
+                        code: 'INVALID_RESPONSE',
+                        httpStatus: 502,
+                        userMessage: 'AI returned an invalid response. Please try again.',
+                        retryable: true,
+                        providerId: strictExecution.targetUsed.providerId,
+                        providerSlug: strictExecution.targetUsed.providerSlug,
+                        model: strictExecution.targetUsed.model,
+                    });
+                }
+            }
+
+            for (const rec of usageRecords) {
+                try {
+                    await incrementUsage(
+                        userId,
+                        { inputTokens: rec.inputTokens, outputTokens: rec.outputTokens },
+                        rec.providerId,
+                        {
+                            skipMessageIncrement: true,
+                            model: rec.model,
+                        }
+                    );
+                } catch (usageErr) {
+                    logger.warn(`${logPrefix} Failed to record token usage`, {
+                        userId,
+                        error: usageErr instanceof Error ? usageErr.message : String(usageErr),
+                    });
+                }
+            }
+
+            return parsed;
+        },
+    });
 }
 
 export function mealSuggestErrorResponse(error: unknown, logPrefix: string): NextResponse {

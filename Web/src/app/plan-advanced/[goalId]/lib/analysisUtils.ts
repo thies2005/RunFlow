@@ -1,4 +1,5 @@
 import { startOfWeek, format } from 'date-fns';
+import { estimateWorkoutTssWithFallback } from '@/lib/metrics/plannedTss';
 
 export interface WorkoutItem {
     id: string;
@@ -67,22 +68,7 @@ function getModality(type: string, sport?: string | null): 'run' | 'bike' | 'swi
 }
 
 function estimateFallbackTss(w: WorkoutItem): number {
-    if (w.plannedTss && w.plannedTss > 0) return w.plannedTss;
-    const durSec = w.targetDuration ?? (w.targetDistance ? (w.targetDistance / 1000) * 330 : 0);
-    if (!durSec || durSec <= 0) return 0;
-    const hours = durSec / 3600;
-    const mod = getModality(w.workoutType, w.sport);
-    let intensityFactor = 0.75;
-    if (['INTERVALS', 'REPETITIONS', 'RIDE_INTERVALS'].includes(w.workoutType)) {
-        intensityFactor = 0.92;
-    } else if (['TEMPO', 'FARTLEK', 'BRICK'].includes(w.workoutType)) {
-        intensityFactor = 0.85;
-    } else if (['LONG_RUN', 'LONG_RIDE'].includes(w.workoutType)) {
-        intensityFactor = 0.72;
-    } else if (mod === 'strength') {
-        intensityFactor = 0.6;
-    }
-    return Math.round(hours * Math.pow(intensityFactor, 2) * 100);
+    return estimateWorkoutTssWithFallback(w as any);
 }
 
 export interface WeekGroup {

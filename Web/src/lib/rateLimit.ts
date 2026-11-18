@@ -194,7 +194,7 @@ export const RATE_LIMITS = {
  * have passed through the expected proxy chain and is not trusted at all.
  * A hop count of 0 means "no trusted proxy" and disables the header entirely.
  */
-function extractTrustedForwardedIp(forwardedFor: string | null, trustedHops: number): string | null {
+export function extractTrustedForwardedIp(forwardedFor: string | null, trustedHops: number): string | null {
     if (trustedHops <= 0 || !forwardedFor) {
         return null;
     }
@@ -205,16 +205,14 @@ function extractTrustedForwardedIp(forwardedFor: string | null, trustedHops: num
     return parts[parts.length - trustedHops] || null;
 }
 
-function getTrustedProxyHops(): number {
-    const raw = process.env.TRUSTED_PROXY_HOPS;
+export function getTrustedProxyHops(defaultHops: number = 1): number {
+    const raw = process.env.TRUSTED_PROXY_HOPS || process.env.TRUSTED_PROXY_COUNT;
     if (raw === undefined || raw === '') {
-        // Default: one appending proxy in front of the app (the shipped
-        // deployment runs behind a single cloudflared tunnel hop).
-        return 1;
+        return defaultHops;
     }
     const parsed = parseInt(raw, 10);
     if (!Number.isFinite(parsed) || parsed < 0) {
-        return 1;
+        return defaultHops;
     }
     return parsed;
 }

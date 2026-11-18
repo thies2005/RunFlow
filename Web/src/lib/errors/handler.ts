@@ -1,5 +1,6 @@
 import { Prisma } from '@/generated/prisma/client'
 import { NextResponse } from 'next/server'
+import { isApiError } from '@/lib/apiError'
 import { logger } from '@/lib/logging/logger'
 import crypto from 'crypto'
 
@@ -17,6 +18,10 @@ export function getSafeErrorMessage(error: unknown): string {
 export function handleError(error: unknown): NextResponse {
   const errorId = crypto.randomUUID().substring(0, 8)
   logger.error('Error', { errorId, error: error instanceof Error ? error.message : String(error) })
+
+  if (isApiError(error)) {
+    return error.toResponse()
+  }
 
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === 'P2002') {

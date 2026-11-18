@@ -4,15 +4,12 @@ import { recalculateWorkoutPaces } from '@/lib/plans/recalculate-paces';
 import { auth } from '@/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { RaceType, PlanSport, WorkoutType, Prisma } from '@/generated/prisma/browser';
+import { RaceType, PlanSport } from '@/generated/prisma/browser';
 import {
     TRIATHLON_RACE_TYPES,
-    generateTrainingPlan,
-    buildPlanPhaseBlocks,
     type PlanConfig,
 } from '@/lib/plans';
-import { mapWorkoutsForDb, computePlanWeeklyVolumeGoals } from '@/lib/services/plan-creation';
-import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
+import { regenerateGoalPlan } from '@/lib/services/plan-creation';
 
 export async function GET() {
     try {
@@ -410,73 +407,11 @@ export async function POST(req: NextRequest) {
                     hrRest: typeof restingHeartRate === 'number' ? Math.round(restingHeartRate) : currentUser?.hrRest ?? null,
                 };
 
-                const generated = generateTrainingPlan(planConfig);
-                for (const w of generated) {
-                    if (w.plannedTss == null) {
-                        w.plannedTss = calculateWorkoutPlannedTss({
-                            workoutType: w.type as WorkoutType,
-                            sport: w.sport ?? null,
-                            targetDistance: w.totalDistance,
-                            targetDuration: w.targetDuration ?? null,
-                            targetPace: w.targetPace ?? null,
-                            structuredSteps: w.structuredSteps ?? null,
-                            ftpWatts: nextFtp,
-                        });
-                    }
-                }
-                const phaseBlocks = buildPlanPhaseBlocks(planConfig, generated);
-                const weeklyGoals = computePlanWeeklyVolumeGoals(planConfig, generated);
-
-                const lastCompletedWorkout = prisma.workout?.findFirst
-                    ? await prisma.workout.findFirst({
-                          where: { goalId: activeGoal.id, isCompleted: true },
-                          orderBy: { scheduledDate: 'desc' },
-                          select: { scheduledDate: true },
-                      })
-                    : null;
-                const workoutsToInsert =
-                    lastCompletedWorkout?.scheduledDate && lastCompletedWorkout.scheduledDate !== firstPendingWorkout?.scheduledDate
-                        ? generated.filter((w) => new Date(w.date).getTime() > new Date(lastCompletedWorkout.scheduledDate).getTime())
-                        : generated;
-
-                await prisma.$transaction(async (tx) => {
-                    await tx.workout.deleteMany({
-                        where: { goalId: activeGoal.id, isCompleted: false },
-                    });
-                    await tx.goal.update({
-                        where: { id: activeGoal.id },
-                        data: {
-                            sport: nextSport,
-                            raceType: nextRaceType,
-                            raceDate: nextRaceDate,
-                            planStartDate: startDate,
-                            planWeeks: totalWeeks,
-                            currentVdot: newVdot,
-                            ftpAtCreation: nextFtp,
-                            swimCssAtCreation: nextCss,
-                            runsPerWeek: nextRuns,
-                            ridesPerWeek: nextRides,
-                            swimsPerWeek: nextSwims,
-                            strengthPerWeek: nextStrength,
-                            weeklyMileageGoal: nextMileageMeters,
-                            buildWeeks: build,
-                            peakWeeks: peak,
-                            taperWeeks: taper,
-                            longRunDay: nextLongRunDay,
-                            workoutDay: nextWorkoutDay,
-                            swimDay: typeof nextSwimDay === 'number' ? nextSwimDay : null,
-                            ...(nextRestDays && { restDays: nextRestDays }),
-                            weeklyBikeTssGoal: weeklyGoals.bikeTss,
-                            weeklySwimMetersGoal: weeklyGoals.swimMeters,
-                            targetWeeklyTss: weeklyGoals.totalTss,
-                            ...(phaseBlocks.length > 0 && { phaseBlocks: phaseBlocks as unknown as Prisma.InputJsonValue }),
-                        },
-                    });
-                    if (workoutsToInsert.length > 0) {
-                        await tx.workout.createMany({
-                            data: mapWorkoutsForDb(workoutsToInsert, { goalId: activeGoal.id, ftpWatts: nextFtp }),
-                        });
-                    }
+                await regenerateGoalPlan({
+                    goalId: activeGoal.id,
+                    planConfig,
+                    updatePlanStartDate: true,
+                    firstPendingDate: firstPendingWorkout?.scheduledDate ?? null,
                 });
             } else {
                 // Update Goal Settings (currentVdot is set inside recalculateWorkoutPaces)

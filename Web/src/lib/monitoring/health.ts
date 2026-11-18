@@ -1,4 +1,5 @@
 import { prisma } from '../db';
+import { getRealTimeStats } from './request-tracker';
 
 export interface HealthCheckResult {
     status: 'healthy' | 'unhealthy';
@@ -143,14 +144,22 @@ export function recordMetric(responseTime: number, isError: boolean = false): vo
 
 export function getRecentMetrics(): { errorRate: number; avgResponseTime: number; uptime: number } {
     const now = Date.now();
+    const uptime = (now - startTime) / 1000;
+
+    if (metricsBuffer.length === 0) {
+        const stats = getRealTimeStats();
+        return {
+            errorRate: stats.errorRate / 100,
+            avgResponseTime: stats.avgResponseTime,
+            uptime,
+        };
+    }
 
     const errorCount = metricsBuffer.filter(m => m.error).length;
-    const errorRate = metricsBuffer.length > 0 ? errorCount / metricsBuffer.length : 0;
+    const errorRate = errorCount / metricsBuffer.length;
 
     const totalResponseTime = metricsBuffer.reduce((sum, m) => sum + m.responseTime, 0);
-    const avgResponseTime = metricsBuffer.length > 0 ? totalResponseTime / metricsBuffer.length : 0;
-
-    const uptime = (now - startTime) / 1000;
+    const avgResponseTime = totalResponseTime / metricsBuffer.length;
 
     return { errorRate, avgResponseTime, uptime };
 }

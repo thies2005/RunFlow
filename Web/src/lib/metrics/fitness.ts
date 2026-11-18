@@ -30,8 +30,8 @@ export interface FitnessHistory {
 }
 
 // Time constants (in days)
-const CTL_TIME_CONSTANT = 42;
-const ATL_TIME_CONSTANT = 7;
+export const CTL_TIME_CONSTANT = 42;
+export const ATL_TIME_CONSTANT = 7;
 
 /**
  * Calculate exponential decay factor
@@ -39,6 +39,43 @@ const ATL_TIME_CONSTANT = 7;
  */
 export function calculateDecayFactor(timeConstant: number): number {
     return Math.exp(-1 / timeConstant);
+}
+
+/**
+ * Advance an exponentially weighted moving average (EWMA) by one day.
+ */
+export function stepEwma(
+    previous: number,
+    dailyLoad: number,
+    timeConstant: number = CTL_TIME_CONSTANT
+): number {
+    const decay = calculateDecayFactor(timeConstant);
+    return previous * decay + dailyLoad * (1 - decay);
+}
+
+/**
+ * Apply multi-day zero-load exponential decay to an EWMA value.
+ */
+export function decayEwma(
+    previous: number,
+    gapDays: number,
+    timeConstant: number = CTL_TIME_CONSTANT
+): number {
+    if (gapDays <= 0) return previous;
+    return previous * Math.pow(calculateDecayFactor(timeConstant), gapDays);
+}
+
+/**
+ * Advance a Banister PMC state (CTL, ATL, TSB) by one day for a given daily load.
+ */
+export function stepPmcState(
+    state: { ctl: number; atl: number },
+    dailyLoad: number,
+    opts?: { ctlDays?: number; atlDays?: number }
+): { ctl: number; atl: number; tsb: number } {
+    const ctl = stepEwma(state.ctl, dailyLoad, opts?.ctlDays ?? CTL_TIME_CONSTANT);
+    const atl = stepEwma(state.atl, dailyLoad, opts?.atlDays ?? ATL_TIME_CONSTANT);
+    return { ctl, atl, tsb: ctl - atl };
 }
 
 /**
@@ -55,9 +92,6 @@ export function calculateFitnessHistory(
     // Only return empty if NO activities AND no explicit start date
     // When startDate is provided, we need to calculate decay even with no activities
     if (dailyLoads.length === 0 && !startDate) return [];
-
-    const ctlDecay = calculateDecayFactor(CTL_TIME_CONSTANT);
-    const atlDecay = calculateDecayFactor(ATL_TIME_CONSTANT);
 
     let ctl = initialCtl;
     let atl = initialAtl;
@@ -94,16 +128,14 @@ export function calculateFitnessHistory(
         const trimp = dayLoad?.trimp || 0;
         const runningTss = dayLoad?.runningTss || 0;
 
-        // Update CTL (total TRIMP from all activities)
-        ctl = ctl * ctlDecay + trimp * (1 - ctlDecay);
-
-        // Update ATL (total TRIMP)
-        atl = atl * atlDecay + trimp * (1 - atlDecay);
+        // Update CTL & ATL (total TRIMP from all activities)
+        const nextPmc = stepPmcState({ ctl, atl }, trimp);
+        ctl = nextPmc.ctl;
+        atl = nextPmc.atl;
+        const tsb = nextPmc.tsb;
 
         // Update Running-only CTL
-        ctlRunning = ctlRunning * ctlDecay + runningTss * (1 - ctlDecay);
-
-        const tsb = ctl - atl;
+        ctlRunning = stepEwma(ctlRunning, runningTss, CTL_TIME_CONSTANT);
 
         history.push({
             date: new Date(d),

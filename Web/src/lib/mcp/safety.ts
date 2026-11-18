@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { stepPmcState } from '@/lib/metrics/fitness';
 
 export interface SafetyAdvisory {
     level: 'info' | 'warning' | 'critical';
@@ -261,9 +262,10 @@ export async function evaluatePlanSafety(
 
     for (const day of sortedDays) {
         const dayTss = dailyTssMap.get(day) || 0;
-        currentCtl = currentCtl + (dayTss - currentCtl) / 42;
-        currentAtl = currentAtl + (dayTss - currentAtl) / 7;
-        const projectedTsb = currentCtl - currentAtl;
+        const next = stepPmcState({ ctl: currentCtl, atl: currentAtl }, dayTss);
+        currentCtl = next.ctl;
+        currentAtl = next.atl;
+        const projectedTsb = next.tsb;
 
         if (projectedTsb < minTsb) {
             minTsb = projectedTsb;

@@ -4,19 +4,16 @@ import { NextResponse } from 'next/server';
 import { MINUTE_MS } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';
 import { getRedisClient, type RedisClient } from '@/lib/redis';
-import { cleanOldTimestamps } from '@/lib/rateLimit';
+import {
+    cleanOldTimestamps,
+    extractTrustedForwardedIp,
+    getTrustedProxyHops,
+    rateLimitHeaders,
+} from '@/lib/rateLimit';
 
 interface AdminRateLimitRecord {
     timestamps: number[];
     violations: number[];
-}
-
-let resolvedRedisClient: RedisClient | null | undefined = undefined;
-
-async function getAdminRedisClient(): Promise<RedisClient | null> {
-    if (resolvedRedisClient !== undefined) return resolvedRedisClient;
-    resolvedRedisClient = await getRedisClient();
-    return resolvedRedisClient;
 }
 
 const adminCache = new LRUCache<string, AdminRateLimitRecord>({
@@ -35,24 +32,6 @@ const ADMIN_RATE_LIMITS = {
 
 type AdminOperation = keyof typeof ADMIN_RATE_LIMITS;
 
-/**
- * Number of trusted reverse proxies in front of the app that APPEND to
- * X-Forwarded-For (e.g. cloudflared / Traefik). Defaults to 0 = directly
- * exposed, in which case forwarded headers are client-supplied and are
- * ignored entirely rather than trusted.
- */
-function getTrustedProxyCount(): number {
-    const raw = process.env.TRUSTED_PROXY_COUNT;
-    if (raw === undefined || raw === '') {
-        return 0;
-    }
-    const parsed = parseInt(raw, 10);
-    if (!Number.isFinite(parsed) || parsed < 0) {
-        return 0;
-    }
-    return parsed;
-}
-
 export function getClientIP(request: Request): string {
     // 1. Explicitly trusted platform/proxy header (e.g. Cf-Connecting-Ip set
     //    by Cloudflare/cloudflared). Only configure this when the app is not
@@ -65,27 +44,16 @@ export function getClientIP(request: Request): string {
         }
     }
 
-    const trustedProxies = getTrustedProxyCount();
+    const trustedProxies = getTrustedProxyHops(0);
     if (trustedProxies <= 0) {
         // No trusted proxy in front: every forwarded header is spoofable, so
         // they must not contribute to rate-limit identity at all.
         return 'unknown';
     }
 
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    if (forwardedFor) {
-        const parts = forwardedFor.split(',').map((s) => s.trim()).filter(Boolean);
-        // The rightmost entries were appended by our trusted proxies; the
-        // client-controlled (spoofable) entries are everything left of them,
-        // so the real client IP is `trustedProxies` entries from the right.
-        // A header with fewer entries than the trusted hop count did not pass
-        // through the expected proxy chain and is not trusted.
-        if (parts.length >= trustedProxies) {
-            const clientIp = parts[parts.length - trustedProxies];
-            if (clientIp) {
-                return clientIp;
-            }
-        }
+    const forwardedIp = extractTrustedForwardedIp(request.headers.get('x-forwarded-for'), trustedProxies);
+    if (forwardedIp) {
+        return forwardedIp;
     }
 
     const realIp = request.headers.get('x-real-ip');
@@ -195,7 +163,7 @@ export async function adminRateLimit(
     } else {
         effectiveBucketId = rawIp;
     }
-    const client = await getAdminRedisClient();
+    const client = await getRedisClient();
 
     if (client) {
         return adminRateLimitRedis(client, effectiveBucketId, operation);
@@ -372,10 +340,11 @@ export function getRateLimitHeaders(
 ): Headers {
     const headers = new Headers();
     const limit = ADMIN_RATE_LIMITS[operation].limit;
+    const record = rateLimitHeaders({ allowed: true, limit, remaining, resetAt: reset });
 
-    headers.set('X-RateLimit-Limit', String(limit));
-    headers.set('X-RateLimit-Remaining', String(remaining));
-    headers.set('X-RateLimit-Reset', String(reset));
+    for (const [key, value] of Object.entries(record)) {
+        headers.set(key, value);
+    }
 
     return headers;
 }

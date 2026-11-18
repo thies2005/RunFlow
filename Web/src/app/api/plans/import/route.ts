@@ -4,7 +4,7 @@ import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
-import { createSnapshot } from '@/lib/plan/snapshot';
+import { createSnapshot } from '@/lib/plans/snapshot';
 import { RaceType, WorkoutType, PlanPhase, PlanCreationMode } from '@/generated/prisma/client';
 import type { Prisma } from '@/generated/prisma/client';
 import { z } from 'zod';

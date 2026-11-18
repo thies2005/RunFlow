@@ -31,12 +31,12 @@ import {
     KeyboardSensor,
     DragEndEvent,
 } from '@dnd-kit/core';
-import { CalendarToolbar, type CalendarViewMode } from '@/app/calendar-preview/components/CalendarToolbar';
-import { MonthlyView } from '@/app/calendar-preview/components/MonthlyView';
-import { WeeklyView } from '@/app/calendar-preview/components/WeeklyView';
-import { SummaryStats } from '@/app/calendar-preview/components/SummaryStats';
-import { buildDays, buildWeeks, buildMonth, fillFitness } from '@/app/calendar-preview/components/metrics';
-import type { MockActivity, MockWorkout, WorkoutType } from '@/app/calendar-preview/components/mockData';
+import { CalendarToolbar, type CalendarViewMode } from '@/components/Calendar/CalendarToolbar';
+import { MonthlyView } from '@/components/Calendar/MonthlyView';
+import { WeeklyView } from '@/components/Calendar/WeeklyView';
+import { SummaryStats } from '@/components/Calendar/SummaryStats';
+import { buildDays, buildWeeks, buildMonth, fillFitness } from '@/components/Calendar/metrics';
+import type { MockActivity, MockWorkout, WorkoutType } from '@/components/Calendar/mockData';
 import type { ActivityListItem } from '@/lib/types';
 import dynamic from 'next/dynamic';
 import { CalendarWorkoutDetailDrawer } from '@/components/Calendar/CalendarWorkoutDetailDrawer';

@@ -3,8 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import {
     calculateCogganPowerZones,
-    calculatePowerCurve,
-    estimateFtpFromPowerCurve,
+    estimateRideFtp,
 } from '@/lib/metrics/power';
 
 export const dynamic = 'force-dynamic';
@@ -28,20 +27,7 @@ async function getHighestEstimatedFtp(userId: string): Promise<number | null> {
     let highestEftp: number | null = null;
 
     for (const r of rides) {
-        let eftp: number | null = null;
-        const streams = r.streams as { watts?: number[]; time?: number[] } | null;
-        const titleMatch = (r.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i);
-        const titleWatts = titleMatch ? parseInt(titleMatch[1], 10) : null;
-        const validTitleWatts = titleWatts && titleWatts >= 40 && titleWatts <= 1500 ? titleWatts : null;
-
-        if (/\bftp\s*test\b/i.test(r.name || '') && validTitleWatts) {
-            eftp = validTitleWatts;
-        } else if (streams?.watts && Array.isArray(streams.watts) && streams.watts.length > 0) {
-            const curve = calculatePowerCurve(streams.watts, streams.time);
-            eftp = estimateFtpFromPowerCurve(curve, r.weightedAverageWatts ?? r.averageWatts ?? validTitleWatts);
-        } else if (r.weightedAverageWatts || r.averageWatts || validTitleWatts) {
-            eftp = estimateFtpFromPowerCurve([], r.weightedAverageWatts ?? r.averageWatts ?? validTitleWatts);
-        }
+        const { eftp } = estimateRideFtp(r);
 
         if (eftp && (highestEftp === null || eftp > highestEftp)) {
             highestEftp = eftp;

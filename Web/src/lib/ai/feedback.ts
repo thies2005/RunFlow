@@ -4,7 +4,6 @@ import {
     buildActivityContext,
     formatContextForAi,
     checkUsageLimit,
-    ensurePeriodUsageReset,
     ACTIVITY_FEEDBACK_PROMPTS,
 } from '@/lib/ai';
 import type { ChatMessage } from '@/lib/ai';
@@ -13,7 +12,7 @@ import { fenceUntrusted } from '@/lib/ai/prompts';
 import { AiProviderError } from '@/lib/ai/errors';
 import { executeCompletionWithFallback } from '@/lib/ai/executor';
 import { countTokens, estimateChatTokens } from '@/lib/ai/tokenCounter';
-import { getFeatureDailyLimit, incrementUsage } from '@/lib/ai/usage';
+import { incrementUsage, stripAiReasoningBlocks, withDailyFeatureQuota } from '@/lib/ai/usage';
 
 /**
  * Normalize LaTeX-style section headers that some models (DeepSeek/Kimi/Qwen
@@ -309,47 +308,12 @@ export async function generateAndSaveActivityFeedback(
 
     const userTier = userSettings.usageTier || 'none';
 
-    // Quota-lost-update fix: the daily activity-feedback limit used to be a
-    // read-compare before the multi-second provider call plus a blind
-    // `usedToday + 1` write after it. Concurrent requests all passed the same
-    // stale pre-check and their absolute writes collapsed into a single
-    // increment (lost update), bypassing the tier limit. The slot is now
-    // RESERVED atomically before any provider spend, with a conditional
-    // updateMany whose WHERE clause is the gate.
-    let feedbackSlotClaimed = false;
-    if (userTier !== 'none') {
-        const dailyLimit = getFeatureDailyLimit('activityFeedback', userTier, globalSettings);
-
-        if (typeof ensurePeriodUsageReset === 'function' && !(prisma as any).__updateManyCalls) {
-            await ensurePeriodUsageReset(userId);
-        } else {
-            const startOfToday = new Date();
-            startOfToday.setHours(0, 0, 0, 0);
-            await prisma.userAiSettings.updateMany({
-                where: {
-                    userId,
-                    lastUsageReset: { lt: startOfToday },
-                },
-                data: {
-                    activityFeedbackUsedToday: 0,
-                },
-            });
-        }
-
-        // Atomic claim: the UPDATE only matches while the counter is still
-        // below the tier limit, so of N concurrent requests at most
-        // dailyLimit - activityFeedbackUsedToday can claim a slot.
-        const claimed = await prisma.userAiSettings.updateMany({
-            where: {
-                userId,
-                activityFeedbackUsedToday: { lt: dailyLimit },
-            },
-            data: {
-                activityFeedbackUsedToday: { increment: 1 },
-                lastUsageReset: new Date(),
-            },
-        });
-        if (claimed.count === 0) {
+    return withDailyFeatureQuota({
+        userId,
+        feature: 'activityFeedback',
+        userTier,
+        globalSettings,
+        onLimitReached: (dailyLimit) => {
             throw new AiProviderError({
                 code: 'USER_LIMIT_REACHED',
                 httpStatus: 429,
@@ -357,180 +321,149 @@ export async function generateAndSaveActivityFeedback(
                 shouldFallback: false,
                 retryable: false,
             });
-        }
-        feedbackSlotClaimed = true;
-    }
+        },
+        fn: async () => {
+            const userContext = await buildUserContext(userId);
+            const activityContext = await buildActivityContext(activityId, userId);
 
-    try {
-        const userContext = await buildUserContext(userId);
-        const activityContext = await buildActivityContext(activityId, userId);
-
-        if (!activityContext) {
-            throw new Error('Could not load activity context');
-        }
-
-        const baseContext = formatContextForAi(userContext);
-        const activityStr = formatActivityForAi(activityContext);
-
-        // Generate all feedback in a single AI request
-        const systemPromptMessage: string = `You are a running coach analyzing an athlete's activity.\n\n--- Athlete Profile ---\n${baseContext}\n\n${ACTIVITY_FEEDBACK_PROMPTS.combined}`;
-        const userMessage: string = `Here's the activity to analyze:\n\n${activityStr}`;
-
-        const messages: ChatMessage[] = [
-            { role: 'system', content: systemPromptMessage },
-            { role: 'user', content: userMessage },
-        ];
-
-        const result = await executeCompletionWithFallback(
-            userId,
-            'activityFeedback',
-            messages,
-            signal ? { signal } : undefined
-        );
-        const raw = result.text;
-
-        // Strip <think> blocks that some models (e.g. DeepSeek) emit before parsing.
-        // These blocks often echo back the prompt including section names, which confuses
-        // the section parser if left in.
-        let cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-        // Also handle unclosed <think> tags (model cut off mid-thought)
-        const openThinkIdx = cleaned.indexOf('<think>');
-        if (openThinkIdx !== -1) {
-            cleaned = cleaned.substring(0, openThinkIdx).trim();
-        }
-        // If stripping removed everything, fall back to raw
-        if (!cleaned) {
-            cleaned = raw;
-        }
-
-        // Some models answer with LaTeX section headers (\section*{…}) instead of
-        // the requested markdown ## — normalize before parsing so both Strategy 1
-        // (header match) and the section trims see clean markdown.
-        cleaned = normalizeLatexSectionHeaders(cleaned);
-
-        // Parse the combined response into the 3 sections using markdown headers.
-        // We look for ## headers first, then fall back to keyword search.
-        const sections: Record<string, string> = {};
-        const lowerCleaned = cleaned.toLowerCase();
-
-        // Strategy 1: Look for markdown headers (## Planned Comparison, etc.)
-        const headerPatterns = [
-            { key: 'plannedComparison', pattern: /^#{1,3}\s*(?:planned\s+comparison|vs\.?\s*planned\s*workout)/gim },
-            { key: 'progressAnalysis', pattern: /^#{1,3}\s*(?:progress\s+(?:analysis|&\s*execution)|progress\s+and\s+execution)/gim },
-            { key: 'goalTrajectory', pattern: /^#{1,3}\s*goal\s+trajectory/gim },
-        ];
-
-        // Find header positions
-        let headerPositions: { key: string; index: number; matchEnd: number }[] = [];
-        for (const hp of headerPatterns) {
-            const match = hp.pattern.exec(cleaned);
-            if (match) {
-                headerPositions.push({ key: hp.key, index: match.index, matchEnd: match.index + match[0].length });
+            if (!activityContext) {
+                throw new Error('Could not load activity context');
             }
-        }
-        headerPositions.sort((a, b) => a.index - b.index);
 
-        if (headerPositions.length >= 2) {
-            // Use header-based parsing
-            for (let i = 0; i < headerPositions.length; i++) {
-                const contentStart = headerPositions[i].matchEnd;
-                const contentEnd = i + 1 < headerPositions.length ? headerPositions[i + 1].index : cleaned.length;
-                let sectionContent = cleaned.slice(contentStart, contentEnd).trim();
-                // Remove leading colons, dashes, newlines
-                sectionContent = sectionContent.replace(/^[:\s\-*>]+/, '').trim();
-                // Remove trailing markdown noise
-                sectionContent = sectionContent.replace(/[#*>\-\s:]+$/, '').trim();
-                sections[headerPositions[i].key] = sectionContent;
-            }
-        } else {
-            // Strategy 2: Fall back to keyword search (for models that don't use markdown headers)
-            const markers = [
-                { key: 'plannedComparison', label: 'planned comparison' },
-                { key: 'progressAnalysis', label: 'progress analysis' },
-                { key: 'goalTrajectory', label: 'goal trajectory' }
+            const baseContext = formatContextForAi(userContext);
+            const activityStr = formatActivityForAi(activityContext);
+
+            // Generate all feedback in a single AI request
+            const systemPromptMessage: string = `You are a running coach analyzing an athlete's activity.\n\n--- Athlete Profile ---\n${baseContext}\n\n${ACTIVITY_FEEDBACK_PROMPTS.combined}`;
+            const userMessage: string = `Here's the activity to analyze:\n\n${activityStr}`;
+
+            const messages: ChatMessage[] = [
+                { role: 'system', content: systemPromptMessage },
+                { role: 'user', content: userMessage },
             ];
 
-            const found = markers
-                .map(m => ({ ...m, index: lowerCleaned.indexOf(m.label) }))
-                .filter(m => m.index !== -1)
-                .sort((a, b) => a.index - b.index);
+            const result = await executeCompletionWithFallback(
+                userId,
+                'activityFeedback',
+                messages,
+                signal ? { signal } : undefined
+            );
+            const raw = result.text;
 
-            if (found.length > 0) {
-                for (let i = 0; i < found.length; i++) {
-                    const start = found[i].index + found[i].label.length;
-                    let actualStart = start;
-                    while (actualStart < cleaned.length && /[:\s#*>\-]/.test(cleaned[actualStart])) {
-                        actualStart++;
-                    }
-                    const end = i + 1 < found.length ? found[i + 1].index : cleaned.length;
-                    let sectionContent = cleaned.slice(actualStart, end).trim();
-                    sectionContent = sectionContent.replace(/[#*>\-\s:]+$/, '').trim();
-                    sections[found[i].key as string] = sectionContent;
+            // Strip <think> / <details> blocks before parsing sections.
+            let cleaned = stripAiReasoningBlocks(raw);
+
+            // Some models answer with LaTeX section headers (\section*{…}) instead of
+            // the requested markdown ## — normalize before parsing so both Strategy 1
+            // (header match) and the section trims see clean markdown.
+            cleaned = normalizeLatexSectionHeaders(cleaned);
+
+            // Parse the combined response into the 3 sections using markdown headers.
+            // We look for ## headers first, then fall back to keyword search.
+            const sections: Record<string, string> = {};
+            const lowerCleaned = cleaned.toLowerCase();
+
+            // Strategy 1: Look for markdown headers (## Planned Comparison, etc.)
+            const headerPatterns = [
+                { key: 'plannedComparison', pattern: /^#{1,3}\s*(?:planned\s+comparison|vs\.?\s*planned\s*workout)/gim },
+                { key: 'progressAnalysis', pattern: /^#{1,3}\s*(?:progress\s+(?:analysis|&\s*execution)|progress\s+and\s+execution)/gim },
+                { key: 'goalTrajectory', pattern: /^#{1,3}\s*goal\s+trajectory/gim },
+            ];
+
+            // Find header positions
+            const headerPositions: { key: string; index: number; matchEnd: number }[] = [];
+            for (const hp of headerPatterns) {
+                const match = hp.pattern.exec(cleaned);
+                if (match) {
+                    headerPositions.push({ key: hp.key, index: match.index, matchEnd: match.index + match[0].length });
                 }
             }
-        }
+            headerPositions.sort((a, b) => a.index - b.index);
 
-        // Fallback: If no sections were parsed, or they are all empty, put the entire cleaned response in progressAnalysis
-        let plannedComparison = stripTrailingReasoningNoise(sections.plannedComparison || '');
-        let progressAnalysis = stripTrailingReasoningNoise(sections.progressAnalysis || '');
-        let goalTrajectory = stripTrailingReasoningNoise(sections.goalTrajectory || '');
+            if (headerPositions.length >= 2) {
+                // Use header-based parsing
+                for (let i = 0; i < headerPositions.length; i++) {
+                    const contentStart = headerPositions[i].matchEnd;
+                    const contentEnd = i + 1 < headerPositions.length ? headerPositions[i + 1].index : cleaned.length;
+                    let sectionContent = cleaned.slice(contentStart, contentEnd).trim();
+                    // Remove leading colons, dashes, newlines
+                    sectionContent = sectionContent.replace(/^[:\s\-*>]+/, '').trim();
+                    // Remove trailing markdown noise
+                    sectionContent = sectionContent.replace(/[#*>\-\s:]+$/, '').trim();
+                    sections[headerPositions[i].key] = sectionContent;
+                }
+            } else {
+                // Strategy 2: Fall back to keyword search (for models that don't use markdown headers)
+                const markers = [
+                    { key: 'plannedComparison', label: 'planned comparison' },
+                    { key: 'progressAnalysis', label: 'progress analysis' },
+                    { key: 'goalTrajectory', label: 'goal trajectory' }
+                ];
 
-        if (!plannedComparison && !progressAnalysis && !goalTrajectory && cleaned.trim()) {
-            progressAnalysis = cleaned.trim();
-        }
+                const found = markers
+                    .map(m => ({ ...m, index: lowerCleaned.indexOf(m.label) }))
+                    .filter(m => m.index !== -1)
+                    .sort((a, b) => a.index - b.index);
 
-        // Upsert into DB
-        const feedback = await prisma.activityAiFeedback.upsert({
-            where: { activityId },
-            create: {
-                activityId,
-                plannedComparison,
-                progressAnalysis,
-                goalTrajectory,
-            },
-            update: {
-                plannedComparison,
-                progressAnalysis,
-                goalTrajectory,
-                generatedAt: new Date(),
-            },
-        });
+                if (found.length > 0) {
+                    for (let i = 0; i < found.length; i++) {
+                        const start = found[i].index + found[i].label.length;
+                        let actualStart = start;
+                        while (actualStart < cleaned.length && /[:\s#*>\-]/.test(cleaned[actualStart])) {
+                            actualStart++;
+                        }
+                        const end = i + 1 < found.length ? found[i + 1].index : cleaned.length;
+                        let sectionContent = cleaned.slice(actualStart, end).trim();
+                        sectionContent = sectionContent.replace(/[#*>\-\s:]+$/, '').trim();
+                        sections[found[i].key as string] = sectionContent;
+                    }
+                }
+            }
 
-        try {
-            const inputTokens = estimateChatTokens(messages, result.targetUsed.model);
-            const outputTokens = countTokens(raw, result.targetUsed.model);
-            await incrementUsage(
-                userId,
-                { inputTokens, outputTokens },
-                result.targetUsed.providerId,
-                { skipMessageIncrement: true, model: result.targetUsed.model }
-            );
-        } catch (usageError) {
-            logger.warn('Failed to record activity feedback token usage', {
-                userId,
-                activityId,
-                error: usageError instanceof Error ? usageError.message : String(usageError),
+            // Fallback: If no sections were parsed, or they are all empty, put the entire cleaned response in progressAnalysis
+            const plannedComparison = stripTrailingReasoningNoise(sections.plannedComparison || '');
+            let progressAnalysis = stripTrailingReasoningNoise(sections.progressAnalysis || '');
+            const goalTrajectory = stripTrailingReasoningNoise(sections.goalTrajectory || '');
+
+            if (!plannedComparison && !progressAnalysis && !goalTrajectory && cleaned.trim()) {
+                progressAnalysis = cleaned.trim();
+            }
+
+            // Upsert into DB
+            const feedback = await prisma.activityAiFeedback.upsert({
+                where: { activityId },
+                create: {
+                    activityId,
+                    plannedComparison,
+                    progressAnalysis,
+                    goalTrajectory,
+                },
+                update: {
+                    plannedComparison,
+                    progressAnalysis,
+                    goalTrajectory,
+                    generatedAt: new Date(),
+                },
             });
-        }
 
-        return { feedback, cached: false };
-    } catch (error) {
-        if (feedbackSlotClaimed) {
-            // Release the reservation when the generation or persistence failed:
-            // nothing was delivered, so the retry must not be blocked by a
-            // quota unit the user never received. Guarded decrement keeps the
-            // counter non-negative even across a day rollover that already
-            // reset it.
-            await prisma.userAiSettings.updateMany({
-                where: {
+            try {
+                const inputTokens = estimateChatTokens(messages, result.targetUsed.model);
+                const outputTokens = countTokens(raw, result.targetUsed.model);
+                await incrementUsage(
                     userId,
-                    activityFeedbackUsedToday: { gt: 0 },
-                },
-                data: {
-                    activityFeedbackUsedToday: { decrement: 1 },
-                },
-            }).catch(() => undefined);
-        }
-        throw error;
-    }
+                    { inputTokens, outputTokens },
+                    result.targetUsed.providerId,
+                    { skipMessageIncrement: true, model: result.targetUsed.model }
+                );
+            } catch (usageError) {
+                logger.warn('Failed to record activity feedback token usage', {
+                    userId,
+                    activityId,
+                    error: usageError instanceof Error ? usageError.message : String(usageError),
+                });
+            }
+
+            return { feedback, cached: false };
+        },
+    });
 }

@@ -1,4 +1,15 @@
-import { calculateFitnessHistory, calculateRunningTss, getActivityContribution, interpretTsb } from '../fitness';
+import {
+    ATL_TIME_CONSTANT,
+    CTL_TIME_CONSTANT,
+    calculateDecayFactor,
+    calculateFitnessHistory,
+    calculateRunningTss,
+    decayEwma,
+    getActivityContribution,
+    interpretTsb,
+    stepEwma,
+    stepPmcState,
+} from '../fitness';
 
 describe('Fitness Metrics', () => {
     describe('calculateFitnessHistory', () => {
@@ -47,6 +58,27 @@ describe('Fitness Metrics', () => {
 
         it('should return fatigued for very negative TSB', () => {
             expect(interpretTsb(-40).status).toBe('very_fatigued');
+        });
+    });
+
+    describe('EWMA / PMC helpers', () => {
+        it('stepEwma matches exponential decay step', () => {
+            const decay = calculateDecayFactor(CTL_TIME_CONSTANT);
+            expect(stepEwma(10, 100)).toBeCloseTo(10 * decay + 100 * (1 - decay), 10);
+        });
+
+        it('decayEwma applies multi-day zero-load decay and ignores non-positive gaps', () => {
+            expect(decayEwma(50, 0, ATL_TIME_CONSTANT)).toBe(50);
+            expect(decayEwma(50, -2, ATL_TIME_CONSTANT)).toBe(50);
+            const expected = 50 * Math.pow(calculateDecayFactor(ATL_TIME_CONSTANT), 3);
+            expect(decayEwma(50, 3, ATL_TIME_CONSTANT)).toBeCloseTo(expected, 10);
+        });
+
+        it('stepPmcState advances CTL, ATL, and TSB', () => {
+            const next = stepPmcState({ ctl: 40, atl: 30 }, 100);
+            expect(next.ctl).toBeGreaterThan(40);
+            expect(next.atl).toBeGreaterThan(30);
+            expect(next.tsb).toBeCloseTo(next.ctl - next.atl, 10);
         });
     });
 });

@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { middleware } from './middleware';
+import { middleware, config } from './middleware';
 import { NextRequest } from 'next/server';
 
 // Mock generateRequestId to avoid random values in snapshots if we used them
@@ -139,5 +139,19 @@ describe('Admin route cookie gate', () => {
     });
     const response = await middleware(request);
     expect(response.status).toBe(200);
+  });
+});
+
+describe('Middleware matcher regex', () => {
+  it('excludes /api/health while matching /api/health/* user routes', () => {
+    const pattern = config.matcher[0];
+    // Convert Next.js matcher pattern '/((?!...).*)' to a RegExp
+    const regex = new RegExp(`^${pattern}$`);
+
+    expect(regex.test('/api/health')).toBe(false);
+    expect(regex.test('/api/health/daily')).toBe(true);
+    expect(regex.test('/api/health/nutrition/log')).toBe(true);
+    expect(regex.test('/api/monitoring')).toBe(false);
+    expect(regex.test('/api/monitoring/track')).toBe(false);
   });
 });

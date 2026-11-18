@@ -66,14 +66,14 @@ jest.mock('@/lib/rateLimit', () => ({
     rateLimitHeaders: jest.fn(() => ({})),
 }));
 
-jest.mock('@/lib/plan/snapshot', () => ({
+jest.mock('@/lib/plans/snapshot', () => ({
     createSnapshot: jest.fn(),
 }));
 
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
-import { createSnapshot } from '@/lib/plan/snapshot';
+import { createSnapshot } from '@/lib/plans/snapshot';
 
 const mockedPrisma = prisma as unknown as {
     goal: { findFirst: jest.Mock; create: jest.Mock };

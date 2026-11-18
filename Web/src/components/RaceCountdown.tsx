@@ -1,7 +1,7 @@
 import { Activity, Calendar, Target, Trophy, CheckCircle, Loader2, Trash2, Info } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { differenceInDays, differenceInWeeks, differenceInCalendarWeeks, format, startOfWeek, endOfWeek, subDays, addDays } from 'date-fns';
-import { detectEffectivePlanSport, getEffectiveSportLabel, estimateFallbackWorkoutTss } from '@/lib/plan/sportDetection';
+import { detectEffectivePlanSport, getEffectiveSportLabel, estimateFallbackWorkoutTss } from '@/lib/plans/sportDetection';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';

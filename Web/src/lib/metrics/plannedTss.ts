@@ -11,7 +11,7 @@
  */
 
 import { WorkoutType } from '@/generated/prisma/client';
-import { calculateDecayFactor } from './fitness';
+import { ATL_TIME_CONSTANT, CTL_TIME_CONSTANT, stepPmcState } from './fitness';
 import {
     parseStructuredWorkout,
     resolveWorkoutSport,
@@ -413,13 +413,10 @@ export function calculateProjectedFitness(
 ): ProjectedFitnessPoint[] {
     if (plannedLoads.length === 0) return [];
 
-    const ctlDays = opts?.ctlDays ?? 42;
-    const atlDays = opts?.atlDays ?? 7;
+    const ctlDays = opts?.ctlDays ?? CTL_TIME_CONSTANT;
+    const atlDays = opts?.atlDays ?? ATL_TIME_CONSTANT;
     let ctl = opts?.initialCtl ?? 0;
     let atl = opts?.initialAtl ?? 0;
-
-    const ctlDecay = calculateDecayFactor(ctlDays);
-    const atlDecay = calculateDecayFactor(atlDays);
 
     // Index by dateKey (YYYY-MM-DD) for stable lookups.
     const loadMap = new Map<string, PlannedDailyLoad>();
@@ -443,9 +440,10 @@ export function calculateProjectedFitness(
         // Actual takes precedence over planned for completed days.
         const load = actualTss > 0 ? actualTss : plannedTss;
 
-        ctl = ctl * ctlDecay + load * (1 - ctlDecay);
-        atl = atl * atlDecay + load * (1 - atlDecay);
-        const tsb = ctl - atl;
+        const next = stepPmcState({ ctl, atl }, load, { ctlDays, atlDays });
+        ctl = next.ctl;
+        atl = next.atl;
+        const tsb = next.tsb;
 
         points.push({
             date: new Date(d),
@@ -479,6 +477,36 @@ export function calculatePlanPlannedTss(workouts: WorkoutForPlannedTss[]): Map<s
         map.set(key, round1((map.get(key) ?? 0) + tss));
     }
     return map;
+}
+
+/**
+ * Estimate planned TSS for a workout with distance-to-duration fallback (~5:30/km)
+ * when `targetDuration` is absent, returning a rounded integer (0 for REST or missing).
+ */
+export function estimateWorkoutTssWithFallback(
+    workout: Partial<WorkoutForPlannedTss> & { workoutType?: WorkoutType | string | null }
+): number {
+    if (workout.plannedTss != null && workout.plannedTss > 0) {
+        return Math.round(workout.plannedTss);
+    }
+    if (!workout.workoutType || workout.workoutType === 'REST') {
+        return 0;
+    }
+
+    const targetDuration =
+        workout.targetDuration && workout.targetDuration > 0
+            ? workout.targetDuration
+            : workout.targetDistance && workout.targetDistance > 0
+                ? Math.round((workout.targetDistance / 1000) * 330)
+                : null;
+
+    return Math.round(
+        calculateWorkoutPlannedTss({
+            ...workout,
+            workoutType: workout.workoutType as WorkoutType,
+            targetDuration,
+        }) ?? 0
+    );
 }
 
 /**

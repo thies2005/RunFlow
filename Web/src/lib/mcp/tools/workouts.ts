@@ -1,6 +1,6 @@
 import { type McpTool } from '@/lib/mcp/server';
 import { evaluatePlanSafety } from '@/lib/mcp/safety';
-import { createSnapshot } from '@/lib/plan/snapshot';
+import { createSnapshot } from '@/lib/plans/snapshot';
 import { adaptPlanAfterCompletion } from '@/lib/plans/adapt';
 import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
 import {

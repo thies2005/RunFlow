@@ -128,3 +128,80 @@ export function getScaledPhaseDefaults(
   const clampedBuild = Math.max(0, phaseBudget - clampedTaper - clampedPeak);
   return { taperWeeks: clampedTaper, peakWeeks: clampedPeak, buildWeeks: clampedBuild };
 }
+
+export type PlanDefaultsOverrides = {
+    runsPerWeek?: number | null;
+    ridesPerWeek?: number | null;
+    swimsPerWeek?: number | null;
+    strengthPerWeek?: number | null;
+    weeklyVolumeKm?: number | null;
+    maxLongRunKm?: number | null;
+    taperWeeks?: number | null;
+    peakWeeks?: number | null;
+    buildWeeks?: number | null;
+    longRunDay?: number | null;
+    workoutDay?: number | null;
+    swimDay?: number | null;
+};
+
+export type AppliedPlanDefaults = RaceDefaults & {
+    longRunDay: number;
+    workoutDay: number;
+    swimDay?: number;
+};
+
+export function applyPlanDefaults(
+    paramsOrRaceType?: string | null | (PlanDefaultsOverrides & { raceType?: string | null; vdot?: number | null }),
+    vdotArg?: number | null,
+    overridesArg?: PlanDefaultsOverrides
+): AppliedPlanDefaults {
+    let raceType = 'MARATHON';
+    let vdot: number | null | undefined = vdotArg;
+    let overrides: PlanDefaultsOverrides | undefined = overridesArg;
+
+    if (typeof paramsOrRaceType === 'object' && paramsOrRaceType !== null) {
+        if (paramsOrRaceType.raceType) raceType = paramsOrRaceType.raceType;
+        if (paramsOrRaceType.vdot !== undefined) vdot = paramsOrRaceType.vdot;
+        overrides = paramsOrRaceType;
+    } else if (typeof paramsOrRaceType === 'string') {
+        raceType = paramsOrRaceType;
+    }
+
+    const base = getRaceDefaults(raceType);
+    const adjusted = vdot && vdot > 0 ? adjustDefaultsForVdot(base, vdot) : base;
+    const isTri = ['SPRINT_TRI', 'OLYMPIC_TRI', 'HALF_IRONMAN', 'FULL_IRONMAN', 'CUSTOM_TRI'].includes(raceType);
+
+    return {
+        ...adjusted,
+        runsPerWeek: (overrides?.runsPerWeek !== undefined && overrides.runsPerWeek !== null && overrides.runsPerWeek > 0)
+            ? overrides.runsPerWeek
+            : adjusted.runsPerWeek,
+        ridesPerWeek: (overrides?.ridesPerWeek !== undefined && overrides.ridesPerWeek !== null && (!isTri || overrides.ridesPerWeek > 0))
+            ? overrides.ridesPerWeek
+            : adjusted.ridesPerWeek,
+        swimsPerWeek: (overrides?.swimsPerWeek !== undefined && overrides.swimsPerWeek !== null && (!isTri || overrides.swimsPerWeek > 0))
+            ? overrides.swimsPerWeek
+            : adjusted.swimsPerWeek,
+        strengthPerWeek: (overrides?.strengthPerWeek !== undefined && overrides.strengthPerWeek !== null && overrides.strengthPerWeek >= 0)
+            ? overrides.strengthPerWeek
+            : adjusted.strengthPerWeek,
+        weeklyVolumeKm: (overrides?.weeklyVolumeKm !== undefined && overrides.weeklyVolumeKm !== null && overrides.weeklyVolumeKm > 0)
+            ? overrides.weeklyVolumeKm
+            : adjusted.weeklyVolumeKm,
+        maxLongRunKm: (overrides?.maxLongRunKm !== undefined && overrides.maxLongRunKm !== null && overrides.maxLongRunKm > 0)
+            ? overrides.maxLongRunKm
+            : adjusted.maxLongRunKm,
+        taperWeeks: (overrides?.taperWeeks !== undefined && overrides.taperWeeks !== null && overrides.taperWeeks >= 0)
+            ? overrides.taperWeeks
+            : adjusted.taperWeeks,
+        peakWeeks: (overrides?.peakWeeks !== undefined && overrides.peakWeeks !== null && overrides.peakWeeks >= 0)
+            ? overrides.peakWeeks
+            : adjusted.peakWeeks,
+        buildWeeks: (overrides?.buildWeeks !== undefined && overrides.buildWeeks !== null && overrides.buildWeeks >= 0)
+            ? overrides.buildWeeks
+            : adjusted.buildWeeks,
+        longRunDay: (overrides?.longRunDay !== undefined && overrides.longRunDay !== null) ? overrides.longRunDay : 0,
+        workoutDay: (overrides?.workoutDay !== undefined && overrides.workoutDay !== null) ? overrides.workoutDay : 3,
+        swimDay: (overrides?.swimDay !== undefined && overrides.swimDay !== null) ? overrides.swimDay : undefined,
+    };
+}

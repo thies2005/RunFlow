@@ -15,7 +15,7 @@ import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS } from '@/lib/rateLimit';
 import { ApiError, handleApiError } from '@/lib/apiError';
-import { createSnapshot } from '@/lib/plan/snapshot';
+import { createSnapshot } from '@/lib/plans/snapshot';
 import { PlanPhase } from '@/generated/prisma/client';
 import type { Prisma } from '@/generated/prisma/client';
 import {

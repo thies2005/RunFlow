@@ -1,3 +1,5 @@
+import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
+
 /**
  * Sport detection & fallback TSS estimation for training plans and workouts.
  */
@@ -128,17 +130,11 @@ export function estimateFallbackWorkoutTss(w: {
     if (!w.targetDuration || w.targetDuration <= 0 || w.workoutType === 'REST') {
         return 0;
     }
-    const hours = w.targetDuration / 3600;
-    const type = w.workoutType || '';
-    let rate = 50; // default (EASY / RIDE / SWIM)
-    if (type === 'INTERVALS' || type === 'RIDE_INTERVALS') {
-        rate = 75;
-    } else if (type === 'TEMPO') {
-        rate = 65;
-    } else if (type === 'LONG_RUN' || type === 'LONG_RIDE') {
-        rate = 55;
-    } else if (type === 'STRENGTH') {
-        rate = 40;
-    }
-    return Math.round(hours * rate);
+    return Math.round(
+        calculateWorkoutPlannedTss({
+            workoutType: (w.workoutType || 'EASY') as any,
+            targetDuration: w.targetDuration,
+            targetPowerWatts: w.targetPowerWatts,
+        }) ?? 0
+    );
 }

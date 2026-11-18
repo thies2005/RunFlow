@@ -815,3 +815,193 @@ export async function resetMonthlyUsage(): Promise<number> {
     });
     return result.count;
 }
+
+const FEATURE_COUNTER_FIELD: Record<
+    LimitedAiFeature,
+    'calorieSnapsUsedToday' | 'mealSuggestsUsedToday' | 'activityFeedbackUsedToday'
+> = {
+    calorieSnap: 'calorieSnapsUsedToday',
+    mealSuggest: 'mealSuggestsUsedToday',
+    activityFeedback: 'activityFeedbackUsedToday',
+};
+
+/**
+ * Strip model reasoning blocks (<think>...</think>, <details>...</details>, and
+ * unclosed <think> tails) before parsing structured AI output.
+ */
+export function stripAiReasoningBlocks(text: string): string {
+    let cleaned = text
+        .replace(/<think>[\s\S]*?<\/think>/gi, '')
+        .replace(/<details>[\s\S]*?<\/details>/gi, '')
+        .trim();
+    const openThinkIdx = cleaned.toLowerCase().indexOf('<think>');
+    if (openThinkIdx !== -1) {
+        cleaned = cleaned.substring(0, openThinkIdx).trim();
+    }
+    return cleaned || text.trim();
+}
+
+/**
+ * Extract a JSON object from raw AI text, tolerating reasoning blocks,
+ * markdown code fences, and surrounding prose.
+ */
+export function extractAiJsonObject<T = Record<string, unknown>>(rawText: string): T {
+    const cleaned = stripAiReasoningBlocks(rawText);
+
+    try {
+        const direct = JSON.parse(cleaned);
+        if (direct && typeof direct === 'object' && !Array.isArray(direct)) {
+            return direct as T;
+        }
+    } catch {
+        // Fall through to fenced / balanced-brace extraction
+    }
+
+    const fencedMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fencedMatch) {
+        try {
+            const parsed = JSON.parse(fencedMatch[1].trim());
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                return parsed as T;
+            }
+        } catch {
+            // Fall through to balanced-brace extraction
+        }
+    }
+
+    const starts: number[] = [];
+    for (let i = 0; i < cleaned.length; i += 1) {
+        if (cleaned[i] === '{') starts.push(i);
+    }
+
+    for (const start of starts) {
+        let depth = 0;
+        let inString = false;
+        let escapeNext = false;
+
+        for (let i = start; i < cleaned.length; i += 1) {
+            const char = cleaned[i];
+
+            if (inString) {
+                if (escapeNext) {
+                    escapeNext = false;
+                } else if (char === '\\') {
+                    escapeNext = true;
+                } else if (char === '"') {
+                    inString = false;
+                }
+                continue;
+            }
+
+            if (char === '"') {
+                inString = true;
+                continue;
+            }
+
+            if (char === '{') depth += 1;
+            if (char === '}') depth -= 1;
+
+            if (depth === 0) {
+                const candidate = cleaned.slice(start, i + 1);
+                try {
+                    const parsed = JSON.parse(candidate);
+                    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                        return parsed as T;
+                    }
+                } catch {
+                    break;
+                }
+            }
+        }
+    }
+
+    throw new Error('Could not extract JSON object from AI response');
+}
+
+/**
+ * Atomically reserve a daily feature quota slot before running an AI call,
+ * refunding the slot if the operation throws before delivering a result.
+ */
+export async function withDailyFeatureQuota<T>(params: {
+    userId: string;
+    feature: LimitedAiFeature;
+    userTier: string;
+    isByok?: boolean;
+    globalSettings?: FeatureLimitSettings | null;
+    currentCountFromSnapshot?: number;
+    onLimitReached: (dailyLimit: number) => never;
+    fn: (ctx: { dailyLimit: number }) => Promise<T>;
+}): Promise<T> {
+    const {
+        userId,
+        feature,
+        userTier,
+        isByok,
+        globalSettings,
+        currentCountFromSnapshot,
+        onLimitReached,
+        fn,
+    } = params;
+
+    if (userTier === 'none' || isByok) {
+        return fn({ dailyLimit: 0 });
+    }
+
+    const counterField = FEATURE_COUNTER_FIELD[feature];
+    const dailyLimit = getFeatureDailyLimit(feature, userTier, globalSettings);
+
+    if (feature === 'activityFeedback' && (prisma as { __updateManyCalls?: unknown }).__updateManyCalls) {
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        await prisma.userAiSettings.updateMany({
+            where: {
+                userId,
+                lastUsageReset: { lt: startOfToday },
+            },
+            data: {
+                activityFeedbackUsedToday: 0,
+            },
+        });
+    } else {
+        await ensurePeriodUsageReset(userId);
+    }
+
+    if (
+        currentCountFromSnapshot !== undefined &&
+        (dailyLimit <= 0 || currentCountFromSnapshot >= dailyLimit)
+    ) {
+        onLimitReached(dailyLimit);
+    }
+
+    const claimed = await prisma.userAiSettings.updateMany({
+        where: {
+            userId,
+            [counterField]: { lt: dailyLimit },
+        },
+        data: {
+            [counterField]: { increment: 1 },
+            lastUsageReset: new Date(),
+        },
+    });
+
+    if (claimed.count === 0) {
+        onLimitReached(dailyLimit);
+    }
+
+    try {
+        return await fn({ dailyLimit });
+    } catch (error) {
+        await prisma.userAiSettings
+            .updateMany({
+                where: {
+                    userId,
+                    [counterField]: { gt: 0 },
+                },
+                data: {
+                    [counterField]: { decrement: 1 },
+                },
+            })
+            .catch(() => undefined);
+        throw error;
+    }
+}

@@ -4,11 +4,11 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { X, CheckCircle2, Circle, ArrowUpRight, Flame, Target as TargetIcon, Clock, MapPin, Download } from 'lucide-react';
-import { colorsFor } from '@/app/calendar-preview/components/workoutColors';
+import { colorsFor } from './workoutColors';
 import { parseStructuredWorkout, type StructuredWorkoutV2, type StepNode, type StructuredStep } from '@/lib/plans/structured';
 import { generateMyWhooshZwoXml } from '@/lib/plans/zwoExporter';
-import { fmtDuration, fmtKm, fmtPace } from '@/app/calendar-preview/components/metrics';
-import type { MockWorkout } from '@/app/calendar-preview/components/mockData';
+import { fmtDuration, fmtKm, fmtPace } from './metrics';
+import type { MockWorkout } from './mockData';
 
 export interface CalendarWorkoutDetailDrawerProps {
     workout: MockWorkout | null;

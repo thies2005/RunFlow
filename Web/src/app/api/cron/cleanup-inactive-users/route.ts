@@ -72,7 +72,7 @@ export async function GET(request: Request) {
         logger.info('Deleting inactive users for GDPR compliance', { userIds });
 
         // Delete non-FK telemetry and users in a transaction (Cascade will take care of related data with FKs)
-        const [, , , deleteResult] = await prisma.$transaction([
+        const [, , deleteResult] = await prisma.$transaction([
             prisma.apiRouteMetric.deleteMany({
                 where: {
                     userId: {
@@ -81,13 +81,6 @@ export async function GET(request: Request) {
                 },
             }),
             prisma.errorLog.deleteMany({
-                where: {
-                    userId: {
-                        in: userIds,
-                    },
-                },
-            }),
-            prisma.sessionReplay.deleteMany({
                 where: {
                     userId: {
                         in: userIds,

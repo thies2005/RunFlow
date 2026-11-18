@@ -81,7 +81,7 @@ jest.mock('@/lib/rateLimit', () => ({
     ),
 }));
 
-jest.mock('@/lib/plan/snapshot', () => ({
+jest.mock('@/lib/plans/snapshot', () => ({
     createSnapshot: jest.fn(),
 }));
 
@@ -93,7 +93,7 @@ jest.mock('@/lib/logging/logger', () => ({
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
-import { createSnapshot } from '@/lib/plan/snapshot';
+import { createSnapshot } from '@/lib/plans/snapshot';
 
 const CTX = { params: Promise.resolve({ goalId: 'goal-1' }) };
 

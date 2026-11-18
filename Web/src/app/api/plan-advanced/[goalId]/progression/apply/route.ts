@@ -3,7 +3,7 @@ import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { createSnapshot } from '@/lib/plan/snapshot';
+import { createSnapshot } from '@/lib/plans/snapshot';
 import { PlanPhase, Prisma, WorkoutType } from '@/generated/prisma/client';
 import { parseStructuredWorkout, summarizeStructuredWorkout } from '@/lib/plans/structured';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';

@@ -5,13 +5,13 @@ import { calculateTrimpFromZones } from './trimp';
 import { DAY_MS } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';
 import {
+    ATL_TIME_CONSTANT,
+    CTL_TIME_CONSTANT,
     calculateRunningTss,
-    getActivityContribution
+    decayEwma,
+    getActivityContribution,
+    stepEwma,
 } from './fitness';
-
-// Constants need to match fitness.ts
-const CTL_TIME_CONSTANT = 42;
-const ATL_TIME_CONSTANT = 7;
 
 // Structural bound on rebuild cost: updateFitnessCache never iterates further
 // back than this, even if a legacy row with an ancient date exists (the API
@@ -114,16 +114,13 @@ export async function updateFitnessCache(
             const gapDays = Math.round((startDate.getTime() - baselineDate.getTime()) / msPerDay) - 1;
 
             if (gapDays > 0) {
-                const ctlDecay = Math.exp(-1 / CTL_TIME_CONSTANT);
-                const atlDecay = Math.exp(-1 / ATL_TIME_CONSTANT);
-
                 // With 0 load during gap days, exponential decay applies:
                 // Value_t = Value_0 * (decay ^ t)
-                currentCtl = currentCtl * Math.pow(ctlDecay, gapDays);
-                currentAtl = currentAtl * Math.pow(atlDecay, gapDays);
-                currentCtlRunning = currentCtlRunning * Math.pow(ctlDecay, gapDays);
-                currentCtlBike = currentCtlBike * Math.pow(ctlDecay, gapDays);
-                currentAtlBike = currentAtlBike * Math.pow(atlDecay, gapDays);
+                currentCtl = decayEwma(currentCtl, gapDays, CTL_TIME_CONSTANT);
+                currentAtl = decayEwma(currentAtl, gapDays, ATL_TIME_CONSTANT);
+                currentCtlRunning = decayEwma(currentCtlRunning, gapDays, CTL_TIME_CONSTANT);
+                currentCtlBike = decayEwma(currentCtlBike, gapDays, CTL_TIME_CONSTANT);
+                currentAtlBike = decayEwma(currentAtlBike, gapDays, ATL_TIME_CONSTANT);
             }
         }
 
@@ -167,9 +164,6 @@ export async function updateFitnessCache(
 
         // 5. Iterate Day by Day
         const today = toUtcMidnight(new Date());
-
-        const ctlDecay = Math.exp(-1 / CTL_TIME_CONSTANT);
-        const atlDecay = Math.exp(-1 / ATL_TIME_CONSTANT);
 
         const updates: Array<{
             userId: string;
@@ -261,11 +255,11 @@ export async function updateFitnessCache(
             }
 
             // Apply EMA formula: newValue = oldValue * decay + todayLoad * (1 - decay)
-            currentCtl = currentCtl * ctlDecay + dailyCombinedLoad * (1 - ctlDecay);
-            currentAtl = currentAtl * atlDecay + dailyCombinedLoad * (1 - atlDecay);
-            currentCtlRunning = currentCtlRunning * ctlDecay + dailyRunningTss * (1 - ctlDecay);
-            currentCtlBike = currentCtlBike * ctlDecay + dailyBikeTss * (1 - ctlDecay);
-            currentAtlBike = currentAtlBike * atlDecay + dailyBikeTss * (1 - atlDecay);
+            currentCtl = stepEwma(currentCtl, dailyCombinedLoad, CTL_TIME_CONSTANT);
+            currentAtl = stepEwma(currentAtl, dailyCombinedLoad, ATL_TIME_CONSTANT);
+            currentCtlRunning = stepEwma(currentCtlRunning, dailyRunningTss, CTL_TIME_CONSTANT);
+            currentCtlBike = stepEwma(currentCtlBike, dailyBikeTss, CTL_TIME_CONSTANT);
+            currentAtlBike = stepEwma(currentAtlBike, dailyBikeTss, ATL_TIME_CONSTANT);
             const tsb = currentCtl - currentAtl;
             const tsbBike = currentCtlBike - currentAtlBike;
 
@@ -464,9 +458,6 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
         }
 
         // 2. Calculate values for gap days
-        const ctlDecay = Math.exp(-1 / CTL_TIME_CONSTANT);
-        const atlDecay = Math.exp(-1 / ATL_TIME_CONSTANT);
-
         let currentCtl = latest.ctl;
         let currentAtl = latest.atl;
         let currentCtlRunning = latest.ctlRunning;
@@ -498,11 +489,11 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
         let daysProcessed = 0;
         for (let timestamp = startTime; timestamp <= endTime; timestamp += msPerDay) {
             // Apply decay (0 load for these gap days)
-            currentCtl = currentCtl * ctlDecay;
-            currentAtl = currentAtl * atlDecay;
-            currentCtlRunning = currentCtlRunning * ctlDecay;
-            currentCtlBike = currentCtlBike * ctlDecay;
-            currentAtlBike = currentAtlBike * atlDecay;
+            currentCtl = decayEwma(currentCtl, 1, CTL_TIME_CONSTANT);
+            currentAtl = decayEwma(currentAtl, 1, ATL_TIME_CONSTANT);
+            currentCtlRunning = decayEwma(currentCtlRunning, 1, CTL_TIME_CONSTANT);
+            currentCtlBike = decayEwma(currentCtlBike, 1, CTL_TIME_CONSTANT);
+            currentAtlBike = decayEwma(currentAtlBike, 1, ATL_TIME_CONSTANT);
             currentTsb = currentCtl - currentAtl;
             currentTsbBike = currentCtlBike - currentAtlBike;
 

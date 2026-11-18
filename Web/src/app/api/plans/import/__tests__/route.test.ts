@@ -87,7 +87,7 @@ jest.mock('@/lib/rateLimit', () => ({
 
 jest.mock('@/lib/redis', () => ({ invalidateUserDashboardCache: jest.fn() }));
 
-jest.mock('@/lib/plan/snapshot', () => ({
+jest.mock('@/lib/plans/snapshot', () => ({
     createSnapshot: jest.fn(),
 }));
 
@@ -95,7 +95,7 @@ import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { invalidateUserDashboardCache } from '@/lib/redis';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
-import { createSnapshot } from '@/lib/plan/snapshot';
+import { createSnapshot } from '@/lib/plans/snapshot';
 
 function buildRequest(body: unknown): NextRequest {
     return new NextRequest('http://localhost/api/plans/import', {

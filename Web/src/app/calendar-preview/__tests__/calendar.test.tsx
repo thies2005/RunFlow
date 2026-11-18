@@ -3,9 +3,9 @@
  */
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { buildDays, buildWeeks, fmtPace, fmtKm, fmtDuration, fillFitness } from '../components/metrics';
-import { WeeklyView } from '../components/WeeklyView';
-import type { MockActivity, MockWorkout } from '../components/mockData';
+import { buildDays, buildWeeks, fmtPace, fmtKm, fmtDuration, fillFitness } from '@/components/Calendar/metrics';
+import { WeeklyView } from '@/components/Calendar/WeeklyView';
+import type { MockActivity, MockWorkout } from '@/components/Calendar/mockData';
 
 describe('Calendar Metrics & Formatting', () => {
     it('places an activity on its local calendar day, including the last day of a range', () => {

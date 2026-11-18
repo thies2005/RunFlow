@@ -6,7 +6,7 @@ import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 import { generateTrainingPlan, type PlanConfig } from '@/lib/plans';
 import { calculateVdot } from '@/lib/metrics/vdot';
 import { RaceType } from '@/generated/prisma/browser';
-import { applyPlanDefaults } from '@/lib/mcp/server';
+import { applyPlanDefaults } from '@/lib/plans/defaults';
 import { escapeHtml, groupWorkoutsByWeek, MAX_PLAN_HORIZON_DAYS, parseStrictRaceDate } from '../shared';
 
 const EXPORT_RATE_LIMIT: RateLimitConfig = {

@@ -1,4 +1,5 @@
-import { type McpTool, applyPlanDefaults } from '@/lib/mcp/server';
+import { type McpTool } from '@/lib/mcp/server';
+import { applyPlanDefaults } from '@/lib/plans/defaults';
 import { generateTrainingPlan, buildPlanPhaseBlocks, type PlanConfig } from '@/lib/plans';
 import { calculateTrainingPaces, calculateVdot, predictRaceTime, formatPace, formatTime, type RaceDistance } from '@/lib/metrics/vdot';
 import { calculateBikeZones, estimateBikeFtpFromVdot } from '@/lib/plans/bike-zones';

@@ -1,11 +1,12 @@
 import { resolveActiveFtp } from './activeFtp';
 import { prisma } from '@/lib/db';
 import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
+import { ATL_TIME_CONSTANT, stepEwma } from '@/lib/metrics/fitness';
 import {
     CogganPowerZone,
     STANDARD_POWER_DURATIONS,
     calculatePowerCurve,
-    estimateFtpFromPowerCurve,
+    estimateRideFtp,
     calculateCogganPowerZones,
     calculateNormalizedPower,
     calculateIntensityFactor,
@@ -237,34 +238,20 @@ export async function getCyclingAnalytics(
     let allTimeEftp: number | null = null;
 
     for (const r of allRides) {
-        const streams = parseStreams(r.streams);
-        let eftp: number | null = null;
-        const titleMatch = (r.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i);
-        const parsedTitleW = titleMatch ? parseInt(titleMatch[1], 10) : null;
-        const validTitleW = parsedTitleW && parsedTitleW >= 40 && parsedTitleW <= 1500 ? parsedTitleW : null;
+        const { eftp, curve, validTitleWatts } = estimateRideFtp(r);
 
-        if (streams?.watts && Array.isArray(streams.watts) && streams.watts.length > 0) {
-            const curve = calculatePowerCurve(streams.watts, streams.time);
+        if (curve.length > 0) {
             curve.forEach(pt => {
                 const durIdx = STANDARD_POWER_DURATIONS.indexOf(pt.durationSec);
                 if (durIdx !== -1 && pt.peakWatts > allTimePeakWatts[durIdx]) {
                     allTimePeakWatts[durIdx] = pt.peakWatts;
                 }
             });
-            eftp = estimateFtpFromPowerCurve(curve, r.weightedAverageWatts ?? r.averageWatts ?? validTitleW);
         } else {
-            const fallbackW = r.weightedAverageWatts ?? r.averageWatts ?? validTitleW;
-            if (fallbackW) {
-                eftp = estimateFtpFromPowerCurve([], fallbackW);
-            }
             applyEstimatedMmpPoints(allTimePeakWatts, {
                 ...r,
-                averageWatts: r.averageWatts ?? validTitleW,
+                averageWatts: r.averageWatts ?? validTitleWatts,
             });
-        }
-
-        if (/\bftp\s*test\b/i.test(r.name || '') && validTitleW) {
-            eftp = eftp ? Math.max(eftp, validTitleW) : validTitleW;
         }
 
         if (eftp && (allTimeEftp === null || eftp > allTimeEftp)) {
@@ -525,10 +512,9 @@ export async function getCyclingAnalytics(
         orderBy: { date: 'asc' },
     });
 
-    const atlDecay = Math.exp(-1 / 7);
     let currentAtlRun = dailyFitnessRecords.length > 0 ? (dailyFitnessRecords[0].ctlRunning || 0) : 0;
     const pmcSeries = dailyFitnessRecords.map(df => {
-        currentAtlRun = currentAtlRun * atlDecay + (df.runningTss || 0) * (1 - atlDecay);
+        currentAtlRun = stepEwma(currentAtlRun, df.runningTss || 0, ATL_TIME_CONSTANT);
         const atlRun = Number(currentAtlRun.toFixed(1));
         const tsbRun = Number((df.ctlRunning - currentAtlRun).toFixed(1));
         return {

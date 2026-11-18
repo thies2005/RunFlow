@@ -15,6 +15,11 @@ export interface CogganPowerZone {
     maxWkg: number | null;
 }
 
+export interface PowerCurvePoint {
+    durationSec: number;
+    peakWatts: number;
+}
+
 export const STANDARD_POWER_DURATIONS = [5, 15, 30, 60, 120, 300, 600, 1200, 1800, 3600];
 
 /**
@@ -331,6 +336,55 @@ export function estimateFtpFromPowerCurve(
     }
 
     return null;
+}
+
+/**
+ * Estimates eFTP and power curve for a single ride activity, handling stream JSON
+ * parsing, title watt extraction, and FTP test title overrides.
+ */
+export function estimateRideFtp(ride: {
+    name?: string | null;
+    averageWatts?: number | null;
+    weightedAverageWatts?: number | null;
+    streams?: unknown;
+}): { eftp: number | null; curve: PowerCurvePoint[]; validTitleWatts: number | null } {
+    let streamObj: unknown = ride.streams;
+    if (typeof streamObj === 'string') {
+        try {
+            streamObj = JSON.parse(streamObj);
+        } catch {
+            streamObj = null;
+        }
+    }
+    const parsedStreams =
+        streamObj && typeof streamObj === 'object'
+            ? (streamObj as { watts?: unknown; time?: unknown })
+            : null;
+    const watts = Array.isArray(parsedStreams?.watts) ? (parsedStreams.watts as number[]) : null;
+    const time = Array.isArray(parsedStreams?.time) ? (parsedStreams.time as number[]) : undefined;
+
+    const titleMatch = (ride.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i);
+    const parsedTitleWatts = titleMatch ? parseInt(titleMatch[1], 10) : null;
+    const validTitleWatts =
+        parsedTitleWatts && parsedTitleWatts >= 40 && parsedTitleWatts <= 1500
+            ? parsedTitleWatts
+            : null;
+
+    const curve = watts && watts.length > 0 ? calculatePowerCurve(watts, time) : [];
+    const fallbackWatts = ride.weightedAverageWatts ?? ride.averageWatts ?? validTitleWatts;
+    let eftp: number | null = null;
+
+    if (curve.length > 0) {
+        eftp = estimateFtpFromPowerCurve(curve, fallbackWatts);
+    } else if (fallbackWatts) {
+        eftp = estimateFtpFromPowerCurve([], fallbackWatts);
+    }
+
+    if (/\bftp\s*test\b/i.test(ride.name || '') && validTitleWatts) {
+        eftp = eftp ? Math.max(eftp, validTitleWatts) : validTitleWatts;
+    }
+
+    return { eftp, curve, validTitleWatts };
 }
 
 /**

@@ -11,7 +11,7 @@ import { getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { ensureFitnessCacheUpToDate, resolveActivityEffectiveTss } from '@/lib/metrics/fitnessCache';
 import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
-import { estimateFallbackWorkoutTss } from '@/lib/plan/sportDetection';
+import { estimateFallbackWorkoutTss } from '@/lib/plans/sportDetection';
 import { handleError } from '@/lib/errors/handler';
 import { getRedisClient } from '@/lib/redis';
 import { logger } from '@/lib/logging/logger';

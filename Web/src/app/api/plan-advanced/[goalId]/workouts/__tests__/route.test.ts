@@ -31,7 +31,7 @@ jest.mock('@/lib/rateLimit', () => ({
     rateLimitHeaders: jest.fn(() => ({})),
 }));
 
-jest.mock('@/lib/plan/snapshot', () => ({
+jest.mock('@/lib/plans/snapshot', () => ({
     createSnapshot: jest.fn(),
 }));
 

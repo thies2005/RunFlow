@@ -1,6 +1,6 @@
 import { type McpTool } from '@/lib/mcp/server';
 import { evaluatePlanSafety } from '@/lib/mcp/safety';
-import { createSnapshot, restoreFromSnapshot } from '@/lib/plan/snapshot';
+import { createSnapshot, restoreFromSnapshot } from '@/lib/plans/snapshot';
 import { recalculateWorkoutPaces } from '@/lib/plans/recalculate-paces';
 import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
@@ -267,6 +267,10 @@ export const createTrainingPlanTool: McpTool = {
             targetTime: params.targetTime || null,
             planStartDate: params.planStartDate || null,
             weeklyMileageGoal: params.weeklyMileageGoal || null,
+            weeklyBikeTssGoal: params.weeklyBikeTssGoal,
+            weeklySwimMetersGoal: params.weeklySwimMetersGoal,
+            targetWeeklyTss: params.targetWeeklyTss,
+            phaseBlocks: params.phaseBlocks,
             runsPerWeek: params.runsPerWeek ?? null,
             ridesPerWeek: params.ridesPerWeek ?? null,
             swimsPerWeek: params.swimsPerWeek ?? null,
@@ -274,25 +278,6 @@ export const createTrainingPlanTool: McpTool = {
             sport: mapToPrismaSport(params.sport),
             deactivateExisting: true,
         });
-
-        if (
-            params.phaseBlocks !== undefined ||
-            params.weeklyBikeTssGoal !== undefined ||
-            params.weeklySwimMetersGoal !== undefined ||
-            params.targetWeeklyTss !== undefined ||
-            params.strengthPerWeek !== undefined
-        ) {
-            result.goal = await prisma.goal.update({
-                where: { id: result.goal.id },
-                data: {
-                    ...(params.phaseBlocks !== undefined && { phaseBlocks: params.phaseBlocks }),
-                    ...(params.weeklyBikeTssGoal !== undefined && { weeklyBikeTssGoal: params.weeklyBikeTssGoal }),
-                    ...(params.weeklySwimMetersGoal !== undefined && { weeklySwimMetersGoal: params.weeklySwimMetersGoal }),
-                    ...(params.targetWeeklyTss !== undefined && { targetWeeklyTss: params.targetWeeklyTss }),
-                    ...(params.strengthPerWeek !== undefined && { strengthPerWeek: params.strengthPerWeek }),
-                },
-            });
-        }
 
         await createSnapshot(result.goal.id, 'Initial plan creation via MCP', 'ai_mcp_mutation');
         const safetyAdvisory = await evaluatePlanSafety(result.goal.id);
@@ -434,89 +419,57 @@ export const createCustomTrainingPlanTool: McpTool = {
             }
         }
 
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { ftpWatts: true, swimCssSecPer100m: true },
-        });
-        const ftpWatts = user?.ftpWatts || 200;
-        const vdot = 45;
         const setAsActive = params.setAsActive !== undefined ? Boolean(params.setAsActive) : true;
         const planWeeks = Math.max(
             1,
             Math.min(104, Math.ceil((raceDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)))
         );
 
-        const created = await prisma.$transaction(async tx => {
-            if (setAsActive && typeof tx.goal.updateMany === 'function') {
-                await tx.goal.updateMany({
-                    where: { userId, isActive: true },
-                    data: { isActive: false },
-                });
-            }
-
-            const goal = await tx.goal.create({
-                data: {
-                    userId,
-                    name: String(params.name).trim(),
-                    sport: mapToPrismaSport(params.sport),
-                    raceType: mapToPrismaRaceType(params.raceType),
-                    planStartDate: startDate,
-                    raceDate,
-                    planWeeks,
-                    isActive: setAsActive,
-                    creationMode: PlanCreationMode.AI_ASSISTED,
-                    planSource: `mcp_custom:${String(params.sport).toLowerCase()}`,
-                    trainingFocus: params.trainingFocus || `${params.sport}${params.raceType ? `:${params.raceType}` : ''}`,
-                    runsPerWeek: params.runsPerWeek ?? (params.sport === 'BIKE' || params.sport === 'STRENGTH' ? 0 : 4),
-                    ridesPerWeek: params.ridesPerWeek ?? (params.sport === 'BIKE' ? 5 : 0),
-                    swimsPerWeek: params.swimsPerWeek ?? (params.sport === 'SWIM' ? 3 : 0),
-                    strengthPerWeek: params.strengthPerWeek ?? (params.sport === 'STRENGTH' ? 3 : 0),
-                    restDays: params.restDays ?? [1, 5],
-                    longRunDay: params.longRunDay ?? 0,
-                    workoutDay: params.workoutDay ?? 3,
-                    swimDay: params.swimDay ?? null,
-                    ftpAtCreation: ftpWatts,
-                    swimCssAtCreation: user?.swimCssSecPer100m ?? null,
-                    currentVdot: vdot,
-                    targetWeeklyTss: params.targetWeeklyTss ?? null,
-                    weeklyBikeTssGoal: params.weeklyBikeTssGoal ?? null,
-                    weeklyMileageGoal: params.weeklyMileageGoal ?? null,
-                    weeklySwimMetersGoal: params.weeklySwimMetersGoal ?? null,
-                    customDistanceM: params.customDistanceM ?? null,
-                    customBikeDistM: params.customBikeDistM ?? null,
-                    customRunDistM: params.customRunDistM ?? null,
-                    customSwimDistM: params.customSwimDistM ?? null,
-                    priority: (params.priority as GoalPriority) || GoalPriority.PRIMARY,
-                    parentGoalId: params.parentGoalId ?? null,
-                    phaseBlocks: params.phaseBlocks ?? [],
-                },
-            });
-
-            const importedWorkoutIds: any[] = [];
-            if (Array.isArray(params.workouts) && params.workouts.length > 0) {
-                const rows = params.workouts.map((raw: any, idx: number) =>
-                    buildCanonicalWorkoutData(raw, goal.id, vdot, ftpWatts, typeof raw.order === 'number' ? raw.order : idx)
-                );
-
-                for (const row of rows) {
-                    const w = await tx.workout.create({ data: row });
-                    importedWorkoutIds.push({
-                        id: w?.id ?? `custom-${importedWorkoutIds.length + 1}`,
-                        scheduledDate: row.scheduledDate.toISOString().split('T')[0],
-                        sport: row.sport,
-                        workoutType: row.workoutType,
-                        customName: row.customName,
-                        plannedTss: row.plannedTss,
-                    });
-                }
-            }
-
-            return { goal, importedWorkoutIds };
+        const created = await createPlanWithWorkouts({
+            userId,
+            name: String(params.name).trim(),
+            sport: mapToPrismaSport(params.sport),
+            raceType: mapToPrismaRaceType(params.raceType),
+            planStartDate: params.planStartDate,
+            raceDate: params.raceDate,
+            planWeeks,
+            isActive: setAsActive,
+            deactivateExisting: setAsActive,
+            creationMode: PlanCreationMode.AI_ASSISTED,
+            planSource: `mcp_custom:${String(params.sport).toLowerCase()}`,
+            trainingFocus: params.trainingFocus || `${params.sport}${params.raceType ? `:${params.raceType}` : ''}`,
+            runsPerWeek: params.runsPerWeek ?? (params.sport === 'BIKE' || params.sport === 'STRENGTH' ? 0 : 4),
+            ridesPerWeek: params.ridesPerWeek ?? (params.sport === 'BIKE' ? 5 : 0),
+            swimsPerWeek: params.swimsPerWeek ?? (params.sport === 'SWIM' ? 3 : 0),
+            strengthPerWeek: params.strengthPerWeek ?? (params.sport === 'STRENGTH' ? 3 : 0),
+            restDays: params.restDays ?? [1, 5],
+            longRunDay: params.longRunDay ?? 0,
+            workoutDay: params.workoutDay ?? 3,
+            swimDay: params.swimDay ?? null,
+            targetWeeklyTss: params.targetWeeklyTss ?? null,
+            weeklyBikeTssGoal: params.weeklyBikeTssGoal ?? null,
+            weeklyMileageGoal: params.weeklyMileageGoal ?? null,
+            weeklySwimMetersGoal: params.weeklySwimMetersGoal ?? null,
+            customDistanceM: params.customDistanceM ?? null,
+            customBikeDistM: params.customBikeDistM ?? null,
+            customRunDistM: params.customRunDistM ?? null,
+            customSwimDistM: params.customSwimDistM ?? null,
+            priority: (params.priority as GoalPriority) || GoalPriority.PRIMARY,
+            parentGoalId: params.parentGoalId ?? null,
+            phaseBlocks: params.phaseBlocks ?? [],
+            skipGenerator: true,
+            customWorkoutRows: Array.isArray(params.workouts)
+                ? params.workouts.map((raw: any, idx: number) => (goalId: string, vdot: number, ftpWatts: number) =>
+                      buildCanonicalWorkoutData(raw, goalId, vdot, ftpWatts, typeof raw.order === 'number' ? raw.order : idx)
+                  )
+                : undefined,
         });
+
+        const importedWorkoutIds = created.importedWorkoutIds ?? [];
 
         const snapshot = await createSnapshot(
             created.goal.id,
-            `Create custom training plan "${created.goal.name}" (${created.importedWorkoutIds.length} workouts)`,
+            `Create custom training plan "${created.goal.name}" (${importedWorkoutIds.length} workouts)`,
             'ai_mcp_custom_plan'
         );
         const safetyAdvisory = await evaluatePlanSafety(created.goal.id);
@@ -525,8 +478,8 @@ export const createCustomTrainingPlanTool: McpTool = {
             success: true,
             goalId: created.goal.id,
             goal: created.goal,
-            importedCount: created.importedWorkoutIds.length,
-            importedWorkoutIds: created.importedWorkoutIds,
+            importedCount: importedWorkoutIds.length,
+            importedWorkoutIds,
             snapshotId: snapshot?.id ?? null,
             safetyAdvisory,
         };

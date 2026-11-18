@@ -189,7 +189,6 @@ export async function POST(req: NextRequest) {
                     await prisma.$transaction([
                         prisma.apiRouteMetric.deleteMany({ where: { userId: account.userId } }),
                         prisma.errorLog.deleteMany({ where: { userId: account.userId } }),
-                        prisma.sessionReplay.deleteMany({ where: { userId: account.userId } }),
                         prisma.user.delete({ where: { id: account.userId } })
                     ]);
                     logger.info(`Deleted user ${account.userId} and telemetry due to Strava deauthorization.`);

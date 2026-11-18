@@ -2,6 +2,7 @@ import {
     calculateWorkoutPlannedTss,
     calculateProjectedFitness,
     calculatePlanPlannedTss,
+    estimateWorkoutTssWithFallback,
 } from '../plannedTss';
 import { calculateDecayFactor } from '../fitness';
 import { WorkoutType } from '@/generated/prisma/client';
@@ -355,5 +356,25 @@ describe('calculatePlanPlannedTss', () => {
         ];
         const map = calculatePlanPlannedTss(workouts);
         expect(map.size).toBe(0);
+    });
+});
+
+describe('estimateWorkoutTssWithFallback', () => {
+    it('returns rounded persisted plannedTss when positive', () => {
+        expect(estimateWorkoutTssWithFallback({ workoutType: WorkoutType.EASY, plannedTss: 42.6 })).toBe(43);
+    });
+
+    it('returns 0 for REST or missing workoutType', () => {
+        expect(estimateWorkoutTssWithFallback({ workoutType: WorkoutType.REST, targetDuration: 3600 })).toBe(0);
+        expect(estimateWorkoutTssWithFallback({})).toBe(0);
+    });
+
+    it('falls back to distance-based duration (~5:30/km) when targetDuration is missing', () => {
+        // 10km -> 3300s (~0.9167h) at EASY IF 0.75 -> 0.9167 * 0.5625 * 100 = 51.6 -> 52
+        expect(estimateWorkoutTssWithFallback({ workoutType: WorkoutType.EASY, targetDistance: 10000 })).toBe(52);
+    });
+
+    it('returns 0 when both duration and distance are missing', () => {
+        expect(estimateWorkoutTssWithFallback({ workoutType: WorkoutType.EASY })).toBe(0);
     });
 });

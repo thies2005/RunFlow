@@ -300,16 +300,6 @@ export async function GET() {
                     },
                     orderBy: { createdAt: 'desc' },
                 },
-                guidedPlanSessions: {
-                    select: {
-                        currentStep: true,
-                        responses: true,
-                        aiRecommendation: true,
-                        isComplete: true,
-                        createdAt: true,
-                    },
-                    orderBy: { createdAt: 'desc' },
-                },
                 notifications: {
                     select: {
                         message: true,
